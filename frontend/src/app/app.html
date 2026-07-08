@@ -1,1 +1,28 @@
 <div id="map" class="map-container"></div>
+
+<div class="legend-panel">
+  <div class="legend-header">
+    <h3>Mapeamento de Conflitos</h3>
+    <p>Painel de Camadas (Pernambuco)</p>
+  </div>
+  <div class="legend-body">
+    @for (layer of layers; track layer.id) {
+      <div class="legend-item" (click)="toggleLayer(layer)">
+        <input 
+          type="checkbox" 
+          [checked]="layer.visible"
+          (change)="$event.stopPropagation(); toggleLayer(layer)"
+          class="layer-checkbox"
+        />
+        <div 
+          class="color-indicator" 
+          [style.backgroundColor]="layer.fillColor"
+          [style.borderColor]="layer.borderColor"
+        ></div>
+        <span class="layer-name" [class.disabled]="!layer.visible">
+          {{ layer.name }}
+        </span>
+      </div>
+    }
+  </div>
+</div>

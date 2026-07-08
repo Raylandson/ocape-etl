@@ -95,7 +95,7 @@ cd frontend
 pnpm install
 pnpm start
 ```
-Open `http://localhost:4200` in your web browser. You will see the interactive map rendering SIGEF private properties (translucent yellow) and FUNAI Indigenous Lands (translucent red) rendered as vector tiles.
+Open `http://localhost:4200` in your web browser. You will see an interactive map with a glassmorphic layer control panel, serving vector tiles for all 6 main datasets (Indigenous Lands, Quilombola Territories, SIGEF Private/Public, and SNCI Private/Public) in distinct, custom-colored layers with toggle controls.
 
 ---
 
