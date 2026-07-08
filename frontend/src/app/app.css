@@ -67,6 +67,7 @@
   width: 16px;
   height: 16px;
   accent-color: #3b82f6;
+  pointer-events: none;
 }
 
 .color-indicator {
