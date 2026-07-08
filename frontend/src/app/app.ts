@@ -74,6 +74,15 @@ export class App implements AfterViewInit {
       fillColor: '#14b8a6',
       borderColor: '#0f766e',
       visible: true
+    },
+    {
+      id: 'land_overlaps',
+      name: '⚠️ Áreas de Conflito (Sobreposições)',
+      sourceUrl: 'http://localhost:3000/land_overlaps',
+      sourceLayer: 'land_overlaps',
+      fillColor: '#ec4899', // neon hot pink
+      borderColor: '#be185d',
+      visible: true
     }
   ];
 
@@ -101,7 +110,7 @@ export class App implements AfterViewInit {
           'source-layer': layer.sourceLayer,
           paint: {
             'fill-color': layer.fillColor,
-            'fill-opacity': 0.4
+            'fill-opacity': layer.id === 'land_overlaps' ? 0.75 : 0.4
           },
           layout: {
             visibility: layer.visible ? 'visible' : 'none'
@@ -116,7 +125,7 @@ export class App implements AfterViewInit {
           'source-layer': layer.sourceLayer,
           paint: {
             'line-color': layer.borderColor,
-            'line-width': 1.5
+            'line-width': layer.id === 'land_overlaps' ? 3.0 : 1.5
           },
           layout: {
             visibility: layer.visible ? 'visible' : 'none'

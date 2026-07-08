@@ -110,9 +110,22 @@ The pipeline (`src/etl.py`) automates the following steps for each dataset under
 
 ---
 
+## Spatial Overlaps & Conflict Identification
+
+The pipeline includes a spatial intersection calculator (`src/overlaps.py`) that executes automatically at the end of the ETL ingestion. It identifies and generates a dedicated table of overlaps (*overlappings*) where private properties intersect traditional territories.
+
+This table is optimized with a spatial **GIST index** to allow the Martin vector tile server to serve the conflict areas instantaneously to the front-end.
+
+* **Target Table**: `land_overlaps`
+* **Sources Analyzed**:
+  * Private Lands (`sigef_privado_pe`, `imovel_certificado_snci_privado_pe`)
+  * Traditional Territories (`tis_poligonais`, `areas_de_quilombolas_pe`)
+
+---
+
 ## Ingested Datasets
 
-The Phase 1 ETL successfully ingests the following datasets:
+The ETL successfully manages and serves the following datasets:
 
 | Target Table Name | Sources Description | Spatial CRS | Spatial Index Type |
 | :--- | :--- | :--- | :--- |
@@ -124,3 +137,4 @@ The Phase 1 ETL successfully ingests the following datasets:
 | `sigef_privado_pe` | Private SIGEF properties | EPSG:4326 | GIST |
 | `sigef_publico_pe` | Public SIGEF properties | EPSG:4326 | GIST |
 | `tis_poligonais` | Indigenous traditional lands (FUNAI) | EPSG:4326 | GIST |
+| `land_overlaps` | Spatial overlaps (conflicts) | EPSG:4326 | GIST |

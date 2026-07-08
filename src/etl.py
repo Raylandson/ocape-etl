@@ -109,5 +109,14 @@ def run_etl():
         except Exception as e:
             logger.error(f"Error processing file '{filename}': {e}", exc_info=True)
 
+    # Calculate overlaps
+    logger.info("Ingestion completed. Running overlaps calculation...")
+    try:
+        from src.overlaps import calculate_overlaps
+        calculate_overlaps()
+    except Exception as e:
+        logger.error(f"Failed to calculate overlaps: {e}", exc_info=True)
+
 if __name__ == "__main__":
     run_etl()
+
