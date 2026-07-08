@@ -17,5 +17,18 @@ services:
       timeout: 5s
       retries: 5
 
+  martin:
+    image: maplibre/martin:latest
+    container_name: conflitos_agrarios_martin
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/conflitos_agrarios
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   pgdata:
+
