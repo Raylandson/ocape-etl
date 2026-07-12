@@ -112,11 +112,18 @@ The pipeline (`src/etl.py`) automates the following steps for each dataset under
 
 ## Spatial Overlaps & Conflict Identification
 
-The pipeline includes a spatial intersection calculator (`src/overlaps.py`) that executes automatically at the end of the ETL ingestion. It identifies and generates a dedicated table of overlaps (*overlappings*) where private properties intersect traditional territories.
+The pipeline includes a spatial intersection calculator (`src/overlaps.py`) that executes automatically at the end of the ETL ingestion. It identifies and generates dedicated tables of overlaps (*overlappings*) and their geographical center points where private properties intersect traditional territories.
 
-This table is optimized with a spatial **GIST index** to allow the Martin vector tile server to serve the conflict areas instantaneously to the front-end.
+To prevent inflation from duplicate registry entries (e.g. properties certified under both SIGEF and SNCI systems) and neighboring pieces, the pipeline performs a spatial clustering and dissolve step:
+1. **DBSCAN Clustering**: Groups intersecting polygons that touch or are within a very small distance (~11 meters, `eps := 0.0001` degrees) using PostGIS `ST_ClusterDBSCAN`.
+2. **Dissolve (ST_Union)**: Merges the clustered geometries into a single contiguous multi-polygon, reducing redundant visual indicators.
+3. **Attribute Aggregation**: Semicolon-delimits (`string_agg`) all property names, codes, and sources for each dissolved area so they remain searchable and detailed.
 
-* **Target Table**: `land_overlaps`
+These tables are optimized with spatial **GIST indexes** to allow the Martin vector tile server to serve the conflict areas and markers instantaneously to the front-end.
+
+* **Target Tables**: 
+  * `land_overlaps` (the overlapping polygon areas)
+  * `land_overlaps_points` (the center points / medians of the overlaps using PostGIS `ST_PointOnSurface`)
 * **Sources Analyzed**:
   * Private Lands (`sigef_privado_pe`, `imovel_certificado_snci_privado_pe`)
   * Traditional Territories (`tis_poligonais`, `areas_de_quilombolas_pe`)
@@ -138,3 +145,5 @@ The ETL successfully manages and serves the following datasets:
 | `sigef_publico_pe` | Public SIGEF properties | EPSG:4326 | GIST |
 | `tis_poligonais` | Indigenous traditional lands (FUNAI) | EPSG:4326 | GIST |
 | `land_overlaps` | Spatial overlaps (conflicts) | EPSG:4326 | GIST |
+| `land_overlaps_points` | Center points (medians) of conflict areas | EPSG:4326 | GIST |
+

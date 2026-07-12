@@ -90,3 +90,79 @@
   color: #9ca3af;
   text-decoration: line-through;
 }
+
+/* Custom Popup Styling */
+.custom-popup .maplibregl-popup-content {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  padding: 16px;
+  max-width: 280px;
+  font-family: inherit;
+}
+
+.custom-popup .maplibregl-popup-close-button {
+  color: #9ca3af;
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: 0 12px 0 8px;
+  outline: none !important;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.custom-popup .maplibregl-popup-close-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #4b5563;
+}
+
+.popup-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.popup-title {
+  font-weight: 700;
+  color: #dc2626;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.popup-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.popup-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.popup-value {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.popup-value-code {
+  font-size: 0.8rem;
+  font-family: monospace;
+  font-weight: 500;
+  color: #4b5563;
+  background-color: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  width: fit-content;
+}
