@@ -125,7 +125,7 @@ These tables are optimized with spatial **GIST indexes** to allow the Martin vec
   * `land_overlaps` (the overlapping polygon areas)
   * `land_overlaps_points` (the center points / medians of the overlaps using PostGIS `ST_PointOnSurface`)
 * **Sources Analyzed**:
-  * Private Lands (`sigef_privado_pe`, `imovel_certificado_snci_privado_pe`)
+  * Private Lands (`sigef_privado_pe`, `imovel_certificado_snci_privado_pe`, `area_imovel_1` - CAR)
   * Traditional Territories (`tis_poligonais`, `areas_de_quilombolas_pe`)
 
 ---
@@ -136,6 +136,7 @@ The ETL successfully manages and serves the following datasets:
 
 | Target Table Name | Sources Description | Spatial CRS | Spatial Index Type |
 | :--- | :--- | :--- | :--- |
+| `area_imovel_1` | Cadastro Ambiental Rural (CAR - SICAR) properties | EPSG:4326 | GIST |
 | `areas_de_quilombolas_pe` | Quilombola traditional territories | EPSG:4326 | GIST |
 | `imovel_certificado_snci_brasil_pe` | Certified private/public rural properties (SNCI - INCRA) | EPSG:4326 | GIST |
 | `imovel_certificado_snci_privado_pe` | Private certified rural properties (SNCI - INCRA) | EPSG:4326 | GIST |

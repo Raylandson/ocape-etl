@@ -11,4 +11,5 @@ wheels/
 
 # Data files
 data/raw/
+data/extracted/area_imovel_sicar/
 

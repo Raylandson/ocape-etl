@@ -66,6 +66,34 @@ def calculate_overlaps():
         FROM imovel_certificado_snci_brasil_pe p
         JOIN areas_de_quilombolas_pe q ON ST_Intersects(p.geometry, q.geometry)
         WHERE ST_Dimension(ST_Intersection(p.geometry, q.geometry)) = 2
+
+        UNION ALL
+
+        -- 5. CAR/SICAR (area_imovel_1) overlapping with FUNAI Indigenous Lands
+        SELECT
+            ('Imóvel CAR (' || COALESCE(p.municipio, 'PE') || ')')::varchar(150) AS property_name,
+            p.cod_imovel AS property_code,
+            'area_imovel_1'::varchar(50) AS property_source,
+            t.terrai_nom AS traditional_name,
+            'tis_poligonais'::varchar(50) AS traditional_source,
+            ST_Force2D(ST_Multi(ST_CollectionExtract(ST_Intersection(p.geometry, t.geometry), 3)))::geometry(MultiPolygon, 4326) AS geometry
+        FROM area_imovel_1 p
+        JOIN tis_poligonais t ON ST_Intersects(p.geometry, t.geometry)
+        WHERE ST_Dimension(ST_Intersection(p.geometry, t.geometry)) = 2
+
+        UNION ALL
+
+        -- 6. CAR/SICAR (area_imovel_1) overlapping with Quilombolas
+        SELECT
+            ('Imóvel CAR (' || COALESCE(p.municipio, 'PE') || ')')::varchar(150) AS property_name,
+            p.cod_imovel AS property_code,
+            'area_imovel_1'::varchar(50) AS property_source,
+            q.nm_comunid AS traditional_name,
+            'areas_de_quilombolas_pe'::varchar(50) AS traditional_source,
+            ST_Force2D(ST_Multi(ST_CollectionExtract(ST_Intersection(p.geometry, q.geometry), 3)))::geometry(MultiPolygon, 4326) AS geometry
+        FROM area_imovel_1 p
+        JOIN areas_de_quilombolas_pe q ON ST_Intersects(p.geometry, q.geometry)
+        WHERE ST_Dimension(ST_Intersection(p.geometry, q.geometry)) = 2
     ),
     clustered_raw AS (
         SELECT

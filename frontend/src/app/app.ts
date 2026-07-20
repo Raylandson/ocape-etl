@@ -76,6 +76,15 @@ export class App implements AfterViewInit {
       visible: true
     },
     {
+      id: 'area_imovel_1',
+      name: 'Cadastro Ambiental Rural (CAR)',
+      sourceUrl: 'http://localhost:3000/area_imovel_1',
+      sourceLayer: 'area_imovel_1',
+      fillColor: '#84cc16',
+      borderColor: '#4d7c0f',
+      visible: false
+    },
+    {
       id: 'land_overlaps',
       name: '⚠️ Áreas de Conflito (Sobreposições)',
       sourceUrl: 'http://localhost:3000/land_overlaps',
@@ -221,7 +230,7 @@ export class App implements AfterViewInit {
             const pName = propertyNames[i] || 'N/A';
             const pCode = propertyCodes[i] || 'N/A';
             const pSource = propertySources[i] || '';
-            const pLabel = pSource.includes('snci') ? 'SNCI' : (pSource.includes('sigef') ? 'SIGEF' : 'Imóvel');
+            const pLabel = pSource.includes('snci') ? 'SNCI' : (pSource.includes('sigef') ? 'SIGEF' : (pSource.includes('area_imovel') || pSource.includes('sicar') ? 'CAR' : 'Imóvel'));
 
             propertiesHtml += `
               <div class="popup-property-item" style="${i > 0 ? 'margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(229, 231, 235, 0.6);' : ''}">
