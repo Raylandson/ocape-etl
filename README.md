@@ -22,6 +22,8 @@ conflict-solver/
 ├── pyproject.toml           # Project dependencies managed by uv
 ├── README.md                # Project documentation (this file)
 ├── AGENTS.md                # AI Agent guidelines and rules
+├── docs/
+│   └── DATA_ANALYSIS.md     # Comprehensive Data Systems & Metadata Analysis
 ├── data/
 │   ├── raw/                 # Untouched ZIP backups of source data [GIT IGNORED]
 │   │   ├── Imóvel certificado SNCI Brasil_PE.zip
@@ -147,4 +149,14 @@ The ETL successfully manages and serves the following datasets:
 | `tis_poligonais` | Indigenous traditional lands (FUNAI) | EPSG:4326 | GIST |
 | `land_overlaps` | Spatial overlaps (conflicts) | EPSG:4326 | GIST |
 | `land_overlaps_points` | Center points (medians) of conflict areas | EPSG:4326 | GIST |
+
+---
+
+## Documentation & Data Analysis
+
+Detailed documentation covering system definitions (SIGEF, SNCI, SICAR/CAR, FUNAI, INCRA Quilombolas), Shapefile `.dbf` metadata structure, and empirical statistical analyses (percentages, counts, legal status, notary integration, and environmental compliance) is available in:
+
+* 📄 **[Documentation & Data Analysis Report](file:///home/raylandsoncesario/github/conflict-solver/docs/DATA_ANALYSIS.md)** (`docs/DATA_ANALYSIS.md`)
+
+
 
