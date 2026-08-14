@@ -79,7 +79,9 @@ Every record in a dBase attribute table (`.dbf`) corresponds **1-to-1** with an 
 
 ---
 
-### 2. CAR / SICAR — Cadastro Ambiental Rural (`area_imovel_sicar`)
+### 2. CAR / SICAR — Cadastro Ambiental Rural (`area_imovel_sicar`, `apps_sicar`, `reserva_legal_sicar`, `vegetacao_nativa_sicar`)
+
+#### A. Perímetros de Imóveis (`area_imovel_1`)
 * **Total Polygons:** 433,105
 * **Total Declared Area:** 8,502,855.26 ha
 * **Property Classification (`ind_tipo`):**
@@ -95,6 +97,21 @@ Every record in a dBase attribute table (`.dbf`) corresponds **1-to-1** with an 
   * *Analisado, em conformidade com a Lei nº 12.651/2012* (Analyzed and compliant): **9,746** (2.25%)
   * *Cancelado por decisão administrativa* (Cancelled): **1,649** (0.38%)
   * *Analisado com ativos ambientais*: **419** (0.10%)
+
+#### B. Áreas de Preservação Permanente — APPs (`apps_1`)
+* **Total Polygons:** 273,296
+* **Function:** Identifies declared environmental preservation zones (riparian forests, hilltops, steep slopes, springs).
+* **Integration:** Spatial GIST indexed and served via Martin Vector Tiles.
+
+#### C. Reserva Legal (`reserva_legal_1`)
+* **Total Polygons:** 239,388
+* **Function:** Identifies rural property legal reserve declarations required by Law 12.651/2012.
+* **Integration:** Spatial GIST indexed and served via Martin Vector Tiles.
+
+#### D. Remanescentes de Vegetação Nativa (`vegetacao_nativa_1`)
+* **Total Polygons:** 138,475
+* **Function:** Declared native vegetation coverage across rural properties.
+* **Integration:** Spatial GIST indexed and served via Martin Vector Tiles.
 
 ---
 

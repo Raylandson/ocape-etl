@@ -77,11 +77,38 @@ export class App implements AfterViewInit {
     },
     {
       id: 'area_imovel_1',
-      name: 'Cadastro Ambiental Rural (CAR)',
+      name: 'CAR - Imóveis Cadastrados',
       sourceUrl: 'http://localhost:3000/area_imovel_1',
       sourceLayer: 'area_imovel_1',
       fillColor: '#84cc16',
       borderColor: '#4d7c0f',
+      visible: false
+    },
+    {
+      id: 'apps_1',
+      name: 'CAR - APPs Declaradas',
+      sourceUrl: 'http://localhost:3000/apps_1',
+      sourceLayer: 'apps_1',
+      fillColor: '#06b6d4',
+      borderColor: '#0891b2',
+      visible: false
+    },
+    {
+      id: 'reserva_legal_1',
+      name: 'CAR - Reserva Legal',
+      sourceUrl: 'http://localhost:3000/reserva_legal_1',
+      sourceLayer: 'reserva_legal_1',
+      fillColor: '#15803d',
+      borderColor: '#14532d',
+      visible: false
+    },
+    {
+      id: 'vegetacao_nativa_1',
+      name: 'CAR - Vegetação Nativa',
+      sourceUrl: 'http://localhost:3000/vegetacao_nativa_1',
+      sourceLayer: 'vegetacao_nativa_1',
+      fillColor: '#22c55e',
+      borderColor: '#16a34a',
       visible: false
     },
     {

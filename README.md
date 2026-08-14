@@ -139,6 +139,9 @@ The ETL successfully manages and serves the following datasets:
 | Target Table Name | Sources Description | Spatial CRS | Spatial Index Type |
 | :--- | :--- | :--- | :--- |
 | `area_imovel_1` | Cadastro Ambiental Rural (CAR - SICAR) properties | EPSG:4326 | GIST |
+| `apps_1` | Áreas de Preservação Permanente declaradas (CAR - SICAR) | EPSG:4326 | GIST |
+| `reserva_legal_1` | Reserva Legal declarada/averbada (CAR - SICAR) | EPSG:4326 | GIST |
+| `vegetacao_nativa_1` | Remanescentes de Vegetação Nativa (CAR - SICAR) | EPSG:4326 | GIST |
 | `areas_de_quilombolas_pe` | Quilombola traditional territories | EPSG:4326 | GIST |
 | `imovel_certificado_snci_brasil_pe` | Certified private/public rural properties (SNCI - INCRA) | EPSG:4326 | GIST |
 | `imovel_certificado_snci_privado_pe` | Private certified rural properties (SNCI - INCRA) | EPSG:4326 | GIST |

@@ -9,7 +9,10 @@ wheels/
 # Virtual environments
 .venv
 
-# Data files
+# Data files (raw zip backups & heavy extracted shapefiles > 100MB)
 data/raw/
 data/extracted/area_imovel_sicar/
+data/extracted/apps_sicar/
+data/extracted/reserva_legal_sicar/
+data/extracted/vegetacao_nativa_sicar/
 

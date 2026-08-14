@@ -23,4 +23,10 @@ This document outlines the guidelines and protocols that AI coding agents must s
 ### August 2026: Comprehensive Data Documentation & Metadata Analysis
 - **Documentation**: Created [`docs/DATA_ANALYSIS.md`](file:///home/raylandsoncesario/github/conflict-solver/docs/DATA_ANALYSIS.md) and updated [`README.md`](file:///home/raylandsoncesario/github/conflict-solver/README.md) with a dedicated conceptual framework defining SIGEF, SNCI, SICAR (CAR), FUNAI, and INCRA Quilombolas.
 - **Empirical Metadata Analysis**: Extracted and compiled detailed 1-to-1 attribute statistical analyses for all `.dbf` metadata tables in [`data/extracted/`](file:///home/raylandsoncesario/github/conflict-solver/data/extracted), covering 433,105 CAR polygons, 24,013 SIGEF parcels, 16 Indigenous territories, 10 Quilombola areas, and 110 legacy SNCI properties with precise ownership, registration status, and legal condition percentages.
+- **Full SICAR Environmental Integration**: Extracted, ingested, and spatial-indexed three new primary environmental shapefiles for Pernambuco:
+  - `apps_1`: 273,296 Áreas de Preservação Permanente (APP) polygons.
+  - `reserva_legal_1`: 239,388 Reserva Legal (RL) polygons.
+  - `vegetacao_nativa_1`: 138,475 Remanescentes de Vegetação Nativa polygons.
+- **Frontend Layer Controls**: Configured and integrated all 3 new SICAR layers into `frontend/src/app/app.ts` with custom themed colors (Cyan for APPs, Deep Forest Green for Reserva Legal, Light Green for Native Vegetation) and visibility toggle switches.
+
 

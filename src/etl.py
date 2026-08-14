@@ -54,9 +54,24 @@ def run_etl():
 
     logger.info(f"Found {len(shp_files)} shapefile(s) to process.")
 
+    import sys
+    force = "--force" in sys.argv
+
     for shp_path in shp_files:
         filename = shp_path.stem
         table_name = sanitize_name(filename)
+
+        if not force:
+            with engine.connect() as conn:
+                table_exists = conn.execute(text(
+                    f"SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '{table_name}');"
+                )).scalar()
+                if table_exists:
+                    count = conn.execute(text(f"SELECT COUNT(*) FROM {table_name};")).scalar()
+                    if count > 0:
+                        logger.info(f"Table '{table_name}' already exists with {count} rows. Skipping (use --force to reload).")
+                        continue
+
         logger.info(f"Processing '{filename}' -> target table '{table_name}'")
 
         try:
