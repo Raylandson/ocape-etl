@@ -8,7 +8,7 @@ The objective of this platform is to identify geographical overlaps (*overlappin
 
 ### Architecture
 - **Database**: PostgreSQL with PostGIS extension (for spatial queries and indexing).
-- **ETL**: Python with GeoPandas, SQLAlchemy, and GeoAlchemy2.
+- **ETL**: Python with GeoPandas, SQLAlchemy, GeoAlchemy2, and Shapely (with automatic coordinate-axis rectification).
 - **Vector Tile Server**: Martin (Rust-based MVT server running via Docker on port 3000).
 - **Front-end**: Angular 20 + MapLibre GL JS (interactive map running on port 4200).
 
@@ -26,32 +26,39 @@ conflict-solver/
 │   └── DATA_ANALYSIS.md     # Comprehensive Data Systems & Metadata Analysis
 ├── data/
 │   ├── raw/                 # Untouched ZIP backups of source data [GIT IGNORED]
+│   │   ├── autos_infracao_icmbio.zip
+│   │   ├── embargos_icmbio.zip
+│   │   ├── limiteucsfederais_a_icmbio.zip
 │   │   ├── Imóvel certificado SNCI Brasil_PE.zip
-│   │   ├── Imóvel certificado SNCI Privado_PE.zip
-│   │   ├── Imóvel certificado SNCI Público_PE.zip
 │   │   ├── Sigef Brasil_PE.zip
-│   │   ├── Sigef Privado_PE.zip
-│   │   ├── Sigef Público_PE.zip
+│   │   ├── APP_SICAR.zip
+│   │   ├── AREA_IMOVEL_SICAR.zip
+│   │   ├── RESERVA_LEGAL_SICAR.zip
+│   │   ├── VEGETACAO_NATIVA_SICAR.zip
 │   │   ├── tis_poligonais.zip
 │   │   └── Áreas de Quilombolas_PE.zip
 │   └── extracted/           # Extracted shapefiles used as ingestion input by the ETL
+│       ├── autos_infracao_icmbio/
+│       ├── embargos_icmbio/
+│       ├── limiteucsfederais_a/
 │       ├── areas_de_quilombolas_pe/
 │       ├── imovel_certificado_snci_brasil_pe/
-│       ├── imovel_certificado_snci_privado_pe/
-│       ├── imovel_certificado_snci_publico_pe/
 │       ├── sigef_brasil_pe/
-│       ├── sigef_privado_pe/
-│       ├── sigef_publico_pe/
+│       ├── apps_sicar/
+│       ├── area_imovel_sicar/
+│       ├── reserva_legal_sicar/
+│       ├── vegetacao_nativa_sicar/
 │       └── tis_poligonais/
 ├── frontend/                # Angular Web Front-end with MapLibre GL JS
 │   ├── src/                 # Angular source code (Map component integration)
 │   ├── package.json         # Node package configuration
-│   └── angular.json         # Angular build configuration (increased bundle budget for MapLibre)
+│   └── angular.json         # Angular build configuration
 └── src/
     ├── __init__.py
     ├── config.py            # Environment configurations and path parameters
     ├── database.py          # SQLAlchemy engine setup and PostGIS extension helper
-    └── etl.py               # Main ETL pipeline (GeoPandas -> PostGIS)
+    ├── etl.py               # Main ETL pipeline with axis-swap & geometry correction
+    └── overlaps.py          # Spatial conflict detection engine & DBSCAN clustering
 ```
 
 ---
@@ -82,7 +89,7 @@ Install the dependencies using `uv`:
 ```bash
 uv sync
 ```
-This will automatically create a virtual environment (`.venv`) and install dependencies: `geopandas`, `sqlalchemy`, `geoalchemy2`, and `psycopg2-binary`.
+This will automatically create a virtual environment (`.venv`) and install dependencies: `geopandas`, `sqlalchemy`, `geoalchemy2`, `psycopg2-binary`, and `shapely`.
 
 ### 3. Run the ETL Pipeline
 Run the ETL script to process all shapefiles and load them into PostGIS:
@@ -97,7 +104,7 @@ cd frontend
 pnpm install
 pnpm start
 ```
-Open `http://localhost:4200` in your web browser. You will see an interactive map with a glassmorphic layer control panel, serving vector tiles for all 6 main datasets (Indigenous Lands, Quilombola Territories, SIGEF Private/Public, and SNCI Private/Public) in distinct, custom-colored layers with toggle controls.
+Open `http://localhost:4200` in your web browser. You will see an interactive map with a glassmorphic layer control panel, serving vector tiles for all key datasets (Indigenous Lands, Quilombola Territories, SIGEF Private/Public, SNCI, CAR, ICMBio Conservation Units, Embargoes, and Infraction Notices) with custom color themes, circle/symbol markers, and rich popup inspection cards.
 
 ---
 
@@ -105,30 +112,29 @@ Open `http://localhost:4200` in your web browser. You will see an interactive ma
 
 The pipeline (`src/etl.py`) automates the following steps for each dataset under `data/extracted/`:
 1. **Database Initialization**: Connects to PostGIS and executes `CREATE EXTENSION IF NOT EXISTS postgis;`.
-2. **File Ingestion**: Scans `data/extracted/` recursively to find `.shp` files and loads them into GeoPandas GeoDataFrames.
-3. **Column Sanitization**: Standardizes all attribute columns to be SQL-friendly (lowercase, NFKD unicode normalized to strip accents, spaces/dashes replaced by `_`).
-4. **Spatial Reprojection**: Detects the original Coordinate Reference System (CRS) and converts it to **EPSG:4326 (WGS84)**, the web standard.
-5. **PostGIS Loading & Indexing**: Ingests the data using GeoPandas' `to_postgis()`, dropping/replacing tables of the same name and automatically creating a spatial **GIST index** on the `geometry` column to optimize spatial queries.
+2. **File Ingestion & Cleaning**: Scans `data/extracted/` recursively to find `.shp` files, removes non-finite sentinel coordinates, and loads them into GeoPandas GeoDataFrames.
+3. **Coordinate Axis Rectification**: Detects inverted coordinate axes `(Lat, Lon)` (present in federal exports) and swaps them to standard `(Lon, Lat)`.
+4. **Column Sanitization**: Standardizes all attribute columns to be SQL-friendly (lowercase, NFKD unicode normalized to strip accents, spaces/dashes replaced by `_`).
+5. **Spatial Reprojection**: Converts CRS to **EPSG:4326 (WGS84)**.
+6. **PostGIS Loading & Indexing**: Ingests the data using GeoPandas' `to_postgis()` and ensures spatial **GIST indexing** on the `geometry` column.
 
 ---
 
 ## Spatial Overlaps & Conflict Identification
 
-The pipeline includes a spatial intersection calculator (`src/overlaps.py`) that executes automatically at the end of the ETL ingestion. It identifies and generates dedicated tables of overlaps (*overlappings*) and their geographical center points where private properties intersect traditional territories.
+The pipeline includes a spatial intersection calculator (`src/overlaps.py`) that executes automatically at the end of the ETL ingestion. It identifies and generates dedicated tables of overlaps (*overlappings*) and their geographical center points where private properties intersect traditional territories or federal environmental protection areas.
 
-To prevent inflation from duplicate registry entries (e.g. properties certified under both SIGEF and SNCI systems) and neighboring pieces, the pipeline performs a spatial clustering and dissolve step:
+To prevent inflation from duplicate registry entries and neighboring pieces, the pipeline performs a spatial clustering and dissolve step:
 1. **DBSCAN Clustering**: Groups intersecting polygons that touch or are within a very small distance (~11 meters, `eps := 0.0001` degrees) using PostGIS `ST_ClusterDBSCAN`.
-2. **Dissolve (ST_Union)**: Merges the clustered geometries into a single contiguous multi-polygon, reducing redundant visual indicators.
-3. **Attribute Aggregation**: Semicolon-delimits (`string_agg`) all property names, codes, and sources for each dissolved area so they remain searchable and detailed.
-
-These tables are optimized with spatial **GIST indexes** to allow the Martin vector tile server to serve the conflict areas and markers instantaneously to the front-end.
+2. **Dissolve (ST_Union)**: Merges clustered geometries into contiguous multi-polygons.
+3. **Attribute Aggregation**: Semicolon-delimits (`string_agg`) all property names, codes, and sources for each dissolved area.
 
 * **Target Tables**: 
   * `land_overlaps` (the overlapping polygon areas)
-  * `land_overlaps_points` (the center points / medians of the overlaps using PostGIS `ST_PointOnSurface`)
+  * `land_overlaps_points` (the center points of conflict areas via PostGIS `ST_PointOnSurface`)
 * **Sources Analyzed**:
-  * Private Lands (`sigef_privado_pe`, `imovel_certificado_snci_privado_pe`, `area_imovel_1` - CAR)
-  * Traditional Territories (`tis_poligonais`, `areas_de_quilombolas_pe`)
+  * Private Lands (`sigef_brasil_pe`, `imovel_certificado_snci_brasil_pe`, `area_imovel_1` - CAR)
+  * Traditional Territories & Environmental Areas (`tis_poligonais`, `areas_de_quilombolas_pe`, `limiteucsfederais_a`, `embargos_icmbio`)
 
 ---
 
@@ -136,28 +142,31 @@ These tables are optimized with spatial **GIST indexes** to allow the Martin vec
 
 The ETL successfully manages and serves the following datasets:
 
-| Target Table Name | Sources Description | Spatial CRS | Spatial Index Type |
+| Target Table Name | Sources Description | Spatial Geometry | Spatial Index Type |
 | :--- | :--- | :--- | :--- |
-| `area_imovel_1` | Cadastro Ambiental Rural (CAR - SICAR) properties | EPSG:4326 | GIST |
-| `apps_1` | Áreas de Preservação Permanente declaradas (CAR - SICAR) | EPSG:4326 | GIST |
-| `reserva_legal_1` | Reserva Legal declarada/averbada (CAR - SICAR) | EPSG:4326 | GIST |
-| `vegetacao_nativa_1` | Remanescentes de Vegetação Nativa (CAR - SICAR) | EPSG:4326 | GIST |
-| `areas_de_quilombolas_pe` | Quilombola traditional territories | EPSG:4326 | GIST |
-| `imovel_certificado_snci_brasil_pe` | Certified private/public rural properties (SNCI - INCRA) | EPSG:4326 | GIST |
-| `imovel_certificado_snci_privado_pe` | Private certified rural properties (SNCI - INCRA) | EPSG:4326 | GIST |
-| `imovel_certificado_snci_publico_pe` | Public certified rural properties (SNCI - INCRA) | EPSG:4326 | GIST |
-| `sigef_brasil_pe` | Land management system properties (SIGEF - INCRA) | EPSG:4326 | GIST |
-| `sigef_privado_pe` | Private SIGEF properties | EPSG:4326 | GIST |
-| `sigef_publico_pe` | Public SIGEF properties | EPSG:4326 | GIST |
-| `tis_poligonais` | Indigenous traditional lands (FUNAI) | EPSG:4326 | GIST |
-| `land_overlaps` | Spatial overlaps (conflicts) | EPSG:4326 | GIST |
-| `land_overlaps_points` | Center points (medians) of conflict areas | EPSG:4326 | GIST |
+| `limiteucsfederais_a` | Unidades de Conservação Federais (ICMBio - PARNA, REBIO, APA, FLONA) | MultiPolygon | GIST |
+| `embargos_icmbio` | Áreas Embargadas por infrações ambientais (ICMBio) | MultiPolygon | GIST |
+| `autos_infracao_icmbio` | Autos de Infração Ambiental (ICMBio) | MultiPoint | GIST |
+| `area_imovel_1` | Cadastro Ambiental Rural (CAR - SICAR) properties | MultiPolygon | GIST |
+| `apps_1` | Áreas de Preservação Permanente declaradas (CAR - SICAR) | MultiPolygon | GIST |
+| `reserva_legal_1` | Reserva Legal declarada/averbada (CAR - SICAR) | MultiPolygon | GIST |
+| `vegetacao_nativa_1` | Remanescentes de Vegetação Nativa (CAR - SICAR) | MultiPolygon | GIST |
+| `areas_de_quilombolas_pe` | Quilombola traditional territories (INCRA) | MultiPolygon | GIST |
+| `imovel_certificado_snci_brasil_pe` | Certified private/public rural properties (SNCI - INCRA) | MultiPolygon | GIST |
+| `imovel_certificado_snci_privado_pe` | Private certified rural properties (SNCI - INCRA) | MultiPolygon | GIST |
+| `imovel_certificado_snci_publico_pe` | Public certified rural properties (SNCI - INCRA) | MultiPolygon | GIST |
+| `sigef_brasil_pe` | Land management system properties (SIGEF - INCRA) | MultiPolygon | GIST |
+| `sigef_privado_pe` | Private SIGEF properties | MultiPolygon | GIST |
+| `sigef_publico_pe` | Public SIGEF properties | MultiPolygon | GIST |
+| `tis_poligonais` | Indigenous traditional lands (FUNAI) | MultiPolygon | GIST |
+| `land_overlaps` | Spatial overlaps (conflicts) | MultiPolygon | GIST |
+| `land_overlaps_points` | Center points (medians) of conflict areas | Point | GIST |
 
 ---
 
 ## Documentation & Data Analysis
 
-Detailed documentation covering system definitions (SIGEF, SNCI, SICAR/CAR, FUNAI, INCRA Quilombolas), Shapefile `.dbf` metadata structure, and empirical statistical analyses (percentages, counts, legal status, notary integration, and environmental compliance) is available in:
+Detailed documentation covering system definitions (SIGEF, SNCI, SICAR/CAR, FUNAI, INCRA Quilombolas, ICMBio), Shapefile `.dbf` metadata structure, coordinate rectification, and empirical statistical analyses is available in:
 
 * 📄 **[Documentation & Data Analysis Report](file:///home/raylandsoncesario/github/conflict-solver/docs/DATA_ANALYSIS.md)** (`docs/DATA_ANALYSIS.md`)
 

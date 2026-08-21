@@ -30,20 +30,28 @@ This document provides a comprehensive overview of the spatial data systems, ESR
 * **Legal Basis:** Federal Constitution of 1988 (Art. 68 ADCT) & Decree 4887/2003.
 * **Function:** Official spatial database mapping Quilombola traditional community territories undergoing land regularisation and titling by INCRA.
 
+### ICMBio — Instituto Chico Mendes de Conservação da Biodiversidade
+* **Managing Body:** ICMBio / Ministry of the Environment (MMA).
+* **Legal Basis:** Federal Law 11.516/2007, SNUC (Federal Law 9.985/2000), and Federal Decree 6.514/2008.
+* **Function:** Federal autarchy responsible for creating, managing, protecting, and monitoring Federal Conservation Units (UCs), enforcing biodiversity protection laws, enacting administrative embargoes on degraded lands, and issuing official infraction notices (Autos de Infração) against environmental crimes.
+
 ---
 
 ## 2. Spatial File Architecture & `.dbf` Metadata Role
 
 All raw datasets in `data/raw` and extracted datasets in `data/extracted` are formatted as **ESRI Shapefiles**. 
 
-Every record in a dBase attribute table (`.dbf`) corresponds **1-to-1** with an individual spatial polygon feature in the `.shp` file:
+Every record in a dBase attribute table (`.dbf`) corresponds **1-to-1** with an individual spatial feature in the `.shp` file:
 
-* **`.shp`**: Geometry storage (polygon coordinates, boundaries, and spatial vertices).
-* **`.dbf`**: Attribute database table storing alphanumeric metadata (names, IDs, process numbers, status, family counts, dates).
+* **`.shp`**: Geometry storage (polygon boundaries, multipoints, and coordinate vertices).
+* **`.dbf`**: Attribute database table storing alphanumeric metadata (names, IDs, process numbers, status, penalties, dates).
 * **`.shx`**: Shape geometry index file for rapid positional lookup.
 * **`.prj`**: Coordinate Reference System specification (**EPSG:4674 - SIRGAS 2000**).
 * **`.cst` / `.cpg`**: Character set encoding (e.g. UTF-8 / Windows-1252) for text attributes.
 * **`.fix`**: Feature spatial lookup index for high-density datasets (SICAR).
+
+> [!NOTE]
+> **Coordinate Axis Rectification**: Raw ICMBio shapefiles exported by federal systems contained inverted coordinate axes `(Latitude, Longitude)` with X in `[-35, +6]` and Y in `[-75, -30]`. The ETL pipeline automatically detects this condition and rectifies geometry coordinates to standard `(Longitude, Latitude)` EPSG:4326 during ingestion.
 
 ---
 
@@ -51,13 +59,16 @@ Every record in a dBase attribute table (`.dbf`) corresponds **1-to-1** with an 
 
 ### Summary Overview Table
 
-| Dataset | Total Polygons | Total Area (ha) | Key Sub-Types / Ownership | Primary Legal Status / Certification |
+| Dataset | Total Features | Spatial Type | Key Sub-Types / Ownership | Primary Legal Status / Coverage |
 | :--- | :--- | :--- | :--- | :--- |
-| **SIGEF (Pernambuco)** | 24,013 | ~890,000 | 88.23% Private (21,187)<br>11.77% Public/Settlement (2,826) | 91.77% Registered (`REGISTRADA`)<br>93.87% With Notary Book ID |
-| **CAR / SICAR (Pernambuco)** | 433,105 | 8,502,855 | 99.76% Private (`IRU`)<br>0.22% Settlement (`AST`)<br>0.03% Traditional (`PCT`) | 99.23% Active status (`AT`)<br>97.12% Pending Environmental Analysis |
-| **Terras Indígenas (FUNAI)** | 16 | 202,288 | 62.5% Traditionally Occupied<br>37.5% Indigenous Reserve | 62.5% Regularized (10)<br>18.8% Sent as Reserve (3)<br>12.5% Declared (2) |
-| **Territórios Quilombolas (INCRA)** | 10 | 35,683 | 1,276 Registered Families | 60.0% RTID Phase (6)<br>20.0% Partial Title (2)<br>10.0% Presidential Decree (1) |
-| **SNCI Legado (INCRA)** | 110 | ~105,000 | 73.64% Private (81)<br>26.36% Public/Settlement (29) | Legacy INCRA Certifications |
+| **SIGEF (Pernambuco)** | 24,013 | Polygon | 88.23% Private (21,187)<br>11.77% Public/Settlement (2,826) | 91.77% Registered (`REGISTRADA`)<br>93.87% With Notary Book ID |
+| **CAR / SICAR (Pernambuco)** | 433,105 | Polygon | 99.76% Private (`IRU`)<br>0.22% Settlement (`AST`)<br>0.03% Traditional (`PCT`) | 99.23% Active status (`AT`)<br>97.12% Pending Analysis |
+| **Terras Indígenas (FUNAI)** | 16 | Polygon | 62.5% Traditionally Occupied<br>37.5% Indigenous Reserve | 62.5% Regularized (10)<br>18.8% Sent as Reserve (3) |
+| **Territórios Quilombolas (INCRA)** | 10 | Polygon | 1,276 Registered Families | 60.0% RTID Phase (6)<br>20.0% Partial Title (2) |
+| **SNCI Legado (INCRA)** | 110 | Polygon | 73.64% Private (81)<br>26.36% Public/Settlement (29) | Legacy INCRA Certifications |
+| **Unidades de Conservação (ICMBio)** | 347 | Polygon | Federal UCs (7 in PE)<br>PARNA, REBIO, FLONA, APA | Proteção Integral (Catimbau, Serra Negra, Saltinho) & Uso Sustentável |
+| **Áreas Embargadas (ICMBio)** | 14,375 | Polygon | Official Environmental Embargoes<br>251 in Pernambuco | Legal restriction under Decree 6.514/2008 |
+| **Autos de Infração (ICMBio)** | 41,728 | Point | Environmental Infraction Notices<br>839 in Pernambuco | Administrative Sanctions & Fines |
 
 ---
 
@@ -145,3 +156,32 @@ Every record in a dBase attribute table (`.dbf`) corresponds **1-to-1** with an 
 * **Distribution:**
   * **Private Certified Holdings (`imovel_certificado_snci_privado_pe`):** 81 (73.64%)
   * **Public & Settlement Certified Holdings (`imovel_certificado_snci_publico_pe`):** 29 (26.36%)
+
+---
+
+### 6. Unidades de Conservação Federais — ICMBio (`limiteucsfederais_a`)
+* **Total Polygons:** 347 (National scope; 7 units in Pernambuco)
+* **Pernambuco Conservation Units:**
+  * **Parque Nacional do Catimbau** (`PARNA` - Proteção Integral): 62,239.37 ha
+  * **Área de Proteção Ambiental de Fernando de Noronha** (`APA` - Uso Sustentável): 154,365.88 ha
+  * **Reserva Biológica do Atol das Rocas** (`REBIO` - Proteção Integral): 35,186.77 ha
+  * **Parque Nacional Marinho de Fernando de Noronha** (`PARNA` - Proteção Integral): 10,932.58 ha
+  * **Floresta Nacional de Negreiros** (`FLONA` - Uso Sustentável): 2,967.42 ha
+  * **Reserva Biológica de Serra Negra** (`REBIO` - Proteção Integral): 624.85 ha
+  * **Reserva Biológica de Saltinho** (`REBIO` - Proteção Integral): 562.57 ha
+* **Key Attributes:** `nomeuc`, `categoria_`, `sigla_cate`, `grupouc`, `areahaalb`, `esferaadm`, `criacaoano`.
+
+---
+
+### 7. Áreas Embargadas — ICMBio (`embargos_icmbio`)
+* **Total Polygons:** 14,375 (251 in Pernambuco)
+* **Function:** Spatial boundaries of properties or regions under federal embargo due to environmental infractions (deforestation, fires, unauthorized commercial exploration).
+* **Key Attributes:** `numero_emb`, `autuado`, `cpf_cnpj`, `tipo_infra`, `nome_uc`, `municipio`, `uf`, `ano`, `processo`.
+
+---
+
+### 8. Autos de Infração Ambiental — ICMBio (`autos_infracao_icmbio`)
+* **Total Features (Points):** 41,728 (839 in Pernambuco)
+* **Function:** Georeferenced enforcement notices issued by federal environmental inspectors.
+* **Key Attributes:** `numero_ai`, `valor_mult`, `autuado`, `cpf_cnpj`, `tipo_infra`, `nome_uc`, `municipio`, `uf`, `ano`, `desc_ai_1`.
+

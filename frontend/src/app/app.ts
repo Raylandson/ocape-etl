@@ -19,6 +19,15 @@ interface LayerConfig {
 })
 export class App implements AfterViewInit {
   map!: Map;
+  isPanelOpen: boolean = true;
+
+  togglePanel() {
+    this.isPanelOpen = !this.isPanelOpen;
+  }
+
+  getActiveLayersCount(): number {
+    return this.layers.filter(l => l.visible).length;
+  }
 
   layers: LayerConfig[] = [
     {
@@ -109,6 +118,33 @@ export class App implements AfterViewInit {
       sourceLayer: 'vegetacao_nativa_1',
       fillColor: '#22c55e',
       borderColor: '#16a34a',
+      visible: false
+    },
+    {
+      id: 'limiteucsfederais_a',
+      name: 'ICMBio - Unidades de Conservação',
+      sourceUrl: 'http://localhost:3000/limiteucsfederais_a',
+      sourceLayer: 'limiteucsfederais_a',
+      fillColor: '#059669',
+      borderColor: '#065f46',
+      visible: true
+    },
+    {
+      id: 'embargos_icmbio',
+      name: 'ICMBio - Áreas Embargadas',
+      sourceUrl: 'http://localhost:3000/embargos_icmbio',
+      sourceLayer: 'embargos_icmbio',
+      fillColor: '#f97316',
+      borderColor: '#c2410c',
+      visible: true
+    },
+    {
+      id: 'autos_infracao_icmbio',
+      name: 'ICMBio - Autos de Infração (Pontos)',
+      sourceUrl: 'http://localhost:3000/autos_infracao_icmbio',
+      sourceLayer: 'autos_infracao_icmbio',
+      fillColor: '#eab308',
+      borderColor: '#78350f',
       visible: false
     },
     {
@@ -203,6 +239,24 @@ export class App implements AfterViewInit {
               'visibility': layer.visible ? 'visible' : 'none'
             }
           });
+        } else if (layer.id === 'autos_infracao_icmbio') {
+          // Add circle layer for infraction notice points
+          this.map.addLayer({
+            id: `${layer.id}_circle`,
+            type: 'circle',
+            source: layer.id,
+            'source-layer': layer.sourceLayer,
+            paint: {
+              'circle-color': layer.fillColor,
+              'circle-radius': 4.5,
+              'circle-stroke-width': 1.5,
+              'circle-stroke-color': layer.borderColor,
+              'circle-opacity': 0.85
+            },
+            layout: {
+              visibility: layer.visible ? 'visible' : 'none'
+            }
+          });
         } else {
           // Add fill layer (translucent)
           this.map.addLayer({
@@ -237,7 +291,7 @@ export class App implements AfterViewInit {
       });
 
       // Add popup interaction for conflict areas (polygons) and pins
-      const setupPopup = (layerId: string) => {
+      const setupConflictPopup = (layerId: string) => {
         this.map.on('click', layerId, (e) => {
           const coordinates = e.lngLat;
           const properties = e.features?.[0]?.properties;
@@ -249,7 +303,16 @@ export class App implements AfterViewInit {
           const propertyCodes = (properties['property_code'] || 'N/A').split('; ');
           const propertySources = (properties['property_source'] || 'N/A').split('; ');
 
-          const traditionalLabel = traditionalSource === 'tis_poligonais' ? 'Terra Indígena' : 'Território Quilombola';
+          let traditionalLabel = 'Território';
+          if (traditionalSource === 'tis_poligonais') {
+            traditionalLabel = 'Terra Indígena (FUNAI)';
+          } else if (traditionalSource === 'areas_de_quilombolas_pe') {
+            traditionalLabel = 'Território Quilombola (INCRA)';
+          } else if (traditionalSource === 'limiteucsfederais_a') {
+            traditionalLabel = 'Unidade de Conservação (ICMBio)';
+          } else if (traditionalSource === 'embargos_icmbio') {
+            traditionalLabel = 'Área Embargada (ICMBio)';
+          }
 
           let propertiesHtml = '';
           const maxLen = Math.max(propertyNames.length, propertyCodes.length, propertySources.length);
@@ -275,7 +338,7 @@ export class App implements AfterViewInit {
 
           const html = `
             <div class="popup-card">
-              <div class="popup-title">⚠️ Conflito de Terra</div>
+              <div class="popup-title">⚠️ Conflito Territorial / Ambiental</div>
               <div class="popup-section" style="margin-bottom: 4px;">
                 <span class="popup-label">${traditionalLabel}:</span>
                 <span class="popup-value" style="font-weight: 700;">${traditionalName}</span>
@@ -292,19 +355,132 @@ export class App implements AfterViewInit {
             .addTo(this.map);
         });
 
-        // Change the cursor to a pointer when the mouse is over the layer.
         this.map.on('mouseenter', layerId, () => {
           this.map.getCanvas().style.cursor = 'pointer';
         });
-
-        // Change it back to a pointer when it leaves.
         this.map.on('mouseleave', layerId, () => {
           this.map.getCanvas().style.cursor = '';
         });
       };
 
-      setupPopup('land_overlaps_fill');
-      setupPopup('land_overlaps_points_symbol');
+      setupConflictPopup('land_overlaps_fill');
+      setupConflictPopup('land_overlaps_points_symbol');
+
+      // Popup handler for Federal Conservation Units (ICMBio)
+      this.map.on('click', 'limiteucsfederais_a_fill', (e) => {
+        const properties = e.features?.[0]?.properties;
+        if (!properties) return;
+        const nomeUc = properties['nomeuc'] || 'N/A';
+        const categoria = properties['categoria_'] || properties['sigla_cate'] || 'N/A';
+        const grupo = properties['grupouc'] || 'N/A';
+        const criacao = properties['criacaoano'] || 'N/A';
+        const esfera = properties['esferaadm'] || 'Federal';
+        const areaHa = properties['areahaalb'] ? Number(properties['areahaalb']).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' ha' : 'N/A';
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title" style="color: #047857;">🌲 Unidade de Conservação (ICMBio)</div>
+            <div class="popup-section">
+              <span class="popup-label">Nome:</span>
+              <span class="popup-value" style="font-weight: 700;">${nomeUc}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Categoria / Grupo:</span>
+              <span class="popup-value">${categoria} (${grupo})</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Esfera / Ano:</span>
+              <span class="popup-value">${esfera} • ${criacao}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Área Oficial:</span>
+              <span class="popup-value">${areaHa}</span>
+            </div>
+          </div>
+        `;
+        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(e.lngLat).setHTML(html).addTo(this.map);
+      });
+      this.map.on('mouseenter', 'limiteucsfederais_a_fill', () => { this.map.getCanvas().style.cursor = 'pointer'; });
+      this.map.on('mouseleave', 'limiteucsfederais_a_fill', () => { this.map.getCanvas().style.cursor = ''; });
+
+      // Popup handler for ICMBio Embargoes
+      this.map.on('click', 'embargos_icmbio_fill', (e) => {
+        const properties = e.features?.[0]?.properties;
+        if (!properties) return;
+        const numEmb = properties['numero_emb'] || 'N/A';
+        const autuado = properties['autuado'] || 'N/A';
+        const cpfCnpj = properties['cpf_cnpj'] || '';
+        const tipoInfra = properties['tipo_infra'] || properties['desc_inf_1'] || 'N/A';
+        const uc = properties['nome_uc'] || 'N/A';
+        const local = `${properties['municipio'] || ''} - ${properties['uf'] || ''}`;
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title" style="color: #c2410c;">🚫 Área Embargada (ICMBio)</div>
+            <div class="popup-section">
+              <span class="popup-label">Termo de Embargo:</span>
+              <span class="popup-value-code">${numEmb}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Autuado:</span>
+              <span class="popup-value" style="font-weight: 600;">${autuado}</span>
+              ${cpfCnpj ? `<span style="font-size: 0.7rem; color: #6b7280;">(${cpfCnpj})</span>` : ''}
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Tipo de Infração:</span>
+              <span class="popup-value">${tipoInfra}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">UC / Localidade:</span>
+              <span class="popup-value">${uc} (${local})</span>
+            </div>
+          </div>
+        `;
+        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(e.lngLat).setHTML(html).addTo(this.map);
+      });
+      this.map.on('mouseenter', 'embargos_icmbio_fill', () => { this.map.getCanvas().style.cursor = 'pointer'; });
+      this.map.on('mouseleave', 'embargos_icmbio_fill', () => { this.map.getCanvas().style.cursor = ''; });
+
+      // Popup handler for ICMBio Autos de Infração
+      this.map.on('click', 'autos_infracao_icmbio_circle', (e) => {
+        const properties = e.features?.[0]?.properties;
+        if (!properties) return;
+        const numAi = properties['numero_ai'] || 'N/A';
+        const autuado = properties['autuado'] || 'N/A';
+        const valor = properties['valor_mult'] ? 'R$ ' + Number(properties['valor_mult']).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : 'N/A';
+        const tipoInfra = properties['tipo_infra'] || properties['desc_ai_1'] || 'N/A';
+        const uc = properties['nome_uc'] || 'N/A';
+        const local = `${properties['municipio'] || ''} - ${properties['uf'] || ''}`;
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title" style="color: #b45309;">⚡ Auto de Infração Ambiental (ICMBio)</div>
+            <div class="popup-section">
+              <span class="popup-label">Número do Auto:</span>
+              <span class="popup-value-code">${numAi}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Autuado:</span>
+              <span class="popup-value" style="font-weight: 600;">${autuado}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Valor da Multa:</span>
+              <span class="popup-value" style="color: #b91c1c; font-weight: 700;">${valor}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Infração:</span>
+              <span class="popup-value">${tipoInfra}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">UC / Município:</span>
+              <span class="popup-value">${uc} (${local})</span>
+            </div>
+          </div>
+        `;
+        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(e.lngLat).setHTML(html).addTo(this.map);
+      });
+      this.map.on('mouseenter', 'autos_infracao_icmbio_circle', () => { this.map.getCanvas().style.cursor = 'pointer'; });
+      this.map.on('mouseleave', 'autos_infracao_icmbio_circle', () => { this.map.getCanvas().style.cursor = ''; });
     });
   }
 
@@ -320,6 +496,9 @@ export class App implements AfterViewInit {
       }
       if (this.map.getLayer(`${layer.id}_symbol`)) {
         this.map.setLayoutProperty(`${layer.id}_symbol`, 'visibility', visibility);
+      }
+      if (this.map.getLayer(`${layer.id}_circle`)) {
+        this.map.setLayoutProperty(`${layer.id}_circle`, 'visibility', visibility);
       }
     }
   }

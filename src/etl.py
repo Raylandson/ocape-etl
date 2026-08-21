@@ -34,6 +34,49 @@ def sanitize_name(name: str) -> str:
     s = re.sub(r'_+', '_', s)
     return s.strip('_')
 
+import shapely.ops
+
+def sanitize_and_fix_geometries(gdf: gpd.GeoDataFrame, filename: str) -> gpd.GeoDataFrame:
+    """
+    1. Filter out empty, null, or extreme non-finite sentinel coordinates.
+    2. Detect inverted coordinates (Lat, Lon instead of Lon, Lat) and swap them.
+    """
+    # Filter empty or null geometries
+    gdf = gdf[gdf.geometry.notna() & ~gdf.geometry.is_empty].copy()
+
+    # Filter out extreme sentinel values (like -1.79e+308 in some GIS point exports)
+    def is_finite_geom(geom):
+        try:
+            b = geom.bounds
+            return all(abs(v) < 100000 for v in b)
+        except Exception:
+            return False
+
+    finite_mask = gdf.geometry.apply(is_finite_geom)
+    removed_count = len(gdf) - finite_mask.sum()
+    if removed_count > 0:
+        logger.warning(f"Removed {removed_count} non-finite/sentinel geometries from '{filename}'.")
+    gdf = gdf[finite_mask].copy()
+
+    if gdf.empty:
+        return gdf
+
+    # Detect inverted coordinates:
+    # In Brazil: Longitude (X) is in [-75, -30], Latitude (Y) is in [-35, 6].
+    # If miny < -35 and minx > -35 (meaning X has latitudes and Y has longitudes), swap (y, x).
+    minx, miny, maxx, maxy = gdf.total_bounds
+    if miny < -35.0 and minx > -35.0:
+        logger.info(
+            f"Detected inverted coordinate axis (Lat, Lon) in '{filename}' "
+            f"(bounds: [{minx:.2f}, {miny:.2f}, {maxx:.2f}, {maxy:.2f}]). "
+            f"Swapping coordinates to standard (Lon, Lat)..."
+        )
+        gdf.geometry = gdf.geometry.apply(lambda g: shapely.ops.transform(lambda x, y, *z: (y, x), g))
+        new_minx, new_miny, new_maxx, new_maxy = gdf.total_bounds
+        logger.info(f"Coordinates swapped successfully. New bounds: [{new_minx:.2f}, {new_miny:.2f}, {new_maxx:.2f}, {new_maxy:.2f}]")
+
+    return gdf
+
 def run_etl():
     """Main ETL process."""
     # Ensure database is up and PostGIS is enabled
@@ -85,7 +128,13 @@ def run_etl():
 
             logger.info(f"Loaded {len(gdf)} features.")
 
-            # 2. Standardize column names
+            # 2. Sanitize and fix geometries (remove sentinels and fix inverted axes)
+            gdf = sanitize_and_fix_geometries(gdf, filename)
+            if gdf.empty:
+                logger.warning(f"File '{filename}' has no valid features after geometry cleaning. Skipping.")
+                continue
+
+            # 3. Standardize column names
             logger.info("Standardizing column names...")
             original_columns = gdf.columns.tolist()
             new_columns = {}
@@ -98,7 +147,7 @@ def run_etl():
             gdf = gdf.rename(columns=new_columns)
             logger.info(f"Columns renamed to: {list(gdf.columns)}")
 
-            # 3. Spatial transformation to EPSG:4326 (WGS84)
+            # 4. Spatial transformation to EPSG:4326 (WGS84)
             if gdf.crs is None:
                 logger.warning(f"Warning: GeoDataFrame for '{filename}' has no CRS defined. Setting to EPSG:4326 by default.")
                 gdf.set_crs("EPSG:4326", inplace=True)
@@ -106,7 +155,7 @@ def run_etl():
                 logger.info(f"Transforming CRS from {gdf.crs.to_string()} to EPSG:4326...")
                 gdf = gdf.to_crs(epsg=4326)
 
-            # 4. Save to PostGIS (which automatically creates the spatial index GIST)
+            # 5. Save to PostGIS (which automatically creates the spatial index GIST)
             logger.info(f"Writing to database table '{table_name}'...")
             gdf.to_postgis(
                 name=table_name,
@@ -115,7 +164,7 @@ def run_etl():
                 index=False
             )
             
-            # 5. Verify row count
+            # 6. Verify row count and ensure GIST index
             with engine.connect() as conn:
                 res = conn.execute(text(f"SELECT COUNT(*) FROM {table_name};"))
                 count = res.scalar()

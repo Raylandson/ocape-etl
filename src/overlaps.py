@@ -94,6 +94,76 @@ def calculate_overlaps():
         FROM area_imovel_1 p
         JOIN areas_de_quilombolas_pe q ON ST_Intersects(p.geometry, q.geometry)
         WHERE ST_Dimension(ST_Intersection(p.geometry, q.geometry)) = 2
+
+        UNION ALL
+
+        -- 7. SIGEF Brasil overlapping with ICMBio Federal Conservation Units
+        SELECT
+            p.nome_area AS property_name,
+            p.codigo_imo AS property_code,
+            'sigef_brasil_pe'::varchar(50) AS property_source,
+            u.nomeuc AS traditional_name,
+            'limiteucsfederais_a'::varchar(50) AS traditional_source,
+            ST_Force2D(ST_Multi(ST_CollectionExtract(ST_Intersection(p.geometry, u.geometry), 3)))::geometry(MultiPolygon, 4326) AS geometry
+        FROM sigef_brasil_pe p
+        JOIN limiteucsfederais_a u ON ST_Intersects(p.geometry, u.geometry)
+        WHERE ST_Dimension(ST_Intersection(p.geometry, u.geometry)) = 2
+
+        UNION ALL
+
+        -- 8. SIGEF Brasil overlapping with ICMBio Embargo Areas
+        SELECT
+            p.nome_area AS property_name,
+            p.codigo_imo AS property_code,
+            'sigef_brasil_pe'::varchar(50) AS property_source,
+            ('Embargo ' || COALESCE(e.numero_emb, 'S/N') || ' (' || COALESCE(e.autuado, 'N/D') || ')')::varchar(200) AS traditional_name,
+            'embargos_icmbio'::varchar(50) AS traditional_source,
+            ST_Force2D(ST_Multi(ST_CollectionExtract(ST_Intersection(p.geometry, e.geometry), 3)))::geometry(MultiPolygon, 4326) AS geometry
+        FROM sigef_brasil_pe p
+        JOIN embargos_icmbio e ON ST_Intersects(p.geometry, e.geometry)
+        WHERE ST_Dimension(ST_Intersection(p.geometry, e.geometry)) = 2
+
+        UNION ALL
+
+        -- 9. SNCI Brasil overlapping with ICMBio Federal Conservation Units
+        SELECT
+            p.nome_imove AS property_name,
+            p.cod_imovel AS property_code,
+            'imovel_certificado_snci_brasil_pe'::varchar(50) AS property_source,
+            u.nomeuc AS traditional_name,
+            'limiteucsfederais_a'::varchar(50) AS traditional_source,
+            ST_Force2D(ST_Multi(ST_CollectionExtract(ST_Intersection(p.geometry, u.geometry), 3)))::geometry(MultiPolygon, 4326) AS geometry
+        FROM imovel_certificado_snci_brasil_pe p
+        JOIN limiteucsfederais_a u ON ST_Intersects(p.geometry, u.geometry)
+        WHERE ST_Dimension(ST_Intersection(p.geometry, u.geometry)) = 2
+
+        UNION ALL
+
+        -- 10. SNCI Brasil overlapping with ICMBio Embargo Areas
+        SELECT
+            p.nome_imove AS property_name,
+            p.cod_imovel AS property_code,
+            'imovel_certificado_snci_brasil_pe'::varchar(50) AS property_source,
+            ('Embargo ' || COALESCE(e.numero_emb, 'S/N') || ' (' || COALESCE(e.autuado, 'N/D') || ')')::varchar(200) AS traditional_name,
+            'embargos_icmbio'::varchar(50) AS traditional_source,
+            ST_Force2D(ST_Multi(ST_CollectionExtract(ST_Intersection(p.geometry, e.geometry), 3)))::geometry(MultiPolygon, 4326) AS geometry
+        FROM imovel_certificado_snci_brasil_pe p
+        JOIN embargos_icmbio e ON ST_Intersects(p.geometry, e.geometry)
+        WHERE ST_Dimension(ST_Intersection(p.geometry, e.geometry)) = 2
+
+        UNION ALL
+
+        -- 11. CAR/SICAR (area_imovel_1) overlapping with ICMBio Embargo Areas
+        SELECT
+            ('Imóvel CAR (' || COALESCE(p.municipio, 'PE') || ')')::varchar(150) AS property_name,
+            p.cod_imovel AS property_code,
+            'area_imovel_1'::varchar(50) AS property_source,
+            ('Embargo ' || COALESCE(e.numero_emb, 'S/N') || ' (' || COALESCE(e.autuado, 'N/D') || ')')::varchar(200) AS traditional_name,
+            'embargos_icmbio'::varchar(50) AS traditional_source,
+            ST_Force2D(ST_Multi(ST_CollectionExtract(ST_Intersection(p.geometry, e.geometry), 3)))::geometry(MultiPolygon, 4326) AS geometry
+        FROM area_imovel_1 p
+        JOIN embargos_icmbio e ON ST_Intersects(p.geometry, e.geometry)
+        WHERE ST_Dimension(ST_Intersection(p.geometry, e.geometry)) = 2
     ),
     clustered_raw AS (
         SELECT
