@@ -42,7 +42,7 @@ export class App implements AfterViewInit {
       sourceLayer: 'tis_poligonais',
       fillColor: '#ef4444',
       borderColor: '#b91c1c',
-      visible: true
+      visible: false
     },
     {
       id: 'areas_de_quilombolas_pe',
@@ -51,7 +51,7 @@ export class App implements AfterViewInit {
       sourceLayer: 'areas_de_quilombolas_pe',
       fillColor: '#a855f7',
       borderColor: '#7e22ce',
-      visible: true
+      visible: false
     },
     {
       id: 'sigef_privado_pe',
@@ -60,7 +60,7 @@ export class App implements AfterViewInit {
       sourceLayer: 'sigef_privado_pe',
       fillColor: '#f59e0b',
       borderColor: '#b45309',
-      visible: true
+      visible: false
     },
     {
       id: 'sigef_publico_pe',
@@ -69,7 +69,7 @@ export class App implements AfterViewInit {
       sourceLayer: 'sigef_publico_pe',
       fillColor: '#6366f1',
       borderColor: '#4338ca',
-      visible: true
+      visible: false
     },
     {
       id: 'imovel_certificado_snci_privado_pe',
@@ -78,7 +78,7 @@ export class App implements AfterViewInit {
       sourceLayer: 'imovel_certificado_snci_privado_pe',
       fillColor: '#10b981',
       borderColor: '#047857',
-      visible: true
+      visible: false
     },
     {
       id: 'imovel_certificado_snci_publico_pe',
@@ -87,7 +87,7 @@ export class App implements AfterViewInit {
       sourceLayer: 'imovel_certificado_snci_publico_pe',
       fillColor: '#14b8a6',
       borderColor: '#0f766e',
-      visible: true
+      visible: false
     },
     {
       id: 'area_imovel_1',
@@ -132,7 +132,7 @@ export class App implements AfterViewInit {
       sourceLayer: 'limiteucsfederais_a',
       fillColor: '#059669',
       borderColor: '#065f46',
-      visible: true
+      visible: false
     },
     {
       id: 'embargos_icmbio',
@@ -141,7 +141,7 @@ export class App implements AfterViewInit {
       sourceLayer: 'embargos_icmbio',
       fillColor: '#f97316',
       borderColor: '#c2410c',
-      visible: true
+      visible: false
     },
     {
       id: 'autos_infracao_icmbio',
@@ -153,13 +153,22 @@ export class App implements AfterViewInit {
       visible: false
     },
     {
+      id: 'processos_conflitos_judiciais',
+      name: 'DataJud TJPE/TRF5',
+      sourceUrl: 'http://localhost:3000/processos_conflitos_judiciais',
+      sourceLayer: 'processos_conflitos_judiciais',
+      fillColor: '#8b5cf6',
+      borderColor: '#4c1d95',
+      visible: false
+    },
+    {
       id: 'land_overlaps',
       name: '⚠️ Áreas de Conflito (Sobreposições)',
       sourceUrl: 'http://localhost:3000/land_overlaps',
       sourceLayer: 'land_overlaps',
       fillColor: '#ec4899', // neon hot pink
       borderColor: '#be185d',
-      visible: true
+      visible: false
     },
     {
       id: 'land_overlaps_points',
@@ -168,16 +177,7 @@ export class App implements AfterViewInit {
       sourceLayer: 'land_overlaps_points',
       fillColor: '#ef4444', // Red
       borderColor: '#ffffff',
-      visible: true
-    },
-    {
-      id: 'processos_conflitos_judiciais',
-      name: '⚖️ Processos Judiciais (DataJud TJPE/TRF5)',
-      sourceUrl: 'http://localhost:3000/processos_conflitos_judiciais',
-      sourceLayer: 'processos_conflitos_judiciais',
-      fillColor: '#8b5cf6',
-      borderColor: '#4c1d95',
-      visible: true
+      visible: false
     }
   ];
 
