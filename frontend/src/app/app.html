@@ -1,5 +1,8 @@
 <div id="map" class="map-container"></div>
 
+<!-- DataJud Judicial Conflict Categories Legend (Left Side) -->
+<app-datajud-legend [isVisible]="isDataJudVisible()"></app-datajud-legend>
+
 <!-- Floating Toggle Button when panel is closed -->
 @if (!isPanelOpen) {
   <button class="panel-toggle-badge" (click)="togglePanel()" title="Abrir painel de camadas">

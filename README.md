@@ -58,6 +58,7 @@ conflict-solver/
     ├── config.py            # Environment configurations and path parameters
     ├── database.py          # SQLAlchemy engine setup and PostGIS extension helper
     ├── etl.py               # Main ETL pipeline with axis-swap & geometry correction
+    ├── etl_datajud.py       # DataJud CNJ pipeline for TJPE and TRF5 land conflict lawsuits
     └── overlaps.py          # Spatial conflict detection engine & DBSCAN clustering
 ```
 
@@ -91,10 +92,15 @@ uv sync
 ```
 This will automatically create a virtual environment (`.venv`) and install dependencies: `geopandas`, `sqlalchemy`, `geoalchemy2`, `psycopg2-binary`, and `shapely`.
 
-### 3. Run the ETL Pipeline
-Run the ETL script to process all shapefiles and load them into PostGIS:
+### 3. Run the ETL Pipelines
+Process all spatial shapefiles and load them into PostGIS:
 ```bash
 uv run python -m src.etl
+```
+
+Ingest judicial conflict lawsuits from DataJud (CNJ - TJPE & TRF5):
+```bash
+uv run python -m src.etl_datajud
 ```
 
 ### 4. Run the Front-end Application
@@ -104,7 +110,7 @@ cd frontend
 pnpm install
 pnpm start
 ```
-Open `http://localhost:4200` in your web browser. You will see an interactive map with a glassmorphic layer control panel, serving vector tiles for all key datasets (Indigenous Lands, Quilombola Territories, SIGEF Private/Public, SNCI, CAR, ICMBio Conservation Units, Embargoes, and Infraction Notices) with custom color themes, circle/symbol markers, and rich popup inspection cards.
+Open `http://localhost:4200` in your web browser. You will see an interactive map with a glassmorphic layer control panel (right) and a dedicated DataJud Judicial Categories Legend (left), serving vector tiles for all key datasets (Indigenous Lands, Quilombola Territories, SIGEF Private/Public, SNCI, CAR, ICMBio Conservation Units, Embargoes, Infraction Notices, and DataJud Lawsuits) with custom color themes, circle/symbol markers, and rich popup inspection cards.
 
 ---
 
@@ -161,6 +167,8 @@ The ETL successfully manages and serves the following datasets:
 | `tis_poligonais` | Indigenous traditional lands (FUNAI) | MultiPolygon | GIST |
 | `land_overlaps` | Spatial overlaps (conflicts) | MultiPolygon | GIST |
 | `land_overlaps_points` | Center points (medians) of conflict areas | Point | GIST |
+| `processos_conflitos_judiciais` | Processos Judiciais de Conflito Agrário (DataJud - TJPE & TRF5) | Point | GIST |
+| `processos_conflitos_municipios` | Agregação Municipal de Conflitos na Justiça (Pernambuco) | Point | GIST |
 
 ---
 

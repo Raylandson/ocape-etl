@@ -1,0 +1,39 @@
+@if (isVisible) {
+  <!-- Floating Toggle Button when panel is closed -->
+  @if (!isOpen) {
+    <button class="panel-toggle-badge left-toggle" (click)="toggleOpen()" title="Abrir categorias DataJud">
+      <span class="toggle-badge-icon">⚖️</span>
+      <span class="toggle-badge-text">DataJud</span>
+      <span class="toggle-badge-count">{{ categories.length }}</span>
+    </button>
+  }
+
+  <!-- Main DataJud Panel -->
+  <div class="legend-panel left-panel" [class.panel-hidden]="!isOpen">
+    <div class="legend-header">
+      <div class="legend-header-text">
+        <h3>Categorias Judiciais</h3>
+        <p>DataJud (TJPE / TRF5)</p>
+      </div>
+      <button class="close-panel-btn" (click)="toggleOpen()" title="Ocultar painel">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="legend-body">
+      @for (cat of categories; track cat.id) {
+        <div class="legend-item">
+          <div 
+            class="color-indicator" 
+            [style.backgroundColor]="cat.color"
+            [style.borderColor]="cat.borderColor"
+          ></div>
+          <span class="layer-name">
+            {{ cat.name }}
+          </span>
+        </div>
+      }
+    </div>
+  </div>
+}

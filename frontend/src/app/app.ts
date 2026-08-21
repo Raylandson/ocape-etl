@@ -1,5 +1,6 @@
 import { Component, AfterViewInit } from '@angular/core';
 import { Map, Popup } from 'maplibre-gl';
+import { DatajudLegendComponent } from './datajud-legend/datajud-legend.component';
 
 interface LayerConfig {
   id: string;
@@ -13,7 +14,7 @@ interface LayerConfig {
 
 @Component({
   selector: 'app-root',
-  imports: [],
+  imports: [DatajudLegendComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -27,6 +28,10 @@ export class App implements AfterViewInit {
 
   getActiveLayersCount(): number {
     return this.layers.filter(l => l.visible).length;
+  }
+
+  isDataJudVisible(): boolean {
+    return this.layers.find(l => l.id === 'processos_conflitos_judiciais')?.visible ?? false;
   }
 
   layers: LayerConfig[] = [
@@ -164,6 +169,15 @@ export class App implements AfterViewInit {
       fillColor: '#ef4444', // Red
       borderColor: '#ffffff',
       visible: true
+    },
+    {
+      id: 'processos_conflitos_judiciais',
+      name: '⚖️ Processos Judiciais (DataJud TJPE/TRF5)',
+      sourceUrl: 'http://localhost:3000/processos_conflitos_judiciais',
+      sourceLayer: 'processos_conflitos_judiciais',
+      fillColor: '#8b5cf6',
+      borderColor: '#4c1d95',
+      visible: true
     }
   ];
 
@@ -239,19 +253,35 @@ export class App implements AfterViewInit {
               'visibility': layer.visible ? 'visible' : 'none'
             }
           });
-        } else if (layer.id === 'autos_infracao_icmbio') {
-          // Add circle layer for infraction notice points
+        } else if (layer.id === 'autos_infracao_icmbio' || layer.id === 'processos_conflitos_judiciais') {
+          // Add circle layer for points (ICMBio infractions or DataJud judicial processes)
+          const circleColor: any = layer.id === 'processos_conflitos_judiciais'
+            ? [
+                'match',
+                ['get', 'categoria_conflito'],
+                'Reintegração e Conflito de Posse', '#8b5cf6',
+                'Reforma Agrária & Desapropriação', '#f59e0b',
+                'Povos Indígenas & Territórios Quilombolas', '#ef4444',
+                'Terras Devolutas & Ações Discriminatórias', '#3b82f6',
+                'Usucapião e Regularização de Posse', '#10b981',
+                'Conflito Coletivo Rural & Agrário', '#ec4899',
+                /* default */ '#8b5cf6'
+              ]
+            : layer.fillColor;
+
           this.map.addLayer({
             id: `${layer.id}_circle`,
             type: 'circle',
             source: layer.id,
             'source-layer': layer.sourceLayer,
             paint: {
-              'circle-color': layer.fillColor,
-              'circle-radius': 4.5,
-              'circle-stroke-width': 1.5,
-              'circle-stroke-color': layer.borderColor,
-              'circle-opacity': 0.85
+              'circle-color': circleColor,
+              'circle-radius': layer.id === 'processos_conflitos_judiciais' 
+                ? ['interpolate', ['linear'], ['zoom'], 6, 5, 10, 7.5, 14, 10]
+                : 4.5,
+              'circle-stroke-width': 1.8,
+              'circle-stroke-color': '#ffffff',
+              'circle-opacity': 0.9
             },
             layout: {
               visibility: layer.visible ? 'visible' : 'none'
@@ -481,6 +511,91 @@ export class App implements AfterViewInit {
       });
       this.map.on('mouseenter', 'autos_infracao_icmbio_circle', () => { this.map.getCanvas().style.cursor = 'pointer'; });
       this.map.on('mouseleave', 'autos_infracao_icmbio_circle', () => { this.map.getCanvas().style.cursor = ''; });
+
+      // Popup handler for DataJud Judicial Conflict Lawsuits (TJPE & TRF5)
+      this.map.on('click', 'processos_conflitos_judiciais_circle', (e) => {
+        const properties = e.features?.[0]?.properties;
+        if (!properties) return;
+
+        const numProc = properties['numero_processo'] || 'N/A';
+        const tribunal = properties['tribunal'] || 'Judiciário';
+        const grau = properties['grau'] || '1º Grau';
+        const categoria = properties['categoria_conflito'] || 'Conflito Fundiário';
+        const classe = properties['classe_nome'] ? `${properties['classe_nome']} (${properties['classe_codigo'] || ''})` : 'N/A';
+        const assuntos = properties['assuntos_str'] || 'N/A';
+        const orgao = properties['orgao_julgador_nome'] || 'N/A';
+        const municipio = properties['municipio_nome'] || 'Pernambuco';
+        const dataAjuiz = properties['data_ajuizamento'] ? new Date(properties['data_ajuizamento']).toLocaleDateString('pt-BR') : 'N/A';
+        const ultimoMov = properties['ultimo_movimento'] || 'N/A';
+        const dataUltimoMov = properties['data_ultimo_movimento'] ? new Date(properties['data_ultimo_movimento']).toLocaleDateString('pt-BR') : '';
+        const totalMov = properties['total_movimentos'] || '1';
+        const urlConsulta = properties['url_consulta_publica'] || '#';
+
+        // Badge color mapping
+        let catColor = '#8b5cf6';
+        if (categoria.includes('Reforma Agrária')) catColor = '#f59e0b';
+        else if (categoria.includes('Indígenas') || categoria.includes('Quilombolas')) catColor = '#ef4444';
+        else if (categoria.includes('Devolutas') || categoria.includes('Discriminatória')) catColor = '#3b82f6';
+        else if (categoria.includes('Usucapião')) catColor = '#10b981';
+        else if (categoria.includes('Coletivo')) catColor = '#ec4899';
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title" style="color: #6d28d9; display: flex; align-items: center; justify-content: space-between;">
+              <span>⚖️ Conflito na Justiça (${tribunal})</span>
+              <span style="font-size: 0.65rem; background: rgba(109, 40, 217, 0.12); color: #6d28d9; padding: 2px 6px; border-radius: 9999px; font-weight: 700;">${grau}</span>
+            </div>
+            
+            <div class="popup-section" style="margin-bottom: 2px;">
+              <span class="popup-label">Processo CNJ:</span>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                <span class="popup-value-code" style="font-weight: 700; color: #1e1b4b; background: #ede9fe;">${numProc}</span>
+              </div>
+            </div>
+
+            <div style="display: inline-block; margin: 3px 0; padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; background-color: ${catColor}15; color: ${catColor}; border: 1px solid ${catColor}40;">
+              ${categoria}
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Vara / Comarca:</span>
+              <span class="popup-value" style="font-size: 0.8rem; font-weight: 600;">${orgao}</span>
+              <span style="font-size: 0.72rem; color: #6b7280;">Município: <strong>${municipio}</strong></span>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Classe Processual:</span>
+              <span class="popup-value" style="font-size: 0.78rem;">${classe}</span>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Assuntos (TPU/CNJ):</span>
+              <div style="font-size: 0.74rem; color: #374151; max-height: 55px; overflow-y: auto; background: rgba(0,0,0,0.02); padding: 4px 6px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.05);">
+                ${assuntos}
+              </div>
+            </div>
+
+            <div class="popup-section" style="border-top: 1px dashed rgba(209, 213, 219, 0.8); padding-top: 6px; margin-top: 2px;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #6b7280;">
+                <span>Ajuizamento: <strong>${dataAjuiz}</strong></span>
+                <span>Movimentos: <strong>${totalMov}</strong></span>
+              </div>
+              <div style="font-size: 0.72rem; color: #4b5563; margin-top: 2px;">
+                <span>Último Andamento: <em>${ultimoMov}</em> ${dataUltimoMov ? `(${dataUltimoMov})` : ''}</span>
+              </div>
+            </div>
+
+            <div style="margin-top: 6px; text-align: center;">
+              <a href="${urlConsulta}" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; box-sizing: border-box; text-decoration: none; background: #6d28d9; color: #ffffff; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; transition: background 0.2s ease;">
+                Consultar no PJe (${tribunal}) ↗
+              </a>
+            </div>
+          </div>
+        `;
+        new Popup({ closeButton: true, className: 'custom-popup judicial-popup' }).setLngLat(e.lngLat).setHTML(html).addTo(this.map);
+      });
+      this.map.on('mouseenter', 'processos_conflitos_judiciais_circle', () => { this.map.getCanvas().style.cursor = 'pointer'; });
+      this.map.on('mouseleave', 'processos_conflitos_judiciais_circle', () => { this.map.getCanvas().style.cursor = ''; });
     });
   }
 

@@ -27,8 +27,28 @@ This document outlines the guidelines and protocols that AI coding agents must s
   - `autos_infracao_icmbio`: 41,728 environmental infraction notice points (839 in Pernambuco).
 - **Coordinate Inversion Resolution**: Implemented automated detection and axis rectification in `src/etl.py` to swap inverted `(Latitude, Longitude)` geometries to standard `(Longitude, Latitude)` EPSG:4326 and filter non-finite sentinel coordinates.
 - **Overlaps Calculation Expansion**: Extended `src/overlaps.py` to identify spatial overlaps between certified properties (SIGEF/SNCI/CAR) and Federal Conservation Units as well as ICMBio Embargo Areas, expanding total conflict zones to 804 with DBSCAN spatial clustering and center pinpoints (`land_overlaps_points`).
-- **Frontend Map & Popups**: Added `limiteucsfederais_a`, `embargos_icmbio`, and `autos_infracao_icmbio` layers to `frontend/src/app/app.ts` with custom themed colors, circle layer support for infraction notice points, and interactive rich detail popups for all ICMBio features and expanded conflict categories.
-- **Scrollable & Collapsible Layer Panel**: Refactored the frontend layer list to be scrollable with custom sleek scrollbars and constrained viewport heights (`max-height: calc(100vh - 40px)`). Added an interactive minimize / close control in the panel header and a floating toggle badge button showing the active layer count when collapsed.
 - **Documentation**: Updated [`docs/DATA_ANALYSIS.md`](file:///home/raylandsoncesario/github/conflict-solver/docs/DATA_ANALYSIS.md) with the ICMBio legal framework (Law 9.985/2000 SNUC, Decree 6.514/2008) and comprehensive metadata attribute statistics.
+
+### August 2026: DataJud Judicial Conflicts Integration (TJPE & TRF5)
+- **DataJud CNJ API Integration**: Developed `src/etl_datajud.py` to connect directly to the official Conselho Nacional de Justiça (CNJ) DataJud Elasticsearch REST API for both the state court of Pernambuco (`api_publica_tjpe`) and the 5th regional federal court (`api_publica_trf5`).
+- **Conflict Taxonomy Classification**: Mapped and categorized judicial cases into 6 major conflict categories based on CNJ Tabelas Processuais Unificadas (TPU) subjects and classes:
+  1. *Reintegração e Conflito de Posse* (TPU 10100, 10434, 10444, 10445, 10446, 7640, 3425; Classe 1707, 1709).
+  2. *Reforma Agrária & Desapropriação* (TPU 10124, 11873, 5995, 10185; Classe 91, 90).
+  3. *Povos Indígenas & Territórios Quilombolas* (TPU 12031, 10104, 15114, 3647).
+  4. *Terras Devolutas & Ações Discriminatórias* (TPU 10094, 10451, 10453, 10105; Classe 96, 34).
+  5. *Usucapião e Regularização de Posse* (TPU 10500 - Lei 6.969/81, 10457, 10460, 10458, 10459; Classe 49).
+  6. *Conflito Coletivo Rural & Agrário* (TPU 11412, 11413, 9985).
+- **PostGIS Geolocation & Jitter**: Automated geocoding using 185 Pernambuco IBGE municipal centroids (calculated dynamically from SIGEF parcels) and federal sub-section court jurisdictions (`40583XX`). Applied deterministic micro-jittering per lawsuit ID so multiple lawsuits within the same comarca do not stack invisibly on a single point.
+- **PostGIS Storage**: Created `public.processos_conflitos_judiciais` (with spatial GIST and B-Tree indexes) and aggregated summary table `public.processos_conflitos_municipios`.
+- **Frontend Map Layer & Interactive Popups**: Added `processos_conflitos_judiciais` layer in `frontend/src/app/app.ts` with category-driven dynamic color styling, custom size interpolation, and rich inspection popup cards featuring CNJ lawsuit numbers, court/comarca details, procedural classes, TPU subjects, filing dates, last movements, and 1-click consultation links to TJPE / TRF5 PJe portals.
+- **Documentation**: Updated `README.md` and `docs/DATA_ANALYSIS.md` with system architecture, legal basis (CNJ Res. 510/2023), and statistical counts.
+
+### August 2026: DataJud Legend Component (Interactive Categories & Knowings Panel)
+- **Component Architecture**: Built `DatajudLegendComponent` (`frontend/src/app/datajud-legend/`) as an Angular 20 Standalone Component.
+- **Left-Side Positioning & Glassmorphism**: Placed on the upper left (`left: 20px; top: 20px`) with blur backdrop filtering, smooth slide transitions, and a minimized floating pill badge (`⚖️ Legenda DataJud`).
+- **Dynamic Layer Visibility Link**: Component automatically displays when the `processos_conflitos_judiciais` layer is enabled and disappears when disabled.
+- **Taxonomy & Legal Concepts ("Knowings")**: Outlines all 6 judicial conflict categories (Reintegração de Posse, Reforma Agrária, Povos Indígenas/Quilombolas, Terras Devolutas, Usucapião Rural, Conflito Coletivo, and Outros) with matching color swatches, statutory foundations (CPC/2015, Law 8.629/93, Law 6.969/81, Law 6.383/76, CNJ Res. 510/2023), and TPU procedural class codes.
+
+
 
 
