@@ -77,6 +77,62 @@ def sanitize_and_fix_geometries(gdf: gpd.GeoDataFrame, filename: str) -> gpd.Geo
 
     return gdf
 
+def load_pe_boundary():
+    """Load the official IBGE Pernambuco state boundary geometry."""
+    pe_boundary_path = Path(__file__).parent / "pe_boundary.geojson"
+    if pe_boundary_path.exists():
+        pe_gdf = gpd.read_file(pe_boundary_path)
+        return pe_gdf.geometry.union_all()
+    logger.warning("Pernambuco boundary file 'pe_boundary.geojson' not found. Spatial boundary filter will be disabled.")
+    return None
+
+def is_in_pe_territory(geom) -> bool:
+    """Check if geometry bounding box falls within Pernambuco mainland or Fernando de Noronha envelope."""
+    try:
+        b = geom.bounds
+        in_mainland = (-41.60 <= b[0] <= -34.70) and (-9.60 <= b[1] <= -7.20)
+        in_noronha = (-32.60 <= b[0] <= -32.30) and (-4.00 <= b[1] <= -3.70)
+        return in_mainland or in_noronha
+    except Exception:
+        return False
+
+def filter_to_pernambuco(gdf: gpd.GeoDataFrame, filename: str, pe_geom) -> gpd.GeoDataFrame:
+    """
+    Filter datasets to include only features within or relevant to the State of Pernambuco.
+    - For limiteucsfederais_a: retain UCs that physically intersect Pernambuco.
+    - For embargos_icmbio: retain embargos inside PE (intersecting PE geometry or PE attribute within PE bounds).
+    - For autos_infracao_icmbio: retain infraction notices inside PE state territory or Fernando de Noronha.
+    """
+    if gdf.empty:
+        return gdf
+
+    initial_count = len(gdf)
+
+    if filename == "limiteucsfederais_a":
+        if pe_geom is not None:
+            mask = gdf.intersects(pe_geom)
+            gdf = gdf[mask].copy()
+            logger.info(f"Filtered 'limiteucsfederais_a' from {initial_count} to {len(gdf)} Conservation Units in Pernambuco.")
+        return gdf
+
+    elif filename == "embargos_icmbio":
+        mask_geom = gdf.intersects(pe_geom) if pe_geom is not None else False
+        mask_uf = (gdf["uf"].astype(str).str.upper().str.strip() == "PE") & gdf.geometry.apply(is_in_pe_territory) if "uf" in gdf.columns else False
+        mask = mask_geom | mask_uf
+        gdf = gdf[mask].copy()
+        logger.info(f"Filtered 'embargos_icmbio' from {initial_count} to {len(gdf)} embargo polygons in Pernambuco.")
+        return gdf
+
+    elif filename == "autos_infracao_icmbio":
+        mask_geom = gdf.intersects(pe_geom) if pe_geom is not None else False
+        mask_uf = (gdf["uf"].astype(str).str.upper().str.strip() == "PE") & gdf.geometry.apply(is_in_pe_territory) if "uf" in gdf.columns else False
+        mask = mask_geom | mask_uf
+        gdf = gdf[mask].copy()
+        logger.info(f"Filtered 'autos_infracao_icmbio' from {initial_count} to {len(gdf)} infraction notices in Pernambuco.")
+        return gdf
+
+    return gdf
+
 def run_etl():
     """Main ETL process."""
     # Ensure database is up and PostGIS is enabled
@@ -88,6 +144,7 @@ def run_etl():
         return
 
     engine = get_engine()
+    pe_geom = load_pe_boundary()
 
     # Find all .shp files in the extracted data directory recursively
     shp_files = list(EXTRACTED_DATA_DIR.glob("**/*.shp"))
@@ -99,10 +156,22 @@ def run_etl():
 
     import sys
     force = "--force" in sys.argv
+    table_filter = None
+    for arg in sys.argv[1:]:
+        if arg.startswith("--table="):
+            table_filter = arg.split("=")[1].lower()
+        elif arg.startswith("--only-icmbio"):
+            table_filter = "icmbio"
 
     for shp_path in shp_files:
         filename = shp_path.stem
         table_name = sanitize_name(filename)
+
+        if table_filter:
+            if table_filter == "icmbio" and not any(k in table_name for k in ["icmbio", "limiteucsfederais"]):
+                continue
+            elif table_filter != "icmbio" and table_name != table_filter:
+                continue
 
         if not force:
             with engine.connect() as conn:
@@ -134,7 +203,13 @@ def run_etl():
                 logger.warning(f"File '{filename}' has no valid features after geometry cleaning. Skipping.")
                 continue
 
-            # 3. Standardize column names
+            # 3. Filter to Pernambuco State territory
+            gdf = filter_to_pernambuco(gdf, filename, pe_geom)
+            if gdf.empty:
+                logger.warning(f"File '{filename}' has no features located within Pernambuco. Skipping.")
+                continue
+
+            # 4. Standardize column names
             logger.info("Standardizing column names...")
             original_columns = gdf.columns.tolist()
             new_columns = {}
@@ -147,7 +222,7 @@ def run_etl():
             gdf = gdf.rename(columns=new_columns)
             logger.info(f"Columns renamed to: {list(gdf.columns)}")
 
-            # 4. Spatial transformation to EPSG:4326 (WGS84)
+            # 5. Spatial transformation to EPSG:4326 (WGS84)
             if gdf.crs is None:
                 logger.warning(f"Warning: GeoDataFrame for '{filename}' has no CRS defined. Setting to EPSG:4326 by default.")
                 gdf.set_crs("EPSG:4326", inplace=True)
@@ -155,7 +230,7 @@ def run_etl():
                 logger.info(f"Transforming CRS from {gdf.crs.to_string()} to EPSG:4326...")
                 gdf = gdf.to_crs(epsg=4326)
 
-            # 5. Save to PostGIS (which automatically creates the spatial index GIST)
+            # 6. Save to PostGIS (which automatically creates the spatial index GIST)
             logger.info(f"Writing to database table '{table_name}'...")
             gdf.to_postgis(
                 name=table_name,
@@ -164,7 +239,7 @@ def run_etl():
                 index=False
             )
             
-            # 6. Verify row count and ensure GIST index
+            # 7. Verify row count and ensure GIST index
             with engine.connect() as conn:
                 res = conn.execute(text(f"SELECT COUNT(*) FROM {table_name};"))
                 count = res.scalar()
@@ -183,4 +258,5 @@ def run_etl():
 
 if __name__ == "__main__":
     run_etl()
+
 

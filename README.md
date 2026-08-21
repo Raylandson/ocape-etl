@@ -120,9 +120,10 @@ The pipeline (`src/etl.py`) automates the following steps for each dataset under
 1. **Database Initialization**: Connects to PostGIS and executes `CREATE EXTENSION IF NOT EXISTS postgis;`.
 2. **File Ingestion & Cleaning**: Scans `data/extracted/` recursively to find `.shp` files, removes non-finite sentinel coordinates, and loads them into GeoPandas GeoDataFrames.
 3. **Coordinate Axis Rectification**: Detects inverted coordinate axes `(Lat, Lon)` (present in federal exports) and swaps them to standard `(Lon, Lat)`.
-4. **Column Sanitization**: Standardizes all attribute columns to be SQL-friendly (lowercase, NFKD unicode normalized to strip accents, spaces/dashes replaced by `_`).
-5. **Spatial Reprojection**: Converts CRS to **EPSG:4326 (WGS84)**.
-6. **PostGIS Loading & Indexing**: Ingests the data using GeoPandas' `to_postgis()` and ensures spatial **GIST indexing** on the `geometry` column.
+4. **Pernambuco Territorial Filtering**: References the official IBGE state boundary (`src/pe_boundary.geojson`) to filter nationwide datasets (ICMBio UCs, Embargoes, Infraction Notices) strictly to features situated within or intersecting the territory of Pernambuco (including Fernando de Noronha).
+5. **Column Sanitization**: Standardizes all attribute columns to be SQL-friendly (lowercase, NFKD unicode normalized to strip accents, spaces/dashes replaced by `_`).
+6. **Spatial Reprojection**: Converts CRS to **EPSG:4326 (WGS84)**.
+7. **PostGIS Loading & Indexing**: Ingests the data using GeoPandas' `to_postgis()` and ensures spatial **GIST indexing** on the `geometry` column.
 
 ---
 

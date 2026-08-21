@@ -66,9 +66,9 @@ Every record in a dBase attribute table (`.dbf`) corresponds **1-to-1** with an 
 | **Terras Indígenas (FUNAI)** | 16 | Polygon | 62.5% Traditionally Occupied<br>37.5% Indigenous Reserve | 62.5% Regularized (10)<br>18.8% Sent as Reserve (3) |
 | **Territórios Quilombolas (INCRA)** | 10 | Polygon | 1,276 Registered Families | 60.0% RTID Phase (6)<br>20.0% Partial Title (2) |
 | **SNCI Legado (INCRA)** | 110 | Polygon | 73.64% Private (81)<br>26.36% Public/Settlement (29) | Legacy INCRA Certifications |
-| **Unidades de Conservação (ICMBio)** | 347 | Polygon | Federal UCs (7 in PE)<br>PARNA, REBIO, FLONA, APA | Proteção Integral (Catimbau, Serra Negra, Saltinho) & Uso Sustentável |
-| **Áreas Embargadas (ICMBio)** | 14,375 | Polygon | Official Environmental Embargoes<br>251 in Pernambuco | Legal restriction under Decree 6.514/2008 |
-| **Autos de Infração (ICMBio)** | 41,728 | Point | Environmental Infraction Notices<br>839 in Pernambuco | Administrative Sanctions & Fines |
+| **Unidades de Conservação (ICMBio)** | 10 | Polygon | Federal UCs in/intersecting PE<br>PARNA, REBIO, FLONA, APA, RESEX | Proteção Integral (Catimbau, Serra Negra, Saltinho, Pedra Talhada) & Uso Sustentável (Noronha, Costa dos Corais, Araripe, Negreiros, Acaú-Goiana) |
+| **Áreas Embargadas (ICMBio)** | 246 | Polygon | Official Environmental Embargoes in PE | Legal restriction under Decree 6.514/2008 |
+| **Autos de Infração (ICMBio)** | 861 | Point | Environmental Infraction Notices in PE | Administrative Sanctions & Fines |
 | **Processos Judiciais (DataJud CNJ)** | 2,000 | Point | TJPE (1,000) & TRF5 PE (1,000)<br>6 Conflict Categories | Resolução CNJ 510/2023 & TPU (Posse, Reforma Agrária, Indígena/Quilombola, Terras Devolutas) |
 
 
@@ -162,29 +162,32 @@ Every record in a dBase attribute table (`.dbf`) corresponds **1-to-1** with an 
 ---
 
 ### 6. Unidades de Conservação Federais — ICMBio (`limiteucsfederais_a`)
-* **Total Polygons:** 347 (National scope; 7 units in Pernambuco)
+* **Total Polygons Ingested:** 10 (Filtered to Pernambuco State territory from 347 nationwide)
 * **Pernambuco Conservation Units:**
   * **Parque Nacional do Catimbau** (`PARNA` - Proteção Integral): 62,239.37 ha
   * **Área de Proteção Ambiental de Fernando de Noronha** (`APA` - Uso Sustentável): 154,365.88 ha
-  * **Reserva Biológica do Atol das Rocas** (`REBIO` - Proteção Integral): 35,186.77 ha
   * **Parque Nacional Marinho de Fernando de Noronha** (`PARNA` - Proteção Integral): 10,932.58 ha
   * **Floresta Nacional de Negreiros** (`FLONA` - Uso Sustentável): 2,967.42 ha
   * **Reserva Biológica de Serra Negra** (`REBIO` - Proteção Integral): 624.85 ha
   * **Reserva Biológica de Saltinho** (`REBIO` - Proteção Integral): 562.57 ha
+  * **Reserva Biológica de Pedra Talhada** (`REBIO` - Proteção Integral): 4,382.00 ha (PE/AL)
+  * **Área de Proteção Ambiental da Costa dos Corais** (`APA` - Uso Sustentável): 404,286.30 ha (PE/AL)
+  * **Reserva Extrativista Acaú-Goiana** (`RESEX` - Uso Sustentável): 6,678.33 ha (PB/PE)
+  * **Área de Proteção Ambiental da Chapada do Araripe** (`APA` - Uso Sustentável): 972,605.18 ha (PI/CE/PE)
 * **Key Attributes:** `nomeuc`, `categoria_`, `sigla_cate`, `grupouc`, `areahaalb`, `esferaadm`, `criacaoano`.
 
 ---
 
 ### 7. Áreas Embargadas — ICMBio (`embargos_icmbio`)
-* **Total Polygons:** 14,375 (251 in Pernambuco)
+* **Total Polygons Ingested:** 246 (Filtered to Pernambuco State territory from 14,375 nationwide)
 * **Function:** Spatial boundaries of properties or regions under federal embargo due to environmental infractions (deforestation, fires, unauthorized commercial exploration).
 * **Key Attributes:** `numero_emb`, `autuado`, `cpf_cnpj`, `tipo_infra`, `nome_uc`, `municipio`, `uf`, `ano`, `processo`.
 
 ---
 
 ### 8. Autos de Infração Ambiental — ICMBio (`autos_infracao_icmbio`)
-* **Total Features (Points):** 41,728 (839 in Pernambuco)
-* **Function:** Georeferenced enforcement notices issued by federal environmental inspectors.
+* **Total Features Ingested (Points):** 861 (Filtered to Pernambuco State territory from 41,728 nationwide)
+* **Function:** Georeferenced enforcement notices issued by federal environmental inspectors in Pernambuco.
 * **Key Attributes:** `numero_ai`, `valor_mult`, `autuado`, `cpf_cnpj`, `tipo_infra`, `nome_uc`, `municipio`, `uf`, `ano`, `desc_ai_1`.
 
 ---

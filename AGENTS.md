@@ -49,6 +49,15 @@ This document outlines the guidelines and protocols that AI coding agents must s
 - **Dynamic Layer Visibility Link**: Component automatically displays when the `processos_conflitos_judiciais` layer is enabled and disappears when disabled.
 - **Taxonomy & Legal Concepts ("Knowings")**: Outlines all 6 judicial conflict categories (Reintegração de Posse, Reforma Agrária, Povos Indígenas/Quilombolas, Terras Devolutas, Usucapião Rural, Conflito Coletivo, and Outros) with matching color swatches, statutory foundations (CPC/2015, Law 8.629/93, Law 6.969/81, Law 6.383/76, CNJ Res. 510/2023), and TPU procedural class codes.
 
+### August 2026: ICMBio Pernambuco Territorial Filtering
+- **Pernambuco Spatial Boundary Reference**: Bundled official IBGE Pernambuco state boundary (`src/pe_boundary.geojson`) covering mainland Pernambuco and the Fernando de Noronha archipelago.
+- **Automated Territorial Filtering in ETL**: Updated `src/etl.py` with `filter_to_pernambuco(gdf, filename, pe_geom)` to automatically filter nationwide datasets before loading into PostgreSQL/PostGIS:
+  - `limiteucsfederais_a`: Filtered from 347 nationwide UCs to **10 Conservation Units** intersecting Pernambuco.
+  - `embargos_icmbio`: Filtered from 14,375 nationwide polygons to **246 embargo areas** inside Pernambuco.
+  - `autos_infracao_icmbio`: Filtered from 41,728 nationwide points to **861 infraction notices** inside Pernambuco (discarding out-of-state points and administrative headquarters noise).
+- **Overlaps Recalculation**: Recomputed `public.land_overlaps` and `public.land_overlaps_points` ensuring all conflict polygons and center pins (792 conflict zones) are clean, fast, and strictly within Pernambuco.
+
+
 
 
 
