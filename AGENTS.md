@@ -57,6 +57,12 @@ This document outlines the guidelines and protocols that AI coding agents must s
   - `autos_infracao_icmbio`: Filtered from 41,728 nationwide points to **861 infraction notices** inside Pernambuco (discarding out-of-state points and administrative headquarters noise).
 - **Overlaps Recalculation**: Recomputed `public.land_overlaps` and `public.land_overlaps_points` ensuring all conflict polygons and center pins (792 conflict zones) are clean, fast, and strictly within Pernambuco.
 
+### August 2026: Basemap Label Z-Index & Highlighting Optimization
+- **MapLibre GL Layer Ordering**: Dynamically resolved the first symbol/label layer from the Carto Positron basemap style (`watername_*`, `place_*`, `roadname_*`, `poi_*`).
+- **Label Preservation Above Data**: Added all custom polygons (CAR, SIGEF, SNCI, TIs, Quilombolas, ICMBio UCs, Embargoes, Overlaps) and point circles (`autos_infracao_icmbio`, `processos_conflitos_judiciais`) before the basemap's first label layer (`firstLabelId`).
+- **City & Road Name Visibility & Highlighting**: Enhanced all `place_*` layers with high-contrast text color (`#0f172a`), solid white halos (`#ffffff`), increased halo width (`2.5px`), and halo blur (`0.5px`). This ensures that municipal city names (e.g. Palmares, Recife, Caruaru, Barreiras, Gameleira, etc.) stand out prominently and legibly directly over dense clusters of DataJud points and environmental layers.
+
+
 
 
 

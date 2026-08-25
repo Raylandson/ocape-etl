@@ -190,6 +190,42 @@ export class App implements AfterViewInit {
     });
 
     this.map.on('load', () => {
+      // Find the first symbol/label layer in the basemap style so that data layers
+      // (polygons, lines, and point circles) are rendered underneath city/place names and road labels.
+      const styleLayers = this.map.getStyle().layers;
+      let firstLabelId: string | undefined;
+      if (styleLayers) {
+        for (const l of styleLayers) {
+          if (
+            l.type === 'symbol' &&
+            (l.id.startsWith('place_') ||
+              l.id.startsWith('watername_') ||
+              l.id.startsWith('roadname_') ||
+              l.id.startsWith('poi_'))
+          ) {
+            firstLabelId = l.id;
+            break;
+          }
+        }
+
+        // Highlight city, town, village, and road labels with strong contrast and thick halos
+        // so municipal names pop out clearly and legibly over dense point clusters and polygons.
+        for (const l of styleLayers) {
+          if (l.type === 'symbol') {
+            if (l.id.startsWith('place_')) {
+              this.map.setPaintProperty(l.id, 'text-color', '#0f172a'); // Deep high-contrast dark slate
+              this.map.setPaintProperty(l.id, 'text-halo-color', '#ffffff'); // Solid bright white halo
+              this.map.setPaintProperty(l.id, 'text-halo-width', 2.5); // Thick protective badge halo
+              this.map.setPaintProperty(l.id, 'text-halo-blur', 0.5);
+            } else if (l.id.startsWith('roadname_')) {
+              this.map.setPaintProperty(l.id, 'text-color', '#334155');
+              this.map.setPaintProperty(l.id, 'text-halo-color', '#ffffff');
+              this.map.setPaintProperty(l.id, 'text-halo-width', 1.8);
+            }
+          }
+        }
+      }
+
       // 1. Create a beautiful red pin image programmatically
       const width = 32;
       const height = 40;
@@ -254,7 +290,7 @@ export class App implements AfterViewInit {
             }
           });
         } else if (layer.id === 'autos_infracao_icmbio' || layer.id === 'processos_conflitos_judiciais') {
-          // Add circle layer for points (ICMBio infractions or DataJud judicial processes)
+          // Add circle layer for points (ICMBio infractions or DataJud judicial processes) below city labels
           const circleColor: any = layer.id === 'processos_conflitos_judiciais'
             ? [
                 'match',
@@ -286,9 +322,9 @@ export class App implements AfterViewInit {
             layout: {
               visibility: layer.visible ? 'visible' : 'none'
             }
-          });
+          }, firstLabelId);
         } else {
-          // Add fill layer (translucent)
+          // Add fill layer (translucent) below city labels
           this.map.addLayer({
             id: `${layer.id}_fill`,
             type: 'fill',
@@ -301,9 +337,9 @@ export class App implements AfterViewInit {
             layout: {
               visibility: layer.visible ? 'visible' : 'none'
             }
-          });
+          }, firstLabelId);
 
-          // Add line layer (borders)
+          // Add line layer (borders) below city labels
           this.map.addLayer({
             id: `${layer.id}_line`,
             type: 'line',
@@ -316,7 +352,7 @@ export class App implements AfterViewInit {
             layout: {
               visibility: layer.visible ? 'visible' : 'none'
             }
-          });
+          }, firstLabelId);
         }
       });
 
