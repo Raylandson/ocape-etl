@@ -19,3 +19,5 @@ data/extracted/autos_infracao_icmbio/
 data/extracted/embargos_icmbio/
 data/extracted/limiteucsfederais_a/
 
+# Local backup archives
+*.tar.gz

@@ -92,16 +92,50 @@ uv sync
 ```
 This will automatically create a virtual environment (`.venv`) and install dependencies: `geopandas`, `sqlalchemy`, `geoalchemy2`, `psycopg2-binary`, and `shapely`.
 
-### 3. Run the ETL Pipelines
-Process all spatial shapefiles and load them into PostGIS:
+### 3. Run the Ingestion & Analysis Pipelines
+
+The ETL workflow consists of two main pipeline scripts:
+
+1. **Ingest Spatial Shapefiles & Calculate Overlaps**:
+   ```bash
+   uv run python -m src.etl
+   ```
+   > **Note**: `src/etl.py` processes all shapefiles under `data/extracted/`, cleans and rectifies geometries, filters data to the State of Pernambuco, loads them into PostGIS, and **automatically executes `src/overlaps.py`** at the end to compute spatial conflict zones (`land_overlaps`) and conflict center points (`land_overlaps_points`).
+
+2. **Ingest Judicial Conflict Lawsuits (DataJud - CNJ TJPE & TRF5)**:
+   ```bash
+   uv run python -m src.etl_datajud
+   ```
+   > Fetches land conflict lawsuits from the official CNJ DataJud API, categorizes them according to CNJ TPUs, geolocates comarcas across Pernambuco, and creates `processos_conflitos_judiciais`.
+
+3. **Reload Tile Server (Martin)**:
+   ```bash
+   docker compose restart martin
+   ```
+   > Restarting Martin ensures it instantly detects all newly generated tables and refreshes its MVT vector tile endpoints at `http://localhost:3000/catalog`.
+
+---
+
+### Resetting the Database / Full Re-import
+
+To completely wipe the database and re-import everything from scratch:
+
 ```bash
+# 1. Wipe database volume and recreate containers
+docker compose down -v
+docker compose up -d
+
+# 2. Re-run spatial shapefiles ingestion & overlaps calculation
 uv run python -m src.etl
+
+# 3. Re-run judicial conflict lawsuit ingestion
+uv run python -m src.etl_datajud
+
+# 4. Restart Martin tile server
+docker compose restart martin
 ```
 
-Ingest judicial conflict lawsuits from DataJud (CNJ - TJPE & TRF5):
-```bash
-uv run python -m src.etl_datajud
-```
+---
 
 ### 4. Run the Front-end Application
 Navigate to the frontend directory, install packages, and start the development server:
