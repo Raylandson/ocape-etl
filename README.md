@@ -103,13 +103,19 @@ The ETL workflow consists of two main pipeline scripts:
    ```
    > **Note**: `src/etl.py` processes all shapefiles under `data/extracted/`, cleans and rectifies geometries, filters data to the State of Pernambuco, loads them into PostGIS, and **automatically executes `src/overlaps.py`** at the end to compute spatial conflict zones (`land_overlaps`) and conflict center points (`land_overlaps_points`).
 
-2. **Ingest Judicial Conflict Lawsuits (DataJud - CNJ TJPE & TRF5)**:
+2. **Process Territorial Jurisdictions & Comarcas/Termos (TJPE & JFPE DOCX)**:
+   ```bash
+   uv run python -m src.process_jurisdicoes
+   ```
+   > Parses official TJPE and JFPE `.docx` documents from `data/raw/`, normalizes names against all 185 IBGE municipalities, exports structured CSVs to `data/extracted/jurisdicoes/`, and loads spatial tables `jurisdicao_tjpe`, `jurisdicao_jfpe`, and `jurisdicoes_pe_municipios`.
+
+3. **Ingest Judicial Conflict Lawsuits (DataJud - CNJ TJPE & TRF5) & Enrich Jurisdictions**:
    ```bash
    uv run python -m src.etl_datajud
    ```
-   > Fetches land conflict lawsuits from the official CNJ DataJud API, categorizes them according to CNJ TPUs, geolocates comarcas across Pernambuco, and creates `processos_conflitos_judiciais`.
+   > Fetches land conflict lawsuits from the official CNJ DataJud API, categorizes them according to CNJ TPUs, geolocates comarcas across Pernambuco, links them to territorial jurisdictions (including daughter municipalities/termos), and updates `processos_conflitos_judiciais` and `processos_conflitos_municipios`.
 
-3. **Reload Tile Server (Martin)**:
+4. **Reload Tile Server (Martin)**:
    ```bash
    docker compose restart martin
    ```
@@ -129,10 +135,13 @@ docker compose up -d
 # 2. Re-run spatial shapefiles ingestion & overlaps calculation
 uv run python -m src.etl
 
-# 3. Re-run judicial conflict lawsuit ingestion
+# 3. Process territorial jurisdictions (TJPE & JFPE)
+uv run python -m src.process_jurisdicoes
+
+# 4. Re-run judicial conflict lawsuit ingestion & enrichment
 uv run python -m src.etl_datajud
 
-# 4. Restart Martin tile server
+# 5. Restart Martin tile server
 docker compose restart martin
 ```
 
@@ -203,8 +212,11 @@ The ETL successfully manages and serves the following datasets:
 | `tis_poligonais` | Indigenous traditional lands (FUNAI) | MultiPolygon | GIST |
 | `land_overlaps` | Spatial overlaps (conflicts) | MultiPolygon | GIST |
 | `land_overlaps_points` | Center points (medians) of conflict areas | Point | GIST |
+| `jurisdicao_tjpe` | Comarcas estaduais e municípios abrangidos (TJPE) | Point | GIST |
+| `jurisdicao_jfpe` | Subseções judiciárias e municípios abrangidos (TRF5/JFPE) | Point | GIST |
+| `jurisdicoes_pe_municipios` | Mapeamento territorial unificado dos 185 municípios de PE | Point | GIST |
 | `processos_conflitos_judiciais` | Processos Judiciais de Conflito Agrário (DataJud - TJPE & TRF5) | Point | GIST |
-| `processos_conflitos_municipios` | Agregação Municipal de Conflitos na Justiça (Pernambuco) | Point | GIST |
+| `processos_conflitos_municipios` | Agregação Municipal de Conflitos na Justiça (185 municípios de PE) | Point | GIST |
 
 ---
 

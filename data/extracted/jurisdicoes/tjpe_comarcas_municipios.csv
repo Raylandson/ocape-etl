@@ -1,0 +1,186 @@
+tribunal,comarca_nome,comarca_ibge,municipio_nome,municipio_ibge,eh_sede,tipo_vinculo,total_municipios_comarca,municipios_abrangidos,lon,lat
+TJPE,Abreu e Lima,2600054,Abreu e Lima,2600054,True,Sede da Comarca,1,Abreu e Lima,-34.8984,-7.90072
+TJPE,Afogados da Ingazeira,2600104,Afogados da Ingazeira,2600104,True,Sede da Comarca,2,Afogados da Ingazeira; Iguaracy,-37.631,-7.74312
+TJPE,Afogados da Ingazeira,2600104,Iguaracy,2606903,False,Termo Judiciário (Município Abrangido),2,Afogados da Ingazeira; Iguaracy,-37.5082,-7.83222
+TJPE,Afrânio,2600203,Afrânio,2600203,True,Sede da Comarca,2,Afrânio; Dormentes,-41.0095,-8.51136
+TJPE,Afrânio,2600203,Dormentes,2605152,False,Termo Judiciário (Município Abrangido),2,Afrânio; Dormentes,-40.7662,-8.44116
+TJPE,Agrestina,2600302,Agrestina,2600302,True,Sede da Comarca,1,Agrestina,-35.9447,-8.45966
+TJPE,Água Preta,2600401,Água Preta,2600401,True,Sede da Comarca,2,Água Preta; Xexéu,-35.5263,-8.70609
+TJPE,Água Preta,2600401,Xexéu,2616506,False,Termo Judiciário (Município Abrangido),2,Água Preta; Xexéu,-35.6212,-8.8046
+TJPE,Águas Belas,2600500,Águas Belas,2600500,True,Sede da Comarca,1,Águas Belas,-37.1226,-9.11125
+TJPE,Alagoinha,2600609,Alagoinha,2600609,True,Sede da Comarca,1,Alagoinha,-36.7788,-8.4665
+TJPE,Aliança,2600708,Aliança,2600708,True,Sede da Comarca,1,Aliança,-35.2227,-7.60398
+TJPE,Altinho,2600807,Altinho,2600807,True,Sede da Comarca,2,Altinho; Ibirajuba,-36.0644,-8.48482
+TJPE,Altinho,2600807,Ibirajuba,2606705,False,Termo Judiciário (Município Abrangido),2,Altinho; Ibirajuba,-36.1812,-8.57633
+TJPE,Amaraji,2600906,Amaraji,2600906,True,Sede da Comarca,2,Amaraji; Primavera,-35.4501,-8.37691
+TJPE,Amaraji,2600906,Primavera,2611408,False,Termo Judiciário (Município Abrangido),2,Amaraji; Primavera,-35.3544,-8.32999
+TJPE,Angelim,2601003,Angelim,2601003,True,Sede da Comarca,1,Angelim,-36.2902,-8.88429
+TJPE,Araripina,2601102,Araripina,2601102,True,Sede da Comarca,1,Araripina,-40.494,-7.57073
+TJPE,Arcoverde,2601201,Arcoverde,2601201,True,Sede da Comarca,1,Arcoverde,-37.0577,-8.41519
+TJPE,Barreiros,2601409,Barreiros,2601409,True,Sede da Comarca,1,Barreiros,-35.1832,-8.81605
+TJPE,Belém do São Francisco,2601607,Belém do São Francisco,2601607,True,Sede da Comarca,2,Belém do São Francisco; Itacuruba,-38.9623,-8.75046
+TJPE,Belém do São Francisco,2601607,Itacuruba,2607406,False,Termo Judiciário (Município Abrangido),2,Belém do São Francisco; Itacuruba,-38.6975,-8.82231
+TJPE,Belo Jardim,2601706,Belo Jardim,2601706,True,Sede da Comarca,1,Belo Jardim,-36.4258,-8.3313
+TJPE,Betânia,2601805,Betânia,2601805,True,Sede da Comarca,1,Betânia,-38.0345,-8.26787
+TJPE,Bezerros,2601904,Bezerros,2601904,True,Sede da Comarca,1,Bezerros,-35.796,-8.2328
+TJPE,Bodocó,2602001,Bodocó,2602001,True,Sede da Comarca,2,Bodocó; Granito,-39.9338,-7.77759
+TJPE,Bodocó,2602001,Granito,2606309,False,Termo Judiciário (Município Abrangido),2,Bodocó; Granito,-39.615,-7.70711
+TJPE,Bom Conselho,2602100,Bom Conselho,2602100,True,Sede da Comarca,2,Bom Conselho; Terezinha,-36.6857,-9.16919
+TJPE,Bom Conselho,2602100,Terezinha,2615102,False,Termo Judiciário (Município Abrangido),2,Bom Conselho; Terezinha,-36.6272,-9.05621
+TJPE,Bom Jardim,2602209,Bom Jardim,2602209,True,Sede da Comarca,2,Bom Jardim; Machados,-35.5784,-7.79695
+TJPE,Bom Jardim,2602209,Machados,2609105,False,Termo Judiciário (Município Abrangido),2,Bom Jardim; Machados,-35.5114,-7.68827
+TJPE,Bonito,2602308,Barra de Guabiraba,2601300,False,Termo Judiciário (Município Abrangido),2,Barra de Guabiraba; Bonito,-35.6585,-8.42075
+TJPE,Bonito,2602308,Bonito,2602308,True,Sede da Comarca,2,Barra de Guabiraba; Bonito,-35.7292,-8.47163
+TJPE,Brejo da Madre de Deus,2602605,Brejo da Madre de Deus,2602605,True,Sede da Comarca,1,Brejo da Madre de Deus,-36.3741,-8.14933
+TJPE,Buíque,2602803,Buíque,2602803,True,Sede da Comarca,2,Buíque; Tupanatinga,-37.1606,-8.61954
+TJPE,Buíque,2602803,Tupanatinga,2615805,False,Termo Judiciário (Município Abrangido),2,Buíque; Tupanatinga,-37.3445,-8.74798
+TJPE,Cabo de Santo Agostinho,2602902,Cabo de Santo Agostinho,2602902,True,Sede da Comarca,1,Cabo de Santo Agostinho,-35.0253,-8.28218
+TJPE,Cabrobó,2603009,Cabrobó,2603009,True,Sede da Comarca,1,Cabrobó,-39.3094,-8.50548
+TJPE,Cachoeirinha,2603108,Cachoeirinha,2603108,True,Sede da Comarca,1,Cachoeirinha,-36.2402,-8.48668
+TJPE,Caetés,2603207,Caetés,2603207,True,Sede da Comarca,1,Caetés,-36.6268,-8.7803
+TJPE,Camaragibe,2603454,Camaragibe,2603454,True,Sede da Comarca,1,Camaragibe,-34.9782,-8.02351
+TJPE,Camocim de São Félix,2603504,Camocim de São Félix,2603504,True,Sede da Comarca,1,Camocim de São Félix,-35.7653,-8.35865
+TJPE,Canhotinho,2603702,Canhotinho,2603702,True,Sede da Comarca,1,Canhotinho,-36.1979,-8.87652
+TJPE,Capoeiras,2603801,Capoeiras,2603801,True,Sede da Comarca,1,Capoeiras,-36.6306,-8.73423
+TJPE,Carnaíba,2603900,Carnaíba,2603900,True,Sede da Comarca,2,Carnaíba; Quixaba,-37.7946,-7.79342
+TJPE,Carnaíba,2603900,Quixaba,2611533,False,Termo Judiciário (Município Abrangido),2,Carnaíba; Quixaba,-37.8446,-7.70734
+TJPE,Carpina,2604007,Carpina,2604007,True,Sede da Comarca,2,Carpina; Lagoa do Carro,-35.2514,-7.84566
+TJPE,Carpina,2604007,Lagoa do Carro,2608453,False,Termo Judiciário (Município Abrangido),2,Carpina; Lagoa do Carro,-35.3108,-7.84383
+TJPE,Caruaru,2604106,Caruaru,2604106,True,Sede da Comarca,2,Caruaru; Riacho das Almas,-35.9699,-8.28455
+TJPE,Caruaru,2604106,Riacho das Almas,2611705,False,Termo Judiciário (Município Abrangido),2,Caruaru; Riacho das Almas,-35.8648,-8.13742
+TJPE,Catende,2604205,Catende,2604205,True,Sede da Comarca,1,Catende,-35.7024,-8.67509
+TJPE,Condado,2604601,Condado,2604601,True,Sede da Comarca,1,Condado,-35.0999,-7.58787
+TJPE,Correntes,2604700,Correntes,2604700,True,Sede da Comarca,2,Correntes; Lagoa do Ouro,-36.3244,-9.12117
+TJPE,Correntes,2604700,Lagoa do Ouro,2608602,False,Termo Judiciário (Município Abrangido),2,Correntes; Lagoa do Ouro,-36.4584,-9.12567
+TJPE,Cortês,2604809,Cortês,2604809,True,Sede da Comarca,1,Cortês,-35.5468,-8.47443
+TJPE,Cumaru,2604908,Cumaru,2604908,True,Sede da Comarca,1,Cumaru,-35.6957,-8.00827
+TJPE,Cupira,2605004,Cupira,2605004,True,Sede da Comarca,1,Cupira,-35.9518,-8.62432
+TJPE,Custódia,2605103,Custódia,2605103,True,Sede da Comarca,1,Custódia,-37.6443,-8.08546
+TJPE,Escada,2605202,Escada,2605202,True,Sede da Comarca,1,Escada,-35.2241,-8.35672
+TJPE,Exu,2605301,Exu,2605301,True,Sede da Comarca,2,Exu; Moreilândia,-39.7238,-7.50364
+TJPE,Exu,2605301,Moreilândia,2614303,False,Termo Judiciário (Município Abrangido),2,Exu; Moreilândia,-39.546,-7.61931
+TJPE,Feira Nova,2605400,Feira Nova,2605400,True,Sede da Comarca,1,Feira Nova,-35.3801,-7.94704
+TJPE,Ferreiros,2605509,Camutanga,2603603,False,Termo Judiciário (Município Abrangido),2,Camutanga; Ferreiros,-35.2664,-7.40545
+TJPE,Ferreiros,2605509,Ferreiros,2605509,True,Sede da Comarca,2,Camutanga; Ferreiros,-35.2373,-7.44666
+TJPE,Flores,2605608,Calumbi,2603405,False,Termo Judiciário (Município Abrangido),2,Calumbi; Flores,-38.1482,-7.93551
+TJPE,Flores,2605608,Flores,2605608,True,Sede da Comarca,2,Calumbi; Flores,-37.9715,-7.85842
+TJPE,Floresta,2605707,Floresta,2605707,True,Sede da Comarca,1,Floresta,-38.5687,-8.60307
+TJPE,Gameleira,2605905,Gameleira,2605905,True,Sede da Comarca,1,Gameleira,-35.3846,-8.5798
+TJPE,Garanhuns,2606002,Brejão,2602407,False,Termo Judiciário (Município Abrangido),2,Brejão; Garanhuns,-36.566,-9.02915
+TJPE,Garanhuns,2606002,Garanhuns,2606002,True,Sede da Comarca,2,Brejão; Garanhuns,-36.4966,-8.88243
+TJPE,Glória do Goitá,2606101,Chã de Alegria,2604403,False,Termo Judiciário (Município Abrangido),2,Chã de Alegria; Glória do Goitá,-35.204,-8.00679
+TJPE,Glória do Goitá,2606101,Glória do Goitá,2606101,True,Sede da Comarca,2,Chã de Alegria; Glória do Goitá,-35.2904,-8.00568
+TJPE,Goiana,2606200,Goiana,2606200,True,Sede da Comarca,1,Goiana,-34.9959,-7.5606
+TJPE,Gravatá,2606408,Chã Grande,2604502,False,Termo Judiciário (Município Abrangido),2,Chã Grande; Gravatá,-35.4571,-8.23827
+TJPE,Gravatá,2606408,Gravatá,2606408,True,Sede da Comarca,2,Chã Grande; Gravatá,-35.5675,-8.21118
+TJPE,Iati,2606507,Iati,2606507,True,Sede da Comarca,1,Iati,-36.8498,-9.04559
+TJPE,Ibimirim,2606606,Ibimirim,2606606,True,Sede da Comarca,1,Ibimirim,-37.7032,-8.54026
+TJPE,Igarassu,2606804,Araçoiaba,2601052,False,Termo Judiciário (Município Abrangido),2,Araçoiaba; Igarassu,-35.0809,-7.78391
+TJPE,Igarassu,2606804,Igarassu,2606804,True,Sede da Comarca,2,Araçoiaba; Igarassu,-34.9013,-7.82881
+TJPE,Inajá,2607000,Inajá,2607000,True,Sede da Comarca,2,Inajá; Manari,-37.8351,-8.90206
+TJPE,Inajá,2607000,Manari,2609154,False,Termo Judiciário (Município Abrangido),2,Inajá; Manari,-37.6313,-8.9649
+TJPE,Ipojuca,2607208,Ipojuca,2607208,True,Sede da Comarca,1,Ipojuca,-35.0609,-8.39303
+TJPE,Ipubi,2607307,Ipubi,2607307,True,Sede da Comarca,1,Ipubi,-40.1476,-7.64505
+TJPE,Itaíba,2607505,Itaíba,2607505,True,Sede da Comarca,1,Itaíba,-37.4173,-8.94569
+TJPE,Ilha de Itamaracá,2607604,Ilha de Itamaracá,2607604,True,Sede da Comarca,1,Ilha de Itamaracá,-34.8303,-7.74766
+TJPE,Itambé,2607653,Itambé,2607653,True,Sede da Comarca,1,Itambé,-35.0963,-7.41403
+TJPE,Itapetim,2607703,Brejinho,2602506,False,Termo Judiciário (Município Abrangido),2,Brejinho; Itapetim,-37.2865,-7.34694
+TJPE,Itapetim,2607703,Itapetim,2607703,True,Sede da Comarca,2,Brejinho; Itapetim,-37.1863,-7.37178
+TJPE,Itapissuma,2607752,Itapissuma,2607752,True,Sede da Comarca,1,Itapissuma,-34.8971,-7.76798
+TJPE,Itaquitinga,2607802,Itaquitinga,2607802,True,Sede da Comarca,1,Itaquitinga,-35.1002,-7.66373
+TJPE,Jaboatão dos Guararapes,2607901,Jaboatão dos Guararapes,2607901,True,Sede da Comarca,1,Jaboatão dos Guararapes,-35.015,-8.11298
+TJPE,João Alfredo,2608107,João Alfredo,2608107,True,Sede da Comarca,2,João Alfredo; Salgadinho,-35.5787,-7.86565
+TJPE,João Alfredo,2608107,Salgadinho,2612109,False,Termo Judiciário (Município Abrangido),2,João Alfredo; Salgadinho,-35.6503,-7.9269
+TJPE,Jupi,2608305,Jucati,2608255,False,Termo Judiciário (Município Abrangido),2,Jucati; Jupi,-36.4871,-8.70195
+TJPE,Jupi,2608305,Jupi,2608305,True,Sede da Comarca,2,Jucati; Jupi,-36.4126,-8.70904
+TJPE,Jurema,2608404,Jurema,2608404,True,Sede da Comarca,1,Jurema,-36.1347,-8.70714
+TJPE,Lagoa de Itaenga,2608503,Lagoa de Itaenga,2608503,True,Sede da Comarca,1,Lagoa de Itaenga,-35.2874,-7.93005
+TJPE,Lagoa dos Gatos,2608701,Belém de Maria,2601508,False,Termo Judiciário (Município Abrangido),2,Belém de Maria; Lagoa dos Gatos,-35.8335,-8.62504
+TJPE,Lagoa dos Gatos,2608701,Lagoa dos Gatos,2608701,True,Sede da Comarca,2,Belém de Maria; Lagoa dos Gatos,-35.904,-8.6602
+TJPE,Lagoa Grande,2608750,Lagoa Grande,2608750,True,Sede da Comarca,1,Lagoa Grande,-40.2767,-8.99452
+TJPE,Lajedo,2608800,Calçado,2603306,False,Termo Judiciário (Município Abrangido),2,Calçado; Lajedo,-36.3366,-8.73108
+TJPE,Lajedo,2608800,Lajedo,2608800,True,Sede da Comarca,2,Calçado; Lajedo,-36.3293,-8.65791
+TJPE,Limoeiro,2608909,Limoeiro,2608909,True,Sede da Comarca,1,Limoeiro,-35.4402,-7.8726
+TJPE,Macaparana,2609006,São Vicente Ferrer,2613800,False,Termo Judiciário (Município Abrangido),2,São Vicente Ferrer; Macaparana,-35.4808,-7.58969
+TJPE,Macaparana,2609006,Macaparana,2609006,True,Sede da Comarca,2,São Vicente Ferrer; Macaparana,-35.4425,-7.55564
+TJPE,Maraial,2609204,Jaqueira,2607950,False,Termo Judiciário (Município Abrangido),2,Jaqueira; Maraial,-35.7942,-8.72618
+TJPE,Maraial,2609204,Maraial,2609204,True,Sede da Comarca,2,Jaqueira; Maraial,-35.8266,-8.79062
+TJPE,Mirandiba,2609303,Carnaubeira da Penha,2603926,False,Termo Judiciário (Município Abrangido),2,Carnaubeira da Penha; Mirandiba,-38.7512,-8.31799
+TJPE,Mirandiba,2609303,Mirandiba,2609303,True,Sede da Comarca,2,Carnaubeira da Penha; Mirandiba,-38.7388,-8.12113
+TJPE,Moreno,2609402,Moreno,2609402,True,Sede da Comarca,1,Moreno,-35.0835,-8.10871
+TJPE,Nazaré da Mata,2609501,Nazaré da Mata,2609501,True,Sede da Comarca,1,Nazaré da Mata,-35.2193,-7.74149
+TJPE,Olinda,2609600,Olinda,2609600,True,Sede da Comarca,1,Olinda,-34.8545,-8.01017
+TJPE,Orobó,2609709,Orobó,2609709,True,Sede da Comarca,1,Orobó,-35.5956,-7.74553
+TJPE,Orocó,2609808,Orocó,2609808,True,Sede da Comarca,1,Orocó,-39.6026,-8.61026
+TJPE,Ouricuri,2609907,Ouricuri,2609907,True,Sede da Comarca,3,Ouricuri; Santa Cruz; Santa Filomena,-40.08,-7.87918
+TJPE,Ouricuri,2609907,Santa Cruz,2612455,False,Termo Judiciário (Município Abrangido),3,Ouricuri; Santa Cruz; Santa Filomena,-40.3434,-8.24153
+TJPE,Ouricuri,2609907,Santa Filomena,2612554,False,Termo Judiciário (Município Abrangido),3,Ouricuri; Santa Cruz; Santa Filomena,-40.6079,-8.16688
+TJPE,Palmares,2610004,Joaquim Nabuco,2608206,False,Termo Judiciário (Município Abrangido),2,Joaquim Nabuco; Palmares,-35.5288,-8.62281
+TJPE,Palmares,2610004,Palmares,2610004,True,Sede da Comarca,2,Joaquim Nabuco; Palmares,-35.589,-8.68423
+TJPE,Panelas,2610202,Panelas,2610202,True,Sede da Comarca,1,Panelas,-36.0125,-8.66121
+TJPE,Parnamirim,2610400,Terra Nova,2615201,False,Termo Judiciário (Município Abrangido),2,Terra Nova; Parnamirim,-39.3825,-8.22244
+TJPE,Parnamirim,2610400,Parnamirim,2610400,True,Sede da Comarca,2,Terra Nova; Parnamirim,-39.5795,-8.08729
+TJPE,Passira,2610509,Passira,2610509,True,Sede da Comarca,1,Passira,-35.5813,-7.9971
+TJPE,Paudalho,2610608,Paudalho,2610608,True,Sede da Comarca,1,Paudalho,-35.1716,-7.90287
+TJPE,Paulista,2610707,Paulista,2610707,True,Sede da Comarca,1,Paulista,-34.8684,-7.93401
+TJPE,Pedra,2610806,Pedra,2610806,True,Sede da Comarca,1,Pedra,-36.94,-8.49641
+TJPE,Pesqueira,2610905,Pesqueira,2610905,True,Sede da Comarca,1,Pesqueira,-36.6978,-8.35797
+TJPE,Petrolândia,2611002,Jatobá,2608057,False,Termo Judiciário (Município Abrangido),2,Jatobá; Petrolândia,-38.2607,-9.17476
+TJPE,Petrolândia,2611002,Petrolândia,2611002,True,Sede da Comarca,2,Jatobá; Petrolândia,-38.3027,-9.06863
+TJPE,Petrolina,2611101,Petrolina,2611101,True,Sede da Comarca,1,Petrolina,-40.5027,-9.38866
+TJPE,Poção,2611200,Poção,2611200,True,Sede da Comarca,1,Poção,-36.7111,-8.18726
+TJPE,Pombos,2611309,Pombos,2611309,True,Sede da Comarca,1,Pombos,-35.3967,-8.13982
+TJPE,Quipapá,2611507,Quipapá,2611507,True,Sede da Comarca,2,Quipapá; São Benedito do Sul,-36.0137,-8.81175
+TJPE,Quipapá,2611507,São Benedito do Sul,2612901,False,Termo Judiciário (Município Abrangido),2,Quipapá; São Benedito do Sul,-35.9453,-8.8166
+TJPE,Recife,2611606,Fernando de Noronha,2605459,False,Termo Judiciário (Município Abrangido),2,Fernando de Noronha; Recife,-32.4107,-3.8396
+TJPE,Recife,2611606,Recife,2611606,True,Sede da Comarca,2,Fernando de Noronha; Recife,-34.8771,-8.04666
+TJPE,Ribeirão,2611804,Ribeirão,2611804,True,Sede da Comarca,1,Ribeirão,-35.3698,-8.50957
+TJPE,Rio Formoso,2611903,Rio Formoso,2611903,True,Sede da Comarca,1,Rio Formoso,-35.1532,-8.6592
+TJPE,Sairé,2612000,Sairé,2612000,True,Sede da Comarca,1,Sairé,-35.6967,-8.32864
+TJPE,Salgueiro,2612208,Salgueiro,2612208,True,Sede da Comarca,1,Salgueiro,-39.1247,-8.07373
+TJPE,Saloá,2612307,Paranatama,2610301,False,Termo Judiciário (Município Abrangido),2,Paranatama; Saloá,-36.6549,-8.91875
+TJPE,Saloá,2612307,Saloá,2612307,True,Sede da Comarca,2,Paranatama; Saloá,-36.691,-8.9723
+TJPE,Sanharó,2612406,Sanharó,2612406,True,Sede da Comarca,1,Sanharó,-36.5696,-8.36097
+TJPE,Santa Cruz do Capibaribe,2612505,Jataúba,2608008,False,Termo Judiciário (Município Abrangido),2,Jataúba; Santa Cruz do Capibaribe,-36.4943,-7.97668
+TJPE,Santa Cruz do Capibaribe,2612505,Santa Cruz do Capibaribe,2612505,True,Sede da Comarca,2,Jataúba; Santa Cruz do Capibaribe,-36.2061,-7.94802
+TJPE,Santa Maria da Boa Vista,2612604,Santa Maria da Boa Vista,2612604,True,Sede da Comarca,1,Santa Maria da Boa Vista,-39.8241,-8.79766
+TJPE,Santa Maria do Cambucá,2612703,Frei Miguelinho,2605806,False,Termo Judiciário (Município Abrangido),2,Frei Miguelinho; Santa Maria do Cambucá,-35.9113,-7.93918
+TJPE,Santa Maria do Cambucá,2612703,Santa Maria do Cambucá,2612703,True,Sede da Comarca,2,Frei Miguelinho; Santa Maria do Cambucá,-35.8941,-7.83676
+TJPE,São Bento do Una,2613008,São Bento do Una,2613008,True,Sede da Comarca,1,São Bento do Una,-36.4465,-8.52637
+TJPE,São Caetano,2613107,São Caetano,2613107,True,Sede da Comarca,1,São Caetano,-36.2869,-8.33763
+TJPE,São João,2613206,Palmeirina,2610103,False,Termo Judiciário (Município Abrangido),2,Palmeirina; São João,-36.3242,-9.0109
+TJPE,São João,2613206,São João,2613206,True,Sede da Comarca,2,Palmeirina; São João,-36.3653,-8.87576
+TJPE,São Joaquim do Monte,2613305,São Joaquim do Monte,2613305,True,Sede da Comarca,1,São Joaquim do Monte,-35.8035,-8.43196
+TJPE,São José da Coroa Grande,2613404,São José da Coroa Grande,2613404,True,Sede da Comarca,1,São José da Coroa Grande,-35.1515,-8.88937
+TJPE,São José do Belmonte,2613503,São José do Belmonte,2613503,True,Sede da Comarca,1,São José do Belmonte,-38.7577,-7.85723
+TJPE,São José do Egito,2613602,Santa Terezinha,2612802,False,Termo Judiciário (Município Abrangido),2,Santa Terezinha; São José do Egito,-37.4787,-7.37696
+TJPE,São José do Egito,2613602,São José do Egito,2613602,True,Sede da Comarca,2,Santa Terezinha; São José do Egito,-37.274,-7.46945
+TJPE,São Lourenço da Mata,2613701,São Lourenço da Mata,2613701,True,Sede da Comarca,1,São Lourenço da Mata,-35.0124,-8.00684
+TJPE,Serra Talhada,2613909,Serra Talhada,2613909,True,Sede da Comarca,1,Serra Talhada,-38.289,-7.98178
+TJPE,Serrita,2614006,Cedro,2604304,False,Termo Judiciário (Município Abrangido),2,Cedro; Serrita,-39.2367,-7.71179
+TJPE,Serrita,2614006,Serrita,2614006,True,Sede da Comarca,2,Cedro; Serrita,-39.2951,-7.94041
+TJPE,Sertânia,2614105,Sertânia,2614105,True,Sede da Comarca,1,Sertânia,-37.2684,-8.06847
+TJPE,Sirinhaém,2614204,Sirinhaém,2614204,True,Sede da Comarca,1,Sirinhaém,-35.1126,-8.58778
+TJPE,Surubim,2614501,Casinhas,2604155,False,Termo Judiciário (Município Abrangido),3,Casinhas; Surubim; Vertente do Lério,-35.7206,-7.74084
+TJPE,Surubim,2614501,Surubim,2614501,True,Sede da Comarca,3,Casinhas; Surubim; Vertente do Lério,-35.7481,-7.84746
+TJPE,Surubim,2614501,Vertente do Lério,2616183,False,Termo Judiciário (Município Abrangido),3,Casinhas; Surubim; Vertente do Lério,-35.8491,-7.77084
+TJPE,Tabira,2614600,Solidão,2614402,False,Termo Judiciário (Município Abrangido),2,Solidão; Tabira,-37.6445,-7.59472
+TJPE,Tabira,2614600,Tabira,2614600,True,Sede da Comarca,2,Solidão; Tabira,-37.5377,-7.58366
+TJPE,Tacaimbó,2614709,Tacaimbó,2614709,True,Sede da Comarca,1,Tacaimbó,-36.3,-8.30867
+TJPE,Tacaratu,2614808,Tacaratu,2614808,True,Sede da Comarca,1,Tacaratu,-38.1504,-9.09798
+TJPE,Tamandaré,2614857,Tamandaré,2614857,True,Sede da Comarca,1,Tamandaré,-35.1033,-8.75665
+TJPE,Taquaritinga do Norte,2615003,Taquaritinga do Norte,2615003,True,Sede da Comarca,1,Taquaritinga do Norte,-36.0423,-7.89446
+TJPE,Timbaúba,2615300,Timbaúba,2615300,True,Sede da Comarca,1,Timbaúba,-35.3119,-7.50484
+TJPE,Toritama,2615409,Toritama,2615409,True,Sede da Comarca,1,Toritama,-36.0637,-8.00955
+TJPE,Tracunhaém,2615508,Buenos Aires,2602704,False,Termo Judiciário (Município Abrangido),2,Buenos Aires; Tracunhaém,-35.3182,-7.72449
+TJPE,Tracunhaém,2615508,Tracunhaém,2615508,True,Sede da Comarca,2,Buenos Aires; Tracunhaém,-35.2314,-7.80228
+TJPE,Trindade,2615607,Trindade,2615607,True,Sede da Comarca,1,Trindade,-40.2647,-7.759
+TJPE,Triunfo,2615706,Santa Cruz da Baixa Verde,2612471,False,Termo Judiciário (Município Abrangido),2,Santa Cruz da Baixa Verde; Triunfo,-38.1476,-7.81339
+TJPE,Triunfo,2615706,Triunfo,2615706,True,Sede da Comarca,2,Santa Cruz da Baixa Verde; Triunfo,-38.0978,-7.83272
+TJPE,Tuparetama,2615904,Ingazeira,2607109,False,Termo Judiciário (Município Abrangido),2,Ingazeira; Tuparetama,-37.4576,-7.66909
+TJPE,Tuparetama,2615904,Tuparetama,2615904,True,Sede da Comarca,2,Ingazeira; Tuparetama,-37.3165,-7.6003
+TJPE,Venturosa,2616001,Venturosa,2616001,True,Sede da Comarca,1,Venturosa,-36.8742,-8.57885
+TJPE,Verdejante,2616100,Verdejante,2616100,True,Sede da Comarca,1,Verdejante,-38.9701,-7.92235
+TJPE,Vertentes,2616209,Vertentes,2616209,True,Sede da Comarca,1,Vertentes,-35.9681,-7.90158
+TJPE,Vicência,2616308,Vicência,2616308,True,Sede da Comarca,1,Vicência,-35.3139,-7.65655
+TJPE,Vitória de Santo Antão,2616407,Vitória de Santo Antão,2616407,True,Sede da Comarca,1,Vitória de Santo Antão,-35.2976,-8.12819

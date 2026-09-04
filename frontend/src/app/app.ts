@@ -579,6 +579,11 @@ export class App implements AfterViewInit {
         const assuntos = properties['assuntos_str'] || 'N/A';
         const orgao = properties['orgao_julgador_nome'] || 'N/A';
         const municipio = properties['municipio_nome'] || 'Pernambuco';
+        const comarcaSede = properties['comarca_sede_nome'] || municipio;
+        const municipiosAbrangidos = properties['municipios_abrangidos'] || '';
+        const totalAbrangidos = properties['total_municipios_abrangidos'] || 1;
+        const temFilhos = properties['tem_municipios_filhos'] === true || properties['tem_municipios_filhos'] === 'true' || totalAbrangidos > 1;
+        const tipoJurisdicao = properties['tipo_jurisdicao'] || (tribunal === 'TJPE' ? 'Comarca Estadual (TJPE)' : 'Subseção Federal (JFPE)');
         const dataAjuiz = properties['data_ajuizamento'] ? new Date(properties['data_ajuizamento']).toLocaleDateString('pt-BR') : 'N/A';
         const ultimoMov = properties['ultimo_movimento'] || 'N/A';
         const dataUltimoMov = properties['data_ultimo_movimento'] ? new Date(properties['data_ultimo_movimento']).toLocaleDateString('pt-BR') : '';
@@ -612,9 +617,24 @@ export class App implements AfterViewInit {
             </div>
 
             <div class="popup-section">
-              <span class="popup-label">Vara / Comarca:</span>
+              <span class="popup-label">Vara / Órgão Julgador:</span>
               <span class="popup-value" style="font-size: 0.8rem; font-weight: 600;">${orgao}</span>
-              <span style="font-size: 0.72rem; color: #6b7280;">Município: <strong>${municipio}</strong></span>
+              <div style="margin-top: 3px; font-size: 0.72rem; color: #475569;">
+                <span>🏛️ Sede: <strong>${comarcaSede}</strong> (${tipoJurisdicao})</span>
+              </div>
+              ${temFilhos ? `
+                <div style="margin-top: 5px; padding: 5px 7px; border-radius: 5px; background: rgba(59, 130, 246, 0.08); border-left: 3px solid #3b82f6;">
+                  <div style="font-size: 0.7rem; font-weight: 700; color: #1d4ed8; display: flex; align-items: center; gap: 4px;">
+                    <span>📍 Municípios sob Jurisdição (${totalAbrangidos}):</span>
+                  </div>
+                  <div style="font-size: 0.68rem; color: #334155; margin-top: 2px; line-height: 1.35; max-height: 50px; overflow-y: auto;">
+                    ${municipiosAbrangidos.split('; ').join(', ')}
+                  </div>
+                  <div style="font-size: 0.64rem; color: #64748b; margin-top: 3px; font-style: italic;">
+                    * Abrange municípios sem comarca própria (filhas/termos judiciários).
+                  </div>
+                </div>
+              ` : ''}
             </div>
 
             <div class="popup-section">

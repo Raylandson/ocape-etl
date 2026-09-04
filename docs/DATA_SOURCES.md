@@ -90,6 +90,16 @@ Todas as bases abaixo já passam pelo pipeline ETL automatizado (`src/etl.py` e 
   6. *Conflito Coletivo Rural & Agrário* (TPU 11412, 11413).
 * **Interface:** Camada vetorial interativa no mapa com popup de detalhes do processo, link direto para consulta no PJe e painel dedicado de legendas e fundamentos jurídicos (`DatajudLegendComponent`).
 
+#### g. Jurisdições Territoriais & Comarcas / Termos Judiciários (TJPE e JFPE)
+* **Status:** **Importado e Ativo**
+* **Fontes:** Documentos oficiais do TJPE e JFPE (`data/raw/*.docx`) e malha IBGE 185 municípios (`src/pe_municipios_sedes.json`).
+* **Tabelas PostGIS:**
+  - `public.jurisdicao_tjpe` (185 vínculos municipais nas 136 comarcas do TJPE).
+  - `public.jurisdicao_jfpe` (213 vínculos municipais nas 12 subseções da Justiça Federal).
+  - `public.jurisdicoes_pe_municipios` (185 municípios unificados com sedes, comarcas, subseções, varas e coordenadas).
+* **Arquivos Exportados:** `data/extracted/jurisdicoes/tjpe_comarcas_municipios.csv`, `jfpe_subsecoes_municipios.csv`, `jurisdicoes_pe_completo.csv`.
+* **Resolução Fundiária / Jurídica:** Corrige a distorção onde municípios sem comarca própria ("municípios filhas" ou "termos judiciários", como Iguaracy, Dormentes, Casinhas, Primavera, Xexéu, Granito, etc.) ficavam invisíveis ou com contagem zero de processos. Permite identificar com exatidão a comarca sede responsável, as filhas abrangidas e enriquece os dados do DataJud com metadados de competência territorial e popups informativos.
+
 ---
 
 ### 3.1. Futuras Fontes — Camada 1: Cruzamentos Topológicos Espaciais

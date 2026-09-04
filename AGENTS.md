@@ -69,9 +69,18 @@ This document outlines the guidelines and protocols that AI coding agents must s
 ### September 2026: MapBiomas Ingestion & Interactive Inspection Layers
 - **Dual Layer ETL Ingestion (`src/etl.py`)**: Integrated official MapBiomas September 2026 releases:
   - `alerts_with_intersections`: 12,395 validated deforestation and vegetation suppression alerts in Pernambuco (2019–2026), tracking pressure drivers (agriculture, urban expansion, renewable energy, mining), affected areas, biomes, and detection timelines.
-  - `car_with_alerts_and_intersections`: 28,473 rural property polygons registered in SICAR with overlapping deforestation alerts across Pernambuco.
-- **PostGIS & Martin Integration**: Sanitized geometries, transformed to standard EPSG:4326, generated GIST spatial indexes, and published as MVT endpoints on Martin Tile Server.
-- **Frontend Map Layers & Popups**: Added both layers in `frontend/src/app/app.ts` (`🔥 MapBiomas - Alertas de Desmatamento` in `#ea580c` and `⚠️ MapBiomas - Imóveis CAR com Alertas` in `#f59e0b`). Implemented custom MapLibre inspection popup cards with alert code, pressure driver, affected hectares, satellite detection dates, biomes, and pre-computed intersections with SICAR, SIGEF, UCs, TIs, and Quilombolas.
+### September 2026: Judicial Territorial Jurisdictions & Comarcas/Termos Parsing (TJPE & JFPE)
+- **DOCX Extraction & IBGE Normalization (`src/process_jurisdicoes.py`)**: Extracted and normalized territorial jurisdictions from raw official court documents in `data/raw/`:
+  - `TJPE (Justiça Estadual) - Comarcas e municípios abrangidos.docx`: Parsed 136 state comarcas covering all 185 Pernambuco municipalities. Resolved 47 comarcas with multi-municipal jurisdiction (50 daughter municipalities / termos judiciários without their own comarca, e.g. Iguaracy -> Afogados da Ingazeira, Dormentes -> Afrânio, Casinhas -> Surubim). Handled cell XML runs, line breaks (`w:br`), and orthographic variations.
+  - `JFPE (Justiça Federal) - Seções judiciárias e municípios abrangidos.docx`: Parsed 12 Federal Subseções (Recife Sede, Arcoverde, Cabo de Santo Agostinho, Caruaru, Garanhuns, Goiana, Jaboatão, Ouricuri, Palmares, Petrolina, Salgueiro, Serra Talhada) covering all 185 municipalities. Mapped competent federal varas (`1ª` to `38ª`). Protected compound names ("Abreu e Lima") during tokenization.
+- **CSV & PostGIS Ingestion**:
+  - Exported structured CSVs into `data/extracted/jurisdicoes/` (`tjpe_comarcas_municipios.csv`, `jfpe_subsecoes_municipios.csv`, and `jurisdicoes_pe_completo.csv`).
+  - Created PostGIS spatial tables: `public.jurisdicao_tjpe`, `public.jurisdicao_jfpe`, and `public.jurisdicoes_pe_municipios` (with spatial GIST indexes and IBGE municipal centroids).
+- **DataJud Conflict Enrichment (`src/enrich_judicial_data.py` & `src/etl_datajud.py`)**:
+  - Enriched `public.processos_conflitos_judiciais` with `comarca_sede_nome`, `comarca_sede_ibge`, `municipios_abrangidos`, `total_municipios_abrangidos`, `tem_municipios_filhos`, and `tipo_jurisdicao`.
+  - Rebuilt `public.processos_conflitos_municipios` to comprehensively cover all 185 municipalities of Pernambuco, properly attributing judicial dispute volumes to both comarca seats and child terms (`termos judiciários`).
+- **Frontend Map Popups**:
+  - Updated MapLibre interactive popups in `frontend/src/app/app.ts` to display comarca headquarters, territorial jurisdiction badges, and explicit lists of covered municipalities without their own comarca.
 
 
 

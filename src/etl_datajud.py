@@ -449,6 +449,12 @@ def create_schema_and_ingest(records: List[Dict[str, Any]], engine):
                 data_ultimo_movimento TIMESTAMP,
                 total_movimentos INTEGER,
                 url_consulta_publica TEXT,
+                comarca_sede_nome VARCHAR(150),
+                comarca_sede_ibge INTEGER,
+                municipios_abrangidos TEXT,
+                total_municipios_abrangidos INTEGER,
+                tem_municipios_filhos BOOLEAN DEFAULT FALSE,
+                tipo_jurisdicao VARCHAR(50),
                 geometry GEOMETRY(Point, 4326)
             );
         """))
@@ -541,11 +547,13 @@ def create_schema_and_ingest(records: List[Dict[str, Any]], engine):
 
 def run():
     """Main execution function."""
+    from src.enrich_judicial_data import enrich_lawsuits
     engine = get_engine()
     muni_lookup = load_municipality_lookup(engine)
     raw_records = extract_datajud_processes(max_pages_per_tribunal=10)
     processed_records = process_and_geolocate_records(raw_records, muni_lookup)
     create_schema_and_ingest(processed_records, engine)
+    enrich_lawsuits(engine)
 
     # Print summary statistics
     with engine.connect() as conn:
