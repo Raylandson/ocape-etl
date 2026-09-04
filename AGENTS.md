@@ -56,11 +56,16 @@ This document outlines the guidelines and protocols that AI coding agents must s
   - `embargos_icmbio`: Filtered from 14,375 nationwide polygons to **246 embargo areas** inside Pernambuco.
   - `autos_infracao_icmbio`: Filtered from 41,728 nationwide points to **861 infraction notices** inside Pernambuco (discarding out-of-state points and administrative headquarters noise).
 - **Overlaps Recalculation**: Recomputed `public.land_overlaps` and `public.land_overlaps_points` ensuring all conflict polygons and center pins (792 conflict zones) are clean, fast, and strictly within Pernambuco.
-
 ### August 2026: Basemap Label Z-Index & Highlighting Optimization
 - **MapLibre GL Layer Ordering**: Dynamically resolved the first symbol/label layer from the Carto Positron basemap style (`watername_*`, `place_*`, `roadname_*`, `poi_*`).
 - **Label Preservation Above Data**: Added all custom polygons (CAR, SIGEF, SNCI, TIs, Quilombolas, ICMBio UCs, Embargoes, Overlaps) and point circles (`autos_infracao_icmbio`, `processos_conflitos_judiciais`) before the basemap's first label layer (`firstLabelId`).
 - **City & Road Name Visibility & Highlighting**: Enhanced all `place_*` layers with high-contrast text color (`#0f172a`), solid white halos (`#ffffff`), increased halo width (`2.5px`), and halo blur (`0.5px`). This ensures that municipal city names (e.g. Palmares, Recife, Caruaru, Barreiras, Gameleira, etc.) stand out prominently and legibly directly over dense clusters of DataJud points and environmental layers.
+
+### September 2026: Centralized Data Sources & Future Ingestion Roadmap Documentation
+- **Centralized Inventory (`docs/DATA_SOURCES.md`)**: Created comprehensive documentation categorizing data sources into Spatial Topological Crossings (Layer 1) and Socio-Legal Crossings (Layer 2).
+- **Imported vs. Roadmap Breakdown**: Cataloged currently ingested datasets (SIGEF, CAR, FUNAI TIs, Quilombolas, ICMBio UCs/Embargoes/Autos, and DataJud CNJ) alongside technical ingestion blueprints, access prerequisites, and integration requirements for future datasets (MapBiomas, SIPRA INCRA, Moradia Legal TJPE, Acervo Fundiário ITERPE, DespejoZero, and ONR).
+- **Multi-layer Topological Architecture**: Documented database multi-layer intersection architecture (ST_Intersects / ST_Intersection) and socio-legal attribution flows.
+
 
 
 

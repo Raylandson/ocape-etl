@@ -23,7 +23,8 @@ conflict-solver/
 ├── README.md                # Project documentation (this file)
 ├── AGENTS.md                # AI Agent guidelines and rules
 ├── docs/
-│   └── DATA_ANALYSIS.md     # Comprehensive Data Systems & Metadata Analysis
+│   ├── DATA_ANALYSIS.md     # Comprehensive Data Systems & Metadata Analysis
+│   └── DATA_SOURCES.md      # Ecosystem Inventory: Current Imported vs Future Data Sources Roadmap
 ├── data/
 │   ├── raw/                 # Untouched ZIP backups of source data [GIT IGNORED]
 │   │   ├── autos_infracao_icmbio.zip
