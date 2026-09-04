@@ -70,6 +70,9 @@ Every record in a dBase attribute table (`.dbf`) corresponds **1-to-1** with an 
 | **Áreas Embargadas (ICMBio)** | 246 | Polygon | Official Environmental Embargoes in PE | Legal restriction under Decree 6.514/2008 |
 | **Autos de Infração (ICMBio)** | 861 | Point | Environmental Infraction Notices in PE | Administrative Sanctions & Fines |
 | **Processos Judiciais (DataJud CNJ)** | 2,000 | Point | TJPE (1,000) & TRF5 PE (1,000)<br>6 Conflict Categories | Resolução CNJ 510/2023 & TPU (Posse, Reforma Agrária, Indígena/Quilombola, Terras Devolutas) |
+| **Alertas de Desmatamento (MapBiomas)** | 12,395 | Polygon | Supressão de Vegetação em PE (2019-2026)<br>Agropecuária (85%), Expansão Urbana, Energia | Detecção validada por satélite (SAD Caatinga/Mata Atlântica, GLAD, PRODES) |
+| **Imóveis CAR com Alertas (MapBiomas)** | 28,473 | Polygon | Imóveis SICAR em PE com alertas sobrepostos | Cruzamento espacial oficial MapBiomas com códigos `PE-` |
+
 
 
 ---

@@ -12,7 +12,8 @@ Este documento centraliza o inventário de dados da **Plataforma de Mapeamento e
 | :---: | :--- | :--- | :--- | :---: |
 | **a** | **SIGEF** | INCRA | Imóveis rurais certificados federais |  **Importado** |
 | **b** | **CAR / SICAR** | MMA / Órgãos Estaduais | Cadastros ambientais rurais, APPs e reservas |  **Importado** |
-| **c** | **MapBiomas** | Observatório do Clima | Uso, cobertura histórica do solo e alertas | ⏳ **A Importar** |
+| **c** | **MapBiomas Alertas** | MapBiomas / Obs. Clima | Alertas validados de desmatamento (`alerts_with_intersections`) |  **Importado** |
+| **c.1** | **MapBiomas CAR Alertas** | MapBiomas / Obs. Clima | Imóveis CAR com sobreposição a alertas (`car_with_alerts_and_intersections`) |  **Importado** |
 | **d** | **Terras Tradicionais** | FUNAI / INCRA | Terras Indígenas e Territórios Quilombolas |  **Importado** |
 | **e** | **Unidades de Conservação (UCs ICMBio)** | ICMBio / CNUC | Áreas federais de Proteção Integral e Uso Sustentável |  **Importado** |
 | **e.1** | **Áreas Embargadas (ICMBio)** | ICMBio / MMA | Polígonos de embargos ambientais e restrição de uso |  **Importado** |
@@ -95,7 +96,6 @@ Todas as bases abaixo já passam pelo pipeline ETL automatizado (`src/etl.py` e 
 
 | Código | Fonte | Órgão / Responsável | Formato Esperado | Requisitos de Acesso | Prioridade |
 | :---: | :--- | :--- | :--- | :--- | :---: |
-| **c** | **MapBiomas** | MapBiomas / Observatório do Clima | WMS / GeoTIFF / Shapefile (Coleções e Alertas) | Dados públicos abertos | Alta |
 | **h** | **SIPRA** | INCRA (Superintendência SR-03/PE) | Shapefile / KML / GeoJSON | Catálogo Acervo Fundiário INCRA | Alta |
 | **i** | **Moradia Legal** | Corregedoria Geral da Justiça (TJPE) | Shapefiles / Poligonais KML de REURB | Solicitação / Parceria TJPE | Média |
 | **j** | **Acervo ITERPE** | Instituto de Terras e Reforma Agrária de PE | Poligonais das Glebas Estaduais (Shapefile/DWG/KML) | Acordo de Cooperação Técnica (ACT) | Alta |

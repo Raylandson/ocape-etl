@@ -162,23 +162,41 @@ export class App implements AfterViewInit {
       visible: false
     },
     {
-      id: 'land_overlaps',
-      name: '⚠️ Áreas de Conflito (Sobreposições)',
-      sourceUrl: 'http://localhost:3000/land_overlaps',
-      sourceLayer: 'land_overlaps',
-      fillColor: '#ec4899', // neon hot pink
-      borderColor: '#be185d',
+      id: 'alerts_with_intersections',
+      name: 'MapBiomas - Alertas de Desmatamento',
+      sourceUrl: 'http://localhost:3000/alerts_with_intersections',
+      sourceLayer: 'alerts_with_intersections',
+      fillColor: '#ea580c',
+      borderColor: '#9a3412',
       visible: false
     },
     {
-      id: 'land_overlaps_points',
-      name: '📍 Centros de Conflito (Pontos)',
-      sourceUrl: 'http://localhost:3000/land_overlaps_points',
-      sourceLayer: 'land_overlaps_points',
-      fillColor: '#ef4444', // Red
-      borderColor: '#ffffff',
+      id: 'car_with_alerts_and_intersections',
+      name: 'MapBiomas - Imóveis CAR com Alertas',
+      sourceUrl: 'http://localhost:3000/car_with_alerts_and_intersections',
+      sourceLayer: 'car_with_alerts_and_intersections',
+      fillColor: '#f59e0b',
+      borderColor: '#b45309',
       visible: false
-    }
+    },
+    // {
+    //   id: 'land_overlaps',
+    //   name: '⚠️ Áreas de Conflito (Sobreposições)',
+    //   sourceUrl: 'http://localhost:3000/land_overlaps',
+    //   sourceLayer: 'land_overlaps',
+    //   fillColor: '#ec4899', // neon hot pink
+    //   borderColor: '#be185d',
+    //   visible: false
+    // },
+    // {
+    //   id: 'land_overlaps_points',
+    //   name: '📍 Centros de Conflito (Pontos)',
+    //   sourceUrl: 'http://localhost:3000/land_overlaps_points',
+    //   sourceLayer: 'land_overlaps_points',
+    //   fillColor: '#ef4444', // Red
+    //   borderColor: '#ffffff',
+    //   visible: false
+    // }
   ];
 
   ngAfterViewInit() {
@@ -632,6 +650,159 @@ export class App implements AfterViewInit {
       });
       this.map.on('mouseenter', 'processos_conflitos_judiciais_circle', () => { this.map.getCanvas().style.cursor = 'pointer'; });
       this.map.on('mouseleave', 'processos_conflitos_judiciais_circle', () => { this.map.getCanvas().style.cursor = ''; });
+
+      // Popup handler for MapBiomas Alertas de Desmatamento (alerts_with_intersections)
+      this.map.on('click', 'alerts_with_intersections_fill', (e) => {
+        const props = e.features?.[0]?.properties;
+        if (!props) return;
+
+        const code = props['alertcode'] || props['alertid'] || 'N/A';
+        const areaHa = props['alertha'] ? Number(props['alertha']).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ha' : 'N/A';
+        const year = props['detectyear'] ? Math.round(props['detectyear']) : 'N/A';
+        const detectDate = props['detectat'] ? new Date(props['detectat']).toLocaleDateString('pt-BR') : '';
+        const imgBefore = props['beforimgdt'] ? String(props['beforimgdt']).split(' ')[0] : '';
+        const imgAfter = props['afterimgdt'] ? String(props['afterimgdt']).split(' ')[0] : '';
+        const pressure = props['alertclass'] || 'Desconhecido';
+        const biome = props['biome'] || 'Caatinga / Mata Atlântica';
+        const city = props['city'] || 'Pernambuco';
+        const source = props['source'] || '';
+        const sicar = props['cdsicar'] || '';
+        const sigef = props['cdprisigef'] || props['cdpubsigef'] || '';
+        const ucName = props['fedipname'] || props['fedsuname'] || props['staipname'] || props['stasuname'] || '';
+        const tiName = props['inlandname'] || '';
+        const quilName = props['quilname'] || '';
+
+        // Portuguese translation for pressure classes
+        let pressureLabel = pressure;
+        if (pressure === 'agriculture') pressureLabel = '🌾 Agropecuária / Agricultura';
+        else if (pressure === 'urban_expansion') pressureLabel = '🏙️ Expansão Urbana';
+        else if (pressure === 'renewable_energy_project') pressureLabel = '⚡ Energia Renovável (Eólica/Solar)';
+        else if (pressure.includes('mining')) pressureLabel = '⛏️ Mineração';
+        else if (pressure === 'natural_cause') pressureLabel = '🍂 Causa Natural';
+        else if (pressure === 'others') pressureLabel = '⚠️ Outros Vetores de Supressão';
+
+        // Intersections HTML builder
+        let intersections = '';
+        if (sicar) {
+          const firstCar = sicar.split(',')[0];
+          intersections += `<div style="font-size: 0.72rem; color: #374151; word-break: break-all;"><strong>CAR:</strong> <span class="popup-value-code">${firstCar}</span></div>`;
+        }
+        if (sigef) {
+          intersections += `<div style="font-size: 0.72rem; color: #374151; margin-top: 2px;"><strong>SIGEF:</strong> <span class="popup-value-code">${sigef}</span></div>`;
+        }
+        if (ucName) {
+          intersections += `<div style="font-size: 0.72rem; color: #065f46; margin-top: 2px;"><strong>Unidade Conservação:</strong> ${ucName}</div>`;
+        }
+        if (tiName) {
+          intersections += `<div style="font-size: 0.72rem; color: #b91c1c; margin-top: 2px;"><strong>Terra Indígena:</strong> ${tiName}</div>`;
+        }
+        if (quilName) {
+          intersections += `<div style="font-size: 0.72rem; color: #7e22ce; margin-top: 2px;"><strong>Território Quilombola:</strong> ${quilName}</div>`;
+        }
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title" style="color: #ea580c; display: flex; align-items: center; justify-content: space-between;">
+              <span>🌲 Alerta MapBiomas</span>
+              <span style="font-size: 0.68rem; background: #ffedd5; color: #c2410c; padding: 2px 7px; border-radius: 9999px; font-weight: 700;">${year}</span>
+            </div>
+
+            <div class="popup-section" style="margin-bottom: 2px;">
+              <span class="popup-label">Código do Alerta:</span>
+              <span class="popup-value-code" style="font-weight: 700; color: #9a3412; background: #ffedd5;">#${code}</span>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Vetor de Pressão:</span>
+              <span class="popup-value" style="font-weight: 600; color: #1f2937;">${pressureLabel}</span>
+            </div>
+
+            <div class="popup-section" style="display: flex; flex-direction: row; justify-content: space-between; gap: 8px;">
+              <div>
+                <span class="popup-label">Área Desmatada:</span>
+                <span class="popup-value" style="font-weight: 700; color: #b91c1c;">${areaHa}</span>
+              </div>
+              <div>
+                <span class="popup-label">Bioma:</span>
+                <span class="popup-value">${biome}</span>
+              </div>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Localização:</span>
+              <span class="popup-value">${city} - PE</span>
+            </div>
+
+            <div class="popup-section" style="font-size: 0.72rem; color: #6b7280; border-top: 1px dashed rgba(229, 231, 235, 0.8); padding-top: 4px;">
+              <div>Detecção: <strong>${detectDate}</strong> (${source})</div>
+              ${imgBefore && imgAfter ? `<div>Período: ${imgBefore} ➔ ${imgAfter}</div>` : ''}
+            </div>
+
+            ${intersections ? `
+              <div class="popup-section" style="background: rgba(234, 88, 12, 0.05); border: 1px solid rgba(234, 88, 12, 0.2); border-radius: 6px; padding: 6px; margin-top: 4px;">
+                <span class="popup-label" style="color: #c2410c;">Sobreposições Confirmadas:</span>
+                ${intersections}
+              </div>
+            ` : ''}
+          </div>
+        `;
+
+        new Popup({ closeButton: true, className: 'custom-popup mapbiomas-popup' }).setLngLat(e.lngLat).setHTML(html).addTo(this.map);
+      });
+      this.map.on('mouseenter', 'alerts_with_intersections_fill', () => { this.map.getCanvas().style.cursor = 'pointer'; });
+      this.map.on('mouseleave', 'alerts_with_intersections_fill', () => { this.map.getCanvas().style.cursor = ''; });
+
+      // Popup handler for MapBiomas CAR Imóveis com Alertas (car_with_alerts_and_intersections)
+      this.map.on('click', 'car_with_alerts_and_intersections_fill', (e) => {
+        const props = e.features?.[0]?.properties;
+        if (!props) return;
+
+        const codSicar = props['codsicar'] || 'N/A';
+        const alertCode = props['alertcode'] || props['alertid'] || 'N/A';
+        const interHa = props['interha'] ? Number(props['interha']).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ha' : 'N/A';
+        const city = props['city'] || 'Pernambuco';
+        const year = props['detectyear'] ? Math.round(props['detectyear']) : 'N/A';
+        const alertClass = props['alertclass'] || 'Desconhecido';
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title" style="color: #b45309; display: flex; align-items: center; justify-content: space-between;">
+              <span>⚠️ Imóvel CAR com Alerta</span>
+              <span style="font-size: 0.68rem; background: #fef3c7; color: #b45309; padding: 2px 7px; border-radius: 9999px; font-weight: 700;">${year}</span>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Código do Imóvel Rural (SICAR):</span>
+              <span class="popup-value-code" style="word-break: break-all; font-weight: 600; color: #78350f; background: #fef3c7;">${codSicar}</span>
+            </div>
+
+            <div class="popup-section" style="display: flex; flex-direction: row; justify-content: space-between; gap: 8px;">
+              <div>
+                <span class="popup-label">Área Atingida no Imóvel:</span>
+                <span class="popup-value" style="font-weight: 700; color: #b91c1c;">${interHa}</span>
+              </div>
+              <div>
+                <span class="popup-label">Alerta Associado:</span>
+                <span class="popup-value-code">#${alertCode}</span>
+              </div>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Município:</span>
+              <span class="popup-value">${city} - PE</span>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Vetor de Supressão:</span>
+              <span class="popup-value">${alertClass}</span>
+            </div>
+          </div>
+        `;
+
+        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(e.lngLat).setHTML(html).addTo(this.map);
+      });
+      this.map.on('mouseenter', 'car_with_alerts_and_intersections_fill', () => { this.map.getCanvas().style.cursor = 'pointer'; });
+      this.map.on('mouseleave', 'car_with_alerts_and_intersections_fill', () => { this.map.getCanvas().style.cursor = ''; });
     });
   }
 

@@ -18,6 +18,8 @@ data/extracted/vegetacao_nativa_sicar/
 data/extracted/autos_infracao_icmbio/
 data/extracted/embargos_icmbio/
 data/extracted/limiteucsfederais_a/
+data/extracted/mapbiomas_alertas/
+data/extracted/mapbiomas_car_alertas/
 
 # Local backup archives
 *.tar.gz

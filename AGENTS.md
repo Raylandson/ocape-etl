@@ -66,6 +66,14 @@ This document outlines the guidelines and protocols that AI coding agents must s
 - **Imported vs. Roadmap Breakdown**: Cataloged currently ingested datasets (SIGEF, CAR, FUNAI TIs, Quilombolas, ICMBio UCs/Embargoes/Autos, and DataJud CNJ) alongside technical ingestion blueprints, access prerequisites, and integration requirements for future datasets (MapBiomas, SIPRA INCRA, Moradia Legal TJPE, Acervo Fundiário ITERPE, DespejoZero, and ONR).
 - **Multi-layer Topological Architecture**: Documented database multi-layer intersection architecture (ST_Intersects / ST_Intersection) and socio-legal attribution flows.
 
+### September 2026: MapBiomas Ingestion & Interactive Inspection Layers
+- **Dual Layer ETL Ingestion (`src/etl.py`)**: Integrated official MapBiomas September 2026 releases:
+  - `alerts_with_intersections`: 12,395 validated deforestation and vegetation suppression alerts in Pernambuco (2019–2026), tracking pressure drivers (agriculture, urban expansion, renewable energy, mining), affected areas, biomes, and detection timelines.
+  - `car_with_alerts_and_intersections`: 28,473 rural property polygons registered in SICAR with overlapping deforestation alerts across Pernambuco.
+- **PostGIS & Martin Integration**: Sanitized geometries, transformed to standard EPSG:4326, generated GIST spatial indexes, and published as MVT endpoints on Martin Tile Server.
+- **Frontend Map Layers & Popups**: Added both layers in `frontend/src/app/app.ts` (`🔥 MapBiomas - Alertas de Desmatamento` in `#ea580c` and `⚠️ MapBiomas - Imóveis CAR com Alertas` in `#f59e0b`). Implemented custom MapLibre inspection popup cards with alert code, pressure driver, affected hectares, satellite detection dates, biomes, and pre-computed intersections with SICAR, SIGEF, UCs, TIs, and Quilombolas.
+
+
 
 
 

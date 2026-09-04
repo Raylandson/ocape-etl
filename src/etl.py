@@ -131,6 +131,25 @@ def filter_to_pernambuco(gdf: gpd.GeoDataFrame, filename: str, pe_geom) -> gpd.G
         logger.info(f"Filtered 'autos_infracao_icmbio' from {initial_count} to {len(gdf)} infraction notices in Pernambuco.")
         return gdf
 
+    elif filename == "alerts_with_intersections":
+        # Fast filter by STATE attribute and spatial boundary
+        mask_state = gdf["STATE"].astype(str).str.upper().str.contains("PERNAMBUCO", na=False) if "STATE" in gdf.columns else True
+        gdf = gdf[mask_state].copy()
+        if pe_geom is not None and not gdf.empty:
+            gdf = gdf[gdf.intersects(pe_geom)].copy()
+        logger.info(f"Filtered 'alerts_with_intersections' from {initial_count} to {len(gdf)} MapBiomas alerts in Pernambuco.")
+        return gdf
+
+    elif filename == "car_with_alerts_and_intersections":
+        # Fast filter by CODSICAR prefix 'PE-' or STATE attribute and spatial boundary
+        mask_cod = gdf["CODSICAR"].astype(str).str.startswith("PE-") if "CODSICAR" in gdf.columns else False
+        mask_state = gdf["STATE"].astype(str).str.upper().str.contains("PERNAMBUCO", na=False) if "STATE" in gdf.columns else False
+        gdf = gdf[mask_cod | mask_state].copy()
+        if pe_geom is not None and not gdf.empty:
+            gdf = gdf[gdf.intersects(pe_geom)].copy()
+        logger.info(f"Filtered 'car_with_alerts_and_intersections' from {initial_count} to {len(gdf)} CAR properties with alerts in Pernambuco.")
+        return gdf
+
     return gdf
 
 def run_etl():
