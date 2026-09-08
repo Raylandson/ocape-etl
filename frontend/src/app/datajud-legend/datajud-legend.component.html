@@ -2,7 +2,9 @@
   <!-- Floating Toggle Button when panel is closed -->
   @if (!isOpen) {
     <button class="panel-toggle-badge left-toggle" (click)="toggleOpen()" title="Abrir categorias DataJud">
-      <span class="toggle-badge-icon">⚖️</span>
+      <svg class="toggle-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 6l9-4 9 4M4 10h16M4 14h16M4 18h16" />
+      </svg>
       <span class="toggle-badge-text">DataJud</span>
       <span class="toggle-badge-count">{{ categories.length }}</span>
     </button>

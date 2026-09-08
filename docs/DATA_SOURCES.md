@@ -14,6 +14,7 @@ Este documento centraliza o inventário de dados da **Plataforma de Mapeamento e
 | **b** | **CAR / SICAR** | MMA / Órgãos Estaduais | Cadastros ambientais rurais, APPs e reservas |  **Importado** |
 | **c** | **MapBiomas Alertas** | MapBiomas / Obs. Clima | Alertas validados de desmatamento (`alerts_with_intersections`) |  **Importado** |
 | **c.1** | **MapBiomas CAR Alertas** | MapBiomas / Obs. Clima | Imóveis CAR com sobreposição a alertas (`car_with_alerts_and_intersections`) |  **Importado** |
+| — | *MapBiomas Dashboard* | MapBiomas / Obs. Clima | Shapefile simplificado (`dashboard_alerts`) | ℹ️ **Dispensado** (subconjunto de `c`) |
 | **d** | **Terras Tradicionais** | FUNAI / INCRA | Terras Indígenas e Territórios Quilombolas |  **Importado** |
 | **e** | **Unidades de Conservação (UCs ICMBio)** | ICMBio / CNUC | Áreas federais de Proteção Integral e Uso Sustentável |  **Importado** |
 | **e.1** | **Áreas Embargadas (ICMBio)** | ICMBio / MMA | Polígonos de embargos ambientais e restrição de uso |  **Importado** |
@@ -123,12 +124,12 @@ Todas as bases abaixo já passam pelo pipeline ETL automatizado (`src/etl.py` e 
 
 ### 3.3. Detalhamento Técnico das Fontes Futuras
 
-### c. MapBiomas (Uso e Cobertura do Solo & Alertas de Desmatamento)
-* **Objetivo:** Avaliar o histórico de ocupação, vegetação nativa, consolidação de pastagem/agricultura e desmatamento não autorizado em áreas sob litígio.
-* **Subdivisão:**
-  1. **MapBiomas Uso e Cobertura:** Série temporal anual (1985–presente) da transição de uso da terra. Permite aferir posse mansa e pacífica, tempo de ocupação e degradação ambiental.
-  2. **MapBiomas Alerta:** Polígonos validados de alertas de desmatamento com sobreposição a embargos e autorizações do órgão ambiental.
-* **Pipeline Proposto:** Ingestão vetorial dos alertas e relatórios analíticos de cobertura via API do MapBiomas ou processamento zonal no PostGIS (Raster/Vector).
+### c. MapBiomas (Uso e Cobertura do Solo Histórico - Raster 1985–presente)
+* **Objetivo:** Avaliar o histórico de ocupação, vegetação nativa, consolidação de pastagem/agricultura e tempo de posse em áreas sob litígio.
+* **Status Atual:** 
+  * Os **Alertas de Desmatamento (`alerts_with_intersections` e `car_with_alerts_and_intersections`)** já foram **integralmente importados**.
+  * A camada raster anual de **Uso e Cobertura do Solo (Coleção MapBiomas 1985–presente)** está planejada para análise temporal de posse mansa e pacífica.
+* **Pipeline Proposto:** Processamento zonal no PostGIS / Google Earth Engine para geração de perfis temporais de cobertura por imóvel.
 
 ### h. SIPRA — Sistema de Informações de Projetos de Reforma Agrária (INCRA)
 * **Objetivo:** Ingestão dos perímetros de Projetos de Assentamento Federais (PA, PDS, PAF, etc.) em Pernambuco.

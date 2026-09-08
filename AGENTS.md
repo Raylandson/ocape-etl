@@ -69,6 +69,9 @@ This document outlines the guidelines and protocols that AI coding agents must s
 ### September 2026: MapBiomas Ingestion & Interactive Inspection Layers
 - **Dual Layer ETL Ingestion (`src/etl.py`)**: Integrated official MapBiomas September 2026 releases:
   - `alerts_with_intersections`: 12,395 validated deforestation and vegetation suppression alerts in Pernambuco (2019–2026), tracking pressure drivers (agriculture, urban expansion, renewable energy, mining), affected areas, biomes, and detection timelines.
+  - `car_with_alerts_and_intersections`: 28,473 SICAR property boundaries with overlapping deforestation alerts, enabling granular property-level compliance and tenure liability audits.
+- **Deforestation & Agrarian Conflict Cross-Analysis**: Cross-referenced MapBiomas deforestation polygons with traditional territories, agrarian reform settlements, conflict overlap clusters, and judicial lawsuits, identifying 133 alerts in Indigenous Lands (notably TI Xukuru), 9 in Quilombos (Conceição das Crioulas), 395 in INCRA settlements, and 371 directly inside active conflict zones (`land_overlaps`).
+
 ### September 2026: Judicial Territorial Jurisdictions & Comarcas/Termos Parsing (TJPE & JFPE)
 - **DOCX Extraction & IBGE Normalization (`src/process_jurisdicoes.py`)**: Extracted and normalized territorial jurisdictions from raw official court documents in `data/raw/`:
   - `TJPE (Justiça Estadual) - Comarcas e municípios abrangidos.docx`: Parsed 136 state comarcas covering all 185 Pernambuco municipalities. Resolved 47 comarcas with multi-municipal jurisdiction (50 daughter municipalities / termos judiciários without their own comarca, e.g. Iguaracy -> Afogados da Ingazeira, Dormentes -> Afrânio, Casinhas -> Surubim). Handled cell XML runs, line breaks (`w:br`), and orthographic variations.
@@ -81,6 +84,12 @@ This document outlines the guidelines and protocols that AI coding agents must s
   - Rebuilt `public.processos_conflitos_municipios` to comprehensively cover all 185 municipalities of Pernambuco, properly attributing judicial dispute volumes to both comarca seats and child terms (`termos judiciários`).
 - **Frontend Map Popups**:
   - Updated MapLibre interactive popups in `frontend/src/app/app.ts` to display comarca headquarters, territorial jurisdiction badges, and explicit lists of covered municipalities without their own comarca.
+
+### September 2026: UI/UX Minimalist Redesign of Popups & Cards
+- **Anti-AI Slop Cleanup**: Eliminated emojis (`⚖️`, `🌲`, `🚫`, `⚡`, `⚠️`, `🌾`, etc.), neon colored glow shadows (`box-shadow` glows), and saturated background badges across all interactive map popups (DataJud, ICMBio UCs, Embargoes, Autos de Infração, MapBiomas Alertas/CAR, and Land Overlaps).
+- **Removal of Colored Left Stripes**: Replaced colored vertical border stripes (`border-left: 3px solid ...`) on mini cards with neutral, structured `.popup-detail-box` containers styled with subtle borders (`1px solid #e2e8f0`) and clean background shading (`#f8fafc`).
+- **Typography & Institutional Design**: Standardized card hierarchy with dark neutral titles (`#0f172a`), subtle metadata badges (`.popup-badge`), monospace codes (`.popup-value-code`), clean key-value pairs, and neutral institutional action buttons (`.popup-btn`).
+- **DataJud Legend Component**: Replaced floating button emoji with a minimalist scales SVG icon.
 
 
 

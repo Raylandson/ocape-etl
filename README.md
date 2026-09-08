@@ -154,7 +154,7 @@ cd frontend
 pnpm install
 pnpm start
 ```
-Open `http://localhost:4200` in your web browser. You will see an interactive map with a glassmorphic layer control panel (right) and a dedicated DataJud Judicial Categories Legend (left), serving vector tiles for all key datasets (Indigenous Lands, Quilombola Territories, SIGEF Private/Public, SNCI, CAR, ICMBio Conservation Units, Embargoes, Infraction Notices, and DataJud Lawsuits) with custom color themes, circle/symbol markers, and rich popup inspection cards.
+Open `http://localhost:4200` in your web browser. You will see an interactive map with a glassmorphic layer control panel (right) and a dedicated DataJud Judicial Categories Legend (left), serving vector tiles for all key datasets (Indigenous Lands, Quilombola Territories, SIGEF Private/Public, SNCI, CAR, ICMBio Conservation Units, Embargoes, Infraction Notices, MapBiomas Deforestation Alerts/CAR, and DataJud Lawsuits) with custom color themes, circle/symbol markers, and rich popup inspection cards.
 
 ---
 
@@ -210,6 +210,8 @@ The ETL successfully manages and serves the following datasets:
 | `sigef_privado_pe` | Private SIGEF properties | MultiPolygon | GIST |
 | `sigef_publico_pe` | Public SIGEF properties | MultiPolygon | GIST |
 | `tis_poligonais` | Indigenous traditional lands (FUNAI) | MultiPolygon | GIST |
+| `alerts_with_intersections` | Alertas de Desmatamento e Supressão Validados (MapBiomas Alerta 2019–2026) | MultiPolygon | GIST |
+| `car_with_alerts_and_intersections` | Imóveis Rurais (CAR) com sobreposição a alertas de desmatamento (MapBiomas) | MultiPolygon | GIST |
 | `land_overlaps` | Spatial overlaps (conflicts) | MultiPolygon | GIST |
 | `land_overlaps_points` | Center points (medians) of conflict areas | Point | GIST |
 | `jurisdicao_tjpe` | Comarcas estaduais e municípios abrangidos (TJPE) | Point | GIST |

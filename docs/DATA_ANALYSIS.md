@@ -209,4 +209,31 @@ Every record in a dBase attribute table (`.dbf`) corresponds **1-to-1** with an 
   * **Outros Conflitos Fundiários:** 301 processos (TJPE: 63 | TRF5: 238)
 * **Key Attributes:** `numero_processo`, `tribunal`, `grau`, `data_ajuizamento`, `categoria_conflito`, `classe_nome`, `assuntos_str`, `orgao_julgador_nome`, `municipio_nome`, `municipio_ibge`, `ultimo_movimento`, `data_ultimo_movimento`, `total_movimentos`, `url_consulta_publica`.
 
+---
+
+### 10. Alertas de Supressão e Desmatamento — MapBiomas Alerta (`alerts_with_intersections` e `car_with_alerts_and_intersections`)
+* **Managing Body:** Iniciativa MapBiomas (Consórcio de ONGs, Universidades e Empresas de Tecnologia - TNC, Imazon, ISA, WRI Brasil, Lapig/UFG).
+* **Legal & Technical Basis:** Validação de alertas de alta resolução por imagens de satélite Planet (3m) e Sentinel-2 (10m) cruzados com bases públicas fundiárias e ambientais (SICAR, SIGEF, SNCI, FUNAI, INCRA, ICMBio).
+* **Total Records Ingested (PE):**
+  * `alerts_with_intersections`: **12,395 alertas validados** (102.482,3 ha suprimidos entre 2019 e 2026).
+  * `car_with_alerts_and_intersections`: **28,473 registros** de imóveis rurais do CAR com alertas incidentes.
+* **Biome Breakdown:**
+  * **Caatinga:** 12,197 alertas (98.40% dos registros | 101.700 ha).
+  * **Mata Atlântica:** 198 alertas (1.60% dos registros | 782 ha).
+* **Pressure Drivers & Classes (`alertclass` / `VPRESSAO`):**
+  * `agriculture` (Agropecuária): **10,634 alertas** (85.79% | 85.723,8 ha) — expansão de pastagens e lavouras.
+  * `others` (Outros / Transição Não Consolidada): **1,617 alertas** (13.05% | 13.590,6 ha).
+  * `urban_expansion` (Expansão Urbana): **111 alertas** (0.90% | 1.042,3 ha).
+  * `renewable_energy_project` (Parques Eólicos e Solares): **24 alertas** (0.19% | 2.053,9 ha) — megaprojetos fotovoltaicos e eólicos (São José do Belmonte, Terra Nova, Saloá, Caetés, Flores).
+  * `ilegal_mining` (Garimpo Ilegal): **3 alertas** (0.02% | 17,8 ha) — Custódia, Petrolina, Betânia.
+  * `mining` (Mineração Industrial): **3 alertas** (0.02% | 34,5 ha) — Belmonte, Petrolina, Caruaru.
+  * `natural_cause` (Causa Natural): **3 alertas** (0.02% | 20,1 ha).
+* **Direct Agrarian Conflict Intersections:**
+  * **Terras Indígenas (`tis_poligonais`):** 133 alertas (569,1 ha) — Xukuru (100 alertas, 383,3 ha), Atikum (12 alertas), Pankará (8 alertas), Fulni-ô (5 alertas), Pipipã (4 alertas), Entre Serras (3 alertas), Kapinawá (1 alerta).
+  * **Territórios Quilombolas (`areas_de_quilombolas_pe`):** 9 alertas (33,2 ha) — Conceição das Crioulas (5 alertas, 15,5 ha), Águas do Velho Chico, Contendas, Fazenda Santana, Feijão e Posse.
+  * **Assentamentos de Reforma Agrária INCRA (`settlname`):** 395 alertas (2.215,8 ha) em 134 Projetos de Assentamento (PA Cachoeira I, PA São Lourenço, PA Nossa Senhora Aparecida, PA Taboleiro, PA Rosário, PA Terra Livre, etc.).
+  * **Polígonos de Sobreposição Litigiosa (`land_overlaps`):** 371 alertas incidem diretamente sobre zonas de conflito mapeadas na plataforma (310 em UCs Federais, 43 em embargos ambientais, 37 em TIs e 10 em Quilombos).
+  * **Correlação com Conflitos Judiciais:** Alta co-ocorrência em Serra Talhada (717 alertas | 81 processos), Petrolina (460 alertas | 111 processos), Salgueiro (165 alertas | 32 processos), Ouricuri/Araripe (>2.000 alertas) e Pesqueira (302 alertas | 96 em TIs).
+
+
 

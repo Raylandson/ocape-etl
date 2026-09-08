@@ -407,13 +407,13 @@ export class App implements AfterViewInit {
             const pLabel = pSource.includes('snci') ? 'SNCI' : (pSource.includes('sigef') ? 'SIGEF' : (pSource.includes('area_imovel') || pSource.includes('sicar') ? 'CAR' : 'Imóvel'));
 
             propertiesHtml += `
-              <div class="popup-property-item" style="${i > 0 ? 'margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(229, 231, 235, 0.6);' : ''}">
+              <div style="${i > 0 ? 'margin-top: 6px; padding-top: 6px; border-top: 1px solid #e2e8f0;' : ''}">
                 <div class="popup-section">
                   <span class="popup-label">${pLabel}:</span>
                   <span class="popup-value">${pName}</span>
                 </div>
                 <div class="popup-section" style="margin-top: 2px;">
-                  <span class="popup-label" style="font-size: 0.65rem;">Código:</span>
+                  <span class="popup-label">Código:</span>
                   <span class="popup-value-code">${pCode}</span>
                 </div>
               </div>
@@ -422,13 +422,19 @@ export class App implements AfterViewInit {
 
           const html = `
             <div class="popup-card">
-              <div class="popup-title">⚠️ Conflito Territorial / Ambiental</div>
-              <div class="popup-section" style="margin-bottom: 4px;">
-                <span class="popup-label">${traditionalLabel}:</span>
-                <span class="popup-value" style="font-weight: 700;">${traditionalName}</span>
+              <div class="popup-title">
+                <span>Conflito Territorial</span>
+                <span class="popup-badge">Sobreposição</span>
               </div>
-              <div class="popup-properties-container" style="max-height: 180px; overflow-y: auto; background: rgba(0, 0, 0, 0.02); padding: 8px; border-radius: 8px; border: 1px solid rgba(0, 0, 0, 0.04);">
-                ${propertiesHtml}
+              <div class="popup-section">
+                <span class="popup-label">${traditionalLabel}:</span>
+                <span class="popup-value" style="font-weight: 600;">${traditionalName}</span>
+              </div>
+              <div class="popup-detail-box">
+                <div class="popup-detail-box-title">Imóveis Incidentes (${maxLen}):</div>
+                <div class="popup-detail-box-content" style="max-height: 140px;">
+                  ${propertiesHtml}
+                </div>
               </div>
             </div>
           `;
@@ -463,18 +469,21 @@ export class App implements AfterViewInit {
 
         const html = `
           <div class="popup-card">
-            <div class="popup-title" style="color: #047857;">🌲 Unidade de Conservação (ICMBio)</div>
+            <div class="popup-title">
+              <span>Unidade de Conservação</span>
+              <span class="popup-badge">${esfera}</span>
+            </div>
             <div class="popup-section">
               <span class="popup-label">Nome:</span>
-              <span class="popup-value" style="font-weight: 700;">${nomeUc}</span>
+              <span class="popup-value" style="font-weight: 600;">${nomeUc}</span>
             </div>
             <div class="popup-section">
               <span class="popup-label">Categoria / Grupo:</span>
               <span class="popup-value">${categoria} (${grupo})</span>
             </div>
             <div class="popup-section">
-              <span class="popup-label">Esfera / Ano:</span>
-              <span class="popup-value">${esfera} • ${criacao}</span>
+              <span class="popup-label">Ano de Criação:</span>
+              <span class="popup-value">${criacao}</span>
             </div>
             <div class="popup-section">
               <span class="popup-label">Área Oficial:</span>
@@ -500,22 +509,24 @@ export class App implements AfterViewInit {
 
         const html = `
           <div class="popup-card">
-            <div class="popup-title" style="color: #c2410c;">🚫 Área Embargada (ICMBio)</div>
+            <div class="popup-title">
+              <span>Área Embargada</span>
+              <span class="popup-badge">ICMBio</span>
+            </div>
             <div class="popup-section">
               <span class="popup-label">Termo de Embargo:</span>
               <span class="popup-value-code">${numEmb}</span>
             </div>
             <div class="popup-section">
               <span class="popup-label">Autuado:</span>
-              <span class="popup-value" style="font-weight: 600;">${autuado}</span>
-              ${cpfCnpj ? `<span style="font-size: 0.7rem; color: #6b7280;">(${cpfCnpj})</span>` : ''}
+              <span class="popup-value" style="font-weight: 500;">${autuado} ${cpfCnpj ? `(${cpfCnpj})` : ''}</span>
             </div>
             <div class="popup-section">
               <span class="popup-label">Tipo de Infração:</span>
               <span class="popup-value">${tipoInfra}</span>
             </div>
             <div class="popup-section">
-              <span class="popup-label">UC / Localidade:</span>
+              <span class="popup-label">Localização:</span>
               <span class="popup-value">${uc} (${local})</span>
             </div>
           </div>
@@ -538,25 +549,28 @@ export class App implements AfterViewInit {
 
         const html = `
           <div class="popup-card">
-            <div class="popup-title" style="color: #b45309;">⚡ Auto de Infração Ambiental (ICMBio)</div>
+            <div class="popup-title">
+              <span>Auto de Infração</span>
+              <span class="popup-badge">ICMBio</span>
+            </div>
             <div class="popup-section">
               <span class="popup-label">Número do Auto:</span>
               <span class="popup-value-code">${numAi}</span>
             </div>
             <div class="popup-section">
               <span class="popup-label">Autuado:</span>
-              <span class="popup-value" style="font-weight: 600;">${autuado}</span>
+              <span class="popup-value" style="font-weight: 500;">${autuado}</span>
             </div>
             <div class="popup-section">
               <span class="popup-label">Valor da Multa:</span>
-              <span class="popup-value" style="color: #b91c1c; font-weight: 700;">${valor}</span>
+              <span class="popup-value" style="font-weight: 600;">${valor}</span>
             </div>
             <div class="popup-section">
               <span class="popup-label">Infração:</span>
               <span class="popup-value">${tipoInfra}</span>
             </div>
             <div class="popup-section">
-              <span class="popup-label">UC / Município:</span>
+              <span class="popup-label">Localização:</span>
               <span class="popup-value">${uc} (${local})</span>
             </div>
           </div>
@@ -590,83 +604,64 @@ export class App implements AfterViewInit {
         const totalMov = properties['total_movimentos'] || '1';
         const urlConsulta = properties['url_consulta_publica'] || '#';
 
-        // Badge color mapping
-        let catColor = '#8b5cf6';
-        if (categoria.includes('Reforma Agrária')) catColor = '#f59e0b';
-        else if (categoria.includes('Indígenas') || categoria.includes('Quilombolas')) catColor = '#ef4444';
-        else if (categoria.includes('Devolutas') || categoria.includes('Discriminatória')) catColor = '#3b82f6';
-        else if (categoria.includes('Usucapião')) catColor = '#10b981';
-        else if (categoria.includes('Coletivo')) catColor = '#ec4899';
-
         const html = `
           <div class="popup-card">
-            <div class="popup-title" style="color: #6d28d9; display: flex; align-items: center; justify-content: space-between;">
-              <span>⚖️ Conflito na Justiça (${tribunal})</span>
-              <span style="font-size: 0.65rem; background: rgba(109, 40, 217, 0.12); color: #6d28d9; padding: 2px 6px; border-radius: 9999px; font-weight: 700;">${grau}</span>
+            <div class="popup-title">
+              <span>Processo Judicial (${tribunal})</span>
+              <span class="popup-badge">${grau}</span>
             </div>
             
-            <div class="popup-section" style="margin-bottom: 2px;">
+            <div class="popup-section">
               <span class="popup-label">Processo CNJ:</span>
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
-                <span class="popup-value-code" style="font-weight: 700; color: #1e1b4b; background: #ede9fe;">${numProc}</span>
-              </div>
+              <span class="popup-value-code">${numProc}</span>
             </div>
 
-            <div style="display: inline-block; margin: 3px 0; padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; background-color: ${catColor}15; color: ${catColor}; border: 1px solid ${catColor}40;">
-              ${categoria}
+            <div class="popup-section">
+              <span class="popup-label">Classificação:</span>
+              <span class="popup-value" style="font-weight: 500;">${categoria}</span>
             </div>
 
             <div class="popup-section">
               <span class="popup-label">Vara / Órgão Julgador:</span>
-              <span class="popup-value" style="font-size: 0.8rem; font-weight: 600;">${orgao}</span>
-              <div style="margin-top: 3px; font-size: 0.72rem; color: #475569;">
-                <span>🏛️ Sede: <strong>${comarcaSede}</strong> (${tipoJurisdicao})</span>
-              </div>
+              <span class="popup-value" style="font-weight: 500;">${orgao}</span>
+              <span style="font-size: 0.72rem; color: #64748b; margin-top: 1px;">Sede: ${comarcaSede} (${tipoJurisdicao})</span>
               ${temFilhos ? `
-                <div style="margin-top: 5px; padding: 5px 7px; border-radius: 5px; background: rgba(59, 130, 246, 0.08); border-left: 3px solid #3b82f6;">
-                  <div style="font-size: 0.7rem; font-weight: 700; color: #1d4ed8; display: flex; align-items: center; gap: 4px;">
-                    <span>📍 Municípios sob Jurisdição (${totalAbrangidos}):</span>
-                  </div>
-                  <div style="font-size: 0.68rem; color: #334155; margin-top: 2px; line-height: 1.35; max-height: 50px; overflow-y: auto;">
-                    ${municipiosAbrangidos.split('; ').join(', ')}
-                  </div>
-                  <div style="font-size: 0.64rem; color: #64748b; margin-top: 3px; font-style: italic;">
-                    * Abrange municípios sem comarca própria (filhas/termos judiciários).
-                  </div>
+                <div class="popup-detail-box">
+                  <div class="popup-detail-box-title">Municípios sob Jurisdição (${totalAbrangidos}):</div>
+                  <div class="popup-detail-box-content">${municipiosAbrangidos.split('; ').join(', ')}</div>
+                  <div class="popup-detail-box-note">Abrange municípios sem comarca própria vinculados a esta sede.</div>
                 </div>
               ` : ''}
             </div>
 
             <div class="popup-section">
               <span class="popup-label">Classe Processual:</span>
-              <span class="popup-value" style="font-size: 0.78rem;">${classe}</span>
+              <span class="popup-value">${classe}</span>
             </div>
 
             <div class="popup-section">
               <span class="popup-label">Assuntos (TPU/CNJ):</span>
-              <div style="font-size: 0.74rem; color: #374151; max-height: 55px; overflow-y: auto; background: rgba(0,0,0,0.02); padding: 4px 6px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.05);">
+              <div class="popup-detail-box-content" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 5px 7px;">
                 ${assuntos}
               </div>
             </div>
 
-            <div class="popup-section" style="border-top: 1px dashed rgba(209, 213, 219, 0.8); padding-top: 6px; margin-top: 2px;">
-              <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #6b7280;">
-                <span>Ajuizamento: <strong>${dataAjuiz}</strong></span>
-                <span>Movimentos: <strong>${totalMov}</strong></span>
+            <div class="popup-section" style="border-top: 1px solid #f1f5f9; padding-top: 6px; margin-top: 2px;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #64748b;">
+                <span>Ajuizamento: <strong style="color: #1e293b;">${dataAjuiz}</strong></span>
+                <span>Movimentos: <strong style="color: #1e293b;">${totalMov}</strong></span>
               </div>
-              <div style="font-size: 0.72rem; color: #4b5563; margin-top: 2px;">
-                <span>Último Andamento: <em>${ultimoMov}</em> ${dataUltimoMov ? `(${dataUltimoMov})` : ''}</span>
+              <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">
+                <span>Último Andamento: <span style="color: #334155;">${ultimoMov}</span> ${dataUltimoMov ? `(${dataUltimoMov})` : ''}</span>
               </div>
             </div>
 
-            <div style="margin-top: 6px; text-align: center;">
-              <a href="${urlConsulta}" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; box-sizing: border-box; text-decoration: none; background: #6d28d9; color: #ffffff; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; transition: background 0.2s ease;">
-                Consultar no PJe (${tribunal}) ↗
-              </a>
-            </div>
+            <a href="${urlConsulta}" target="_blank" rel="noopener noreferrer" class="popup-btn">
+              Consultar no PJe (${tribunal})
+            </a>
           </div>
         `;
-        new Popup({ closeButton: true, className: 'custom-popup judicial-popup' }).setLngLat(e.lngLat).setHTML(html).addTo(this.map);
+        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(e.lngLat).setHTML(html).addTo(this.map);
       });
       this.map.on('mouseenter', 'processos_conflitos_judiciais_circle', () => { this.map.getCanvas().style.cursor = 'pointer'; });
       this.map.on('mouseleave', 'processos_conflitos_judiciais_circle', () => { this.map.getCanvas().style.cursor = ''; });
@@ -692,16 +687,16 @@ export class App implements AfterViewInit {
         const tiName = props['inlandname'] || '';
         const quilName = props['quilname'] || '';
 
-        // Portuguese translation for pressure classes
+        // Portuguese translation for pressure classes without emojis
         let pressureLabel = pressure;
-        if (pressure === 'agriculture') pressureLabel = '🌾 Agropecuária / Agricultura';
-        else if (pressure === 'urban_expansion') pressureLabel = '🏙️ Expansão Urbana';
-        else if (pressure === 'renewable_energy_project') pressureLabel = '⚡ Energia Renovável (Eólica/Solar)';
-        else if (pressure.includes('mining')) pressureLabel = '⛏️ Mineração';
-        else if (pressure === 'natural_cause') pressureLabel = '🍂 Causa Natural';
-        else if (pressure === 'others') pressureLabel = '⚠️ Outros Vetores de Supressão';
+        if (pressure === 'agriculture') pressureLabel = 'Agropecuária / Agricultura';
+        else if (pressure === 'urban_expansion') pressureLabel = 'Expansão Urbana';
+        else if (pressure === 'renewable_energy_project') pressureLabel = 'Energia Renovável (Eólica/Solar)';
+        else if (pressure.includes('mining')) pressureLabel = 'Mineração';
+        else if (pressure === 'natural_cause') pressureLabel = 'Causa Natural';
+        else if (pressure === 'others') pressureLabel = 'Outros Vetores de Supressão';
 
-        // Intersections HTML builder
+        // Intersections builder
         let intersections = '';
         if (sicar) {
           const firstCar = sicar.split(',')[0];
@@ -711,36 +706,36 @@ export class App implements AfterViewInit {
           intersections += `<div style="font-size: 0.72rem; color: #374151; margin-top: 2px;"><strong>SIGEF:</strong> <span class="popup-value-code">${sigef}</span></div>`;
         }
         if (ucName) {
-          intersections += `<div style="font-size: 0.72rem; color: #065f46; margin-top: 2px;"><strong>Unidade Conservação:</strong> ${ucName}</div>`;
+          intersections += `<div style="font-size: 0.72rem; color: #334155; margin-top: 2px;"><strong>Unidade Conservação:</strong> ${ucName}</div>`;
         }
         if (tiName) {
-          intersections += `<div style="font-size: 0.72rem; color: #b91c1c; margin-top: 2px;"><strong>Terra Indígena:</strong> ${tiName}</div>`;
+          intersections += `<div style="font-size: 0.72rem; color: #334155; margin-top: 2px;"><strong>Terra Indígena:</strong> ${tiName}</div>`;
         }
         if (quilName) {
-          intersections += `<div style="font-size: 0.72rem; color: #7e22ce; margin-top: 2px;"><strong>Território Quilombola:</strong> ${quilName}</div>`;
+          intersections += `<div style="font-size: 0.72rem; color: #334155; margin-top: 2px;"><strong>Território Quilombola:</strong> ${quilName}</div>`;
         }
 
         const html = `
           <div class="popup-card">
-            <div class="popup-title" style="color: #ea580c; display: flex; align-items: center; justify-content: space-between;">
-              <span>🌲 Alerta MapBiomas</span>
-              <span style="font-size: 0.68rem; background: #ffedd5; color: #c2410c; padding: 2px 7px; border-radius: 9999px; font-weight: 700;">${year}</span>
+            <div class="popup-title">
+              <span>Alerta de Desmatamento</span>
+              <span class="popup-badge">${year}</span>
             </div>
 
-            <div class="popup-section" style="margin-bottom: 2px;">
+            <div class="popup-section">
               <span class="popup-label">Código do Alerta:</span>
-              <span class="popup-value-code" style="font-weight: 700; color: #9a3412; background: #ffedd5;">#${code}</span>
+              <span class="popup-value-code">#${code}</span>
             </div>
 
             <div class="popup-section">
               <span class="popup-label">Vetor de Pressão:</span>
-              <span class="popup-value" style="font-weight: 600; color: #1f2937;">${pressureLabel}</span>
+              <span class="popup-value" style="font-weight: 500;">${pressureLabel}</span>
             </div>
 
             <div class="popup-section" style="display: flex; flex-direction: row; justify-content: space-between; gap: 8px;">
               <div>
                 <span class="popup-label">Área Desmatada:</span>
-                <span class="popup-value" style="font-weight: 700; color: #b91c1c;">${areaHa}</span>
+                <span class="popup-value" style="font-weight: 600;">${areaHa}</span>
               </div>
               <div>
                 <span class="popup-label">Bioma:</span>
@@ -753,21 +748,21 @@ export class App implements AfterViewInit {
               <span class="popup-value">${city} - PE</span>
             </div>
 
-            <div class="popup-section" style="font-size: 0.72rem; color: #6b7280; border-top: 1px dashed rgba(229, 231, 235, 0.8); padding-top: 4px;">
+            <div class="popup-section" style="font-size: 0.72rem; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 4px;">
               <div>Detecção: <strong>${detectDate}</strong> (${source})</div>
-              ${imgBefore && imgAfter ? `<div>Período: ${imgBefore} ➔ ${imgAfter}</div>` : ''}
+              ${imgBefore && imgAfter ? `<div>Período: ${imgBefore} a ${imgAfter}</div>` : ''}
             </div>
 
             ${intersections ? `
-              <div class="popup-section" style="background: rgba(234, 88, 12, 0.05); border: 1px solid rgba(234, 88, 12, 0.2); border-radius: 6px; padding: 6px; margin-top: 4px;">
-                <span class="popup-label" style="color: #c2410c;">Sobreposições Confirmadas:</span>
-                ${intersections}
+              <div class="popup-detail-box">
+                <div class="popup-detail-box-title">Sobreposições Identificadas:</div>
+                <div class="popup-detail-box-content">${intersections}</div>
               </div>
             ` : ''}
           </div>
         `;
 
-        new Popup({ closeButton: true, className: 'custom-popup mapbiomas-popup' }).setLngLat(e.lngLat).setHTML(html).addTo(this.map);
+        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(e.lngLat).setHTML(html).addTo(this.map);
       });
       this.map.on('mouseenter', 'alerts_with_intersections_fill', () => { this.map.getCanvas().style.cursor = 'pointer'; });
       this.map.on('mouseleave', 'alerts_with_intersections_fill', () => { this.map.getCanvas().style.cursor = ''; });
@@ -786,20 +781,20 @@ export class App implements AfterViewInit {
 
         const html = `
           <div class="popup-card">
-            <div class="popup-title" style="color: #b45309; display: flex; align-items: center; justify-content: space-between;">
-              <span>⚠️ Imóvel CAR com Alerta</span>
-              <span style="font-size: 0.68rem; background: #fef3c7; color: #b45309; padding: 2px 7px; border-radius: 9999px; font-weight: 700;">${year}</span>
+            <div class="popup-title">
+              <span>Imóvel Rural com Alerta (CAR)</span>
+              <span class="popup-badge">${year}</span>
             </div>
 
             <div class="popup-section">
               <span class="popup-label">Código do Imóvel Rural (SICAR):</span>
-              <span class="popup-value-code" style="word-break: break-all; font-weight: 600; color: #78350f; background: #fef3c7;">${codSicar}</span>
+              <span class="popup-value-code" style="word-break: break-all;">${codSicar}</span>
             </div>
 
             <div class="popup-section" style="display: flex; flex-direction: row; justify-content: space-between; gap: 8px;">
               <div>
                 <span class="popup-label">Área Atingida no Imóvel:</span>
-                <span class="popup-value" style="font-weight: 700; color: #b91c1c;">${interHa}</span>
+                <span class="popup-value" style="font-weight: 600;">${interHa}</span>
               </div>
               <div>
                 <span class="popup-label">Alerta Associado:</span>
