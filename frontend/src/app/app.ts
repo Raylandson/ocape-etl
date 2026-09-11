@@ -1,6 +1,7 @@
 import { Component, AfterViewInit } from '@angular/core';
 import { Map, Popup } from 'maplibre-gl';
 import { DatajudLegendComponent } from './datajud-legend/datajud-legend.component';
+import { SigefBatateirasFilterComponent } from './sigef-batateiras-filter/sigef-batateiras-filter.component';
 
 interface LayerConfig {
   id: string;
@@ -12,15 +13,100 @@ interface LayerConfig {
   visible: boolean;
 }
 
+export interface EnrichedCarInfo {
+  nome_imovel: string;
+  declarante: string;
+  cpf_declarante: string;
+  codigo_protocolo: string;
+  origem_documento: string;
+  sobreposicao_sigef: string;
+  matricula_cartorio: string;
+  conflito_judicial: string;
+}
+
+export const ENRICHED_CAR_DATA: Record<string, EnrichedCarInfo> = {
+  'PE-2609204-F2B44463BC594543B17A9ABA928157F9': {
+    nome_imovel: 'Sítio Batateira',
+    declarante: 'Odílio Severino Nogueira',
+    cpf_declarante: '047.523.274-73',
+    codigo_protocolo: 'PE-2609204-E56F.4FDF.BD22.C8FF.50AC.984A.F223.1F4A',
+    origem_documento: 'CAR - Odílio.pdf',
+    sobreposicao_sigef: 'FAZENDA 2 IRMÃOS (INCRA 9510994953100) - Matrícula 73',
+    matricula_cartorio: 'Matrícula 73 (Livro 02, RGI Maraial) - 960,90 ha',
+    conflito_judicial: 'TJPE Maraial 0000263-83.2026.8.17.2940 (Esbulho Possessório)'
+  },
+  'PE-2609204-AFDF317B8B3B4F00B25E9F067BE40CD2': {
+    nome_imovel: 'Sítio Batateiras',
+    declarante: 'Edvania Maria Cordeiro da Silva / José Carlos Cordeiro da Silva',
+    cpf_declarante: '085.208.194-43 / 030.019.314-93',
+    codigo_protocolo: 'PE-2609204-0CBA.7C0E.01A1.623F.F4EE.986B.4E88.5FCF',
+    origem_documento: 'CAR - Sítio Batateiras (Março de 2018).pdf',
+    sobreposicao_sigef: 'FAZENDA 2 IRMÃOS (INCRA 9510994953100) - Matrícula 73',
+    matricula_cartorio: 'Matrícula 73 (Livro 02, RGI Maraial) - 960,90 ha',
+    conflito_judicial: 'TJPE Maraial 0000263-83.2026.8.17.2940 (Esbulho Possessório)'
+  },
+  'PE-2609204-691BBA8767C14AAFB43E205CEDBA4E43': {
+    nome_imovel: 'Sítio Batateiras',
+    declarante: 'Cícera Maria da Conceição / Francisco Zeferino',
+    cpf_declarante: '632.869.554-34 / 047.523.274-73',
+    codigo_protocolo: 'PE-2609204-F06D.AB18.5132.FDB0.FA18.FCEF.D567.5B4C',
+    origem_documento: 'CAR Francisco Zeferino.pdf',
+    sobreposicao_sigef: 'FAZENDA 2 IRMÃOS (INCRA 9510994953100) - Matrícula 73',
+    matricula_cartorio: 'Matrícula 73 (Livro 02, RGI Maraial) - 960,90 ha',
+    conflito_judicial: 'TJPE Maraial 0000263-83.2026.8.17.2940 (Esbulho Possessório)'
+  },
+  'PE-2609204-C26EA32D98EC43E3A35991D594FF27C2': {
+    nome_imovel: 'Sítio Saputi',
+    declarante: 'Joselito Nogueira',
+    cpf_declarante: '973.717.694-49 / 081.109.184-84',
+    codigo_protocolo: 'PE-2609204-5C1D.7F1D.DFE8.A68C.25C6.9046.2E60.C5C8',
+    origem_documento: 'CAR Joselito.pdf',
+    sobreposicao_sigef: 'FAZENDA 2 IRMÃOS (INCRA 9510994953100) - Matrícula 73',
+    matricula_cartorio: 'Matrícula 73 (Livro 02, RGI Maraial) - 960,90 ha',
+    conflito_judicial: 'TJPE Maraial 0000263-83.2026.8.17.2940 (Esbulho Possessório)'
+  },
+  'PE-2609204-791D8AA9F2B14CD5A5BC5F051A4AEA63': {
+    nome_imovel: 'Sítio Flora Clara',
+    declarante: 'José Manoel da Silva',
+    cpf_declarante: '924.954.274-72 / 127.826.724-79',
+    codigo_protocolo: 'PE-2609204-E4CB.7754.8184.A0AF.393C.CD0D.A7D0.C5E1',
+    origem_documento: 'CAR José Manoel.pdf',
+    sobreposicao_sigef: 'FAZENDA 2 IRMÃOS (INCRA 9510994953100) - Matrícula 73',
+    matricula_cartorio: 'Matrícula 73 (Livro 02, RGI Maraial) - 960,90 ha',
+    conflito_judicial: 'TJPE Maraial 0000263-83.2026.8.17.2940 (Esbulho Possessório)'
+  },
+  'PE-2609204-F07F205EA4CE4657A77D0BDD2BE9B890': {
+    nome_imovel: 'Sítio Batateirinha',
+    declarante: 'Luiz Cândido da Silva / Kleiton',
+    cpf_declarante: '409.063.024-04',
+    codigo_protocolo: 'PE-2609204-1289.FD8B.6C3C.7719.9A0C.CB30.976B.E223',
+    origem_documento: 'CAR Kleiton.pdf',
+    sobreposicao_sigef: 'FAZENDA 2 IRMÃOS (INCRA 9510994953100) - Matrícula 73',
+    matricula_cartorio: 'Matrícula 73 (Livro 02, RGI Maraial) - 960,90 ha',
+    conflito_judicial: 'TJPE Maraial 0000263-83.2026.8.17.2940 (Esbulho Possessório)'
+  },
+  'PE-2609204-7B3D2CC5D90C406B968CB72C195793A8': {
+    nome_imovel: 'Sítio Riachão',
+    declarante: 'José Joaquim Antonio Wanderley / Severino Wanderley',
+    cpf_declarante: '328.331.214-15 / 033.832.594-80',
+    codigo_protocolo: 'PE-2609204-74EF.EFA8.0C3A.D8AD.620B.79F6.3A0D.4B3C',
+    origem_documento: 'CAR Severino Wanderley.pdf',
+    sobreposicao_sigef: 'FAZENDA 2 IRMÃOS (INCRA 9510994953100) - Matrícula 73',
+    matricula_cartorio: 'Matrícula 73 (Livro 02, RGI Maraial) - 960,90 ha',
+    conflito_judicial: 'TJPE Maraial 0000263-83.2026.8.17.2940 (Esbulho Possessório)'
+  }
+};
+
 @Component({
   selector: 'app-root',
-  imports: [DatajudLegendComponent],
+  imports: [DatajudLegendComponent, SigefBatateirasFilterComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class App implements AfterViewInit {
   map!: Map;
   isPanelOpen: boolean = true;
+  selectedSigefPhases: string[] = ['AV-17-73', 'AV-19-73', 'AV-23-73', 'SIGEF Atual'];
 
   togglePanel() {
     this.isPanelOpen = !this.isPanelOpen;
@@ -32,6 +118,35 @@ export class App implements AfterViewInit {
 
   isDataJudVisible(): boolean {
     return this.layers.find(l => l.id === 'processos_conflitos_judiciais')?.visible ?? false;
+  }
+
+  isSigefCasosAnalisadosVisible(): boolean {
+    return this.layers.find(l => l.id === 'sigef_casos_analisados')?.visible ?? false;
+  }
+
+  onSigefFilterChanged(selectedFases: string[]) {
+    this.selectedSigefPhases = selectedFases;
+    this.applySigefFilter();
+  }
+
+  applySigefFilter() {
+    if (!this.map) return;
+
+    let filterExpr: any;
+    if (this.selectedSigefPhases.length === 0) {
+      filterExpr = ['==', ['get', 'fase'], '__none__'];
+    } else if (this.selectedSigefPhases.length === 4) {
+      filterExpr = null;
+    } else {
+      filterExpr = ['any', ...this.selectedSigefPhases.map(f => ['==', ['get', 'fase'], f])];
+    }
+
+    if (this.map.getLayer('sigef_casos_analisados_fill')) {
+      this.map.setFilter('sigef_casos_analisados_fill', filterExpr);
+    }
+    if (this.map.getLayer('sigef_casos_analisados_line')) {
+      this.map.setFilter('sigef_casos_analisados_line', filterExpr);
+    }
   }
 
   layers: LayerConfig[] = [
@@ -88,6 +203,24 @@ export class App implements AfterViewInit {
       fillColor: '#14b8a6',
       borderColor: '#0f766e',
       visible: false
+    },
+    {
+      id: 'car_casos_analisados',
+      name: 'CAR - Casos Analisados (Batateiras)',
+      sourceUrl: 'http://localhost:3000/car_casos_analisados',
+      sourceLayer: 'car_casos_analisados',
+      fillColor: '#0284c7',
+      borderColor: '#0369a1',
+      visible: true
+    },
+    {
+      id: 'sigef_casos_analisados',
+      name: 'SIGEF - Casos Analisados (Batateiras)',
+      sourceUrl: 'http://localhost:3000/sigef_casos_analisados',
+      sourceLayer: 'sigef_casos_analisados',
+      fillColor: '#8b5cf6',
+      borderColor: '#6d28d9',
+      visible: true
     },
     {
       id: 'area_imovel_1',
@@ -343,14 +476,17 @@ export class App implements AfterViewInit {
           }, firstLabelId);
         } else {
           // Add fill layer (translucent) below city labels
+          const fillColor: any = layer.id === 'sigef_casos_analisados' ? ['get', 'cor_hex'] : layer.fillColor;
+          const fillOpacity = layer.id === 'land_overlaps' ? 0.75 : (layer.id === 'sigef_casos_analisados' ? 0.18 : 0.4);
+
           this.map.addLayer({
             id: `${layer.id}_fill`,
             type: 'fill',
             source: layer.id,
             'source-layer': layer.sourceLayer,
             paint: {
-              'fill-color': layer.fillColor,
-              'fill-opacity': layer.id === 'land_overlaps' ? 0.75 : 0.4
+              'fill-color': fillColor,
+              'fill-opacity': fillOpacity
             },
             layout: {
               visibility: layer.visible ? 'visible' : 'none'
@@ -358,14 +494,17 @@ export class App implements AfterViewInit {
           }, firstLabelId);
 
           // Add line layer (borders) below city labels
+          const lineColor: any = layer.id === 'sigef_casos_analisados' ? ['get', 'cor_hex'] : layer.borderColor;
+          const lineWidth = layer.id === 'land_overlaps' ? 3.0 : (layer.id === 'sigef_casos_analisados' ? 2.5 : 1.5);
+
           this.map.addLayer({
             id: `${layer.id}_line`,
             type: 'line',
             source: layer.id,
             'source-layer': layer.sourceLayer,
             paint: {
-              'line-color': layer.borderColor,
-              'line-width': layer.id === 'land_overlaps' ? 3.0 : 1.5
+              'line-color': lineColor,
+              'line-width': lineWidth
             },
             layout: {
               visibility: layer.visible ? 'visible' : 'none'
@@ -374,92 +513,78 @@ export class App implements AfterViewInit {
         }
       });
 
-      // Add popup interaction for conflict areas (polygons) and pins
-      const setupConflictPopup = (layerId: string) => {
-        this.map.on('click', layerId, (e) => {
-          const coordinates = e.lngLat;
-          const properties = e.features?.[0]?.properties;
-          if (!properties) return;
+      this.applySigefFilter();
 
-          const traditionalName = properties['traditional_name'] || 'N/A';
-          const traditionalSource = properties['traditional_source'] || 'N/A';
-          const propertyNames = (properties['property_name'] || 'N/A').split('; ');
-          const propertyCodes = (properties['property_code'] || 'N/A').split('; ');
-          const propertySources = (properties['property_source'] || 'N/A').split('; ');
+      // --- POPUP RENDERERS ---
 
-          let traditionalLabel = 'Território';
-          if (traditionalSource === 'tis_poligonais') {
-            traditionalLabel = 'Terra Indígena (FUNAI)';
-          } else if (traditionalSource === 'areas_de_quilombolas_pe') {
-            traditionalLabel = 'Território Quilombola (INCRA)';
-          } else if (traditionalSource === 'limiteucsfederais_a') {
-            traditionalLabel = 'Unidade de Conservação (ICMBio)';
-          } else if (traditionalSource === 'embargos_icmbio') {
-            traditionalLabel = 'Área Embargada (ICMBio)';
-          }
+      // 1. Conflict Areas & Center Pins
+      const renderConflictPopup = (properties: any, coordinates: any) => {
+        const traditionalName = properties['traditional_name'] || 'N/A';
+        const traditionalSource = properties['traditional_source'] || 'N/A';
+        const propertyNames = (properties['property_name'] || 'N/A').split('; ');
+        const propertyCodes = (properties['property_code'] || 'N/A').split('; ');
+        const propertySources = (properties['property_source'] || 'N/A').split('; ');
 
-          let propertiesHtml = '';
-          const maxLen = Math.max(propertyNames.length, propertyCodes.length, propertySources.length);
-          for (let i = 0; i < maxLen; i++) {
-            const pName = propertyNames[i] || 'N/A';
-            const pCode = propertyCodes[i] || 'N/A';
-            const pSource = propertySources[i] || '';
-            const pLabel = pSource.includes('snci') ? 'SNCI' : (pSource.includes('sigef') ? 'SIGEF' : (pSource.includes('area_imovel') || pSource.includes('sicar') ? 'CAR' : 'Imóvel'));
+        let traditionalLabel = 'Território';
+        if (traditionalSource === 'tis_poligonais') {
+          traditionalLabel = 'Terra Indígena (FUNAI)';
+        } else if (traditionalSource === 'areas_de_quilombolas_pe') {
+          traditionalLabel = 'Território Quilombola (INCRA)';
+        } else if (traditionalSource === 'limiteucsfederais_a') {
+          traditionalLabel = 'Unidade de Conservação (ICMBio)';
+        } else if (traditionalSource === 'embargos_icmbio') {
+          traditionalLabel = 'Área Embargada (ICMBio)';
+        }
 
-            propertiesHtml += `
-              <div style="${i > 0 ? 'margin-top: 6px; padding-top: 6px; border-top: 1px solid #e2e8f0;' : ''}">
-                <div class="popup-section">
-                  <span class="popup-label">${pLabel}:</span>
-                  <span class="popup-value">${pName}</span>
-                </div>
-                <div class="popup-section" style="margin-top: 2px;">
-                  <span class="popup-label">Código:</span>
-                  <span class="popup-value-code">${pCode}</span>
-                </div>
-              </div>
-            `;
-          }
+        let propertiesHtml = '';
+        const maxLen = Math.max(propertyNames.length, propertyCodes.length, propertySources.length);
+        for (let i = 0; i < maxLen; i++) {
+          const pName = propertyNames[i] || 'N/A';
+          const pCode = propertyCodes[i] || 'N/A';
+          const pSource = propertySources[i] || '';
+          const pLabel = pSource.includes('snci') ? 'SNCI' : (pSource.includes('sigef') ? 'SIGEF' : (pSource.includes('area_imovel') || pSource.includes('sicar') ? 'CAR' : 'Imóvel'));
 
-          const html = `
-            <div class="popup-card">
-              <div class="popup-title">
-                <span>Conflito Territorial</span>
-                <span class="popup-badge">Sobreposição</span>
-              </div>
+          propertiesHtml += `
+            <div style="${i > 0 ? 'margin-top: 6px; padding-top: 6px; border-top: 1px solid #e2e8f0;' : ''}">
               <div class="popup-section">
-                <span class="popup-label">${traditionalLabel}:</span>
-                <span class="popup-value" style="font-weight: 600;">${traditionalName}</span>
+                <span class="popup-label">${pLabel}:</span>
+                <span class="popup-value">${pName}</span>
               </div>
-              <div class="popup-detail-box">
-                <div class="popup-detail-box-title">Imóveis Incidentes (${maxLen}):</div>
-                <div class="popup-detail-box-content" style="max-height: 140px;">
-                  ${propertiesHtml}
-                </div>
+              <div class="popup-section" style="margin-top: 2px;">
+                <span class="popup-label">Código:</span>
+                <span class="popup-value-code">${pCode}</span>
               </div>
             </div>
           `;
+        }
 
-          new Popup({ closeButton: true, className: 'custom-popup' })
-            .setLngLat(coordinates)
-            .setHTML(html)
-            .addTo(this.map);
-        });
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title">
+              <span>Conflito Territorial</span>
+              <span class="popup-badge">Sobreposição</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">${traditionalLabel}:</span>
+              <span class="popup-value" style="font-weight: 600;">${traditionalName}</span>
+            </div>
+            <div class="popup-detail-box">
+              <div class="popup-detail-box-title">Imóveis Incidentes (${maxLen}):</div>
+              <div class="popup-detail-box-content" style="max-height: 140px;">
+                ${propertiesHtml}
+              </div>
+            </div>
+          </div>
+        `;
 
-        this.map.on('mouseenter', layerId, () => {
-          this.map.getCanvas().style.cursor = 'pointer';
-        });
-        this.map.on('mouseleave', layerId, () => {
-          this.map.getCanvas().style.cursor = '';
-        });
+        new Popup({ closeButton: true, className: 'custom-popup' })
+          .setLngLat(coordinates)
+          .setHTML(html)
+          .addTo(this.map);
       };
 
-      setupConflictPopup('land_overlaps_fill');
-      setupConflictPopup('land_overlaps_points_symbol');
-
-      // Popup handler for Federal Conservation Units (ICMBio)
-      this.map.on('click', 'limiteucsfederais_a_fill', (e) => {
-        const properties = e.features?.[0]?.properties;
-        if (!properties) return;
+      // 2. Federal Conservation Units (ICMBio)
+      const renderUcsPopup = (properties: any, coordinates: any) => {
         const nomeUc = properties['nomeuc'] || 'N/A';
         const categoria = properties['categoria_'] || properties['sigla_cate'] || 'N/A';
         const grupo = properties['grupouc'] || 'N/A';
@@ -491,15 +616,11 @@ export class App implements AfterViewInit {
             </div>
           </div>
         `;
-        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(e.lngLat).setHTML(html).addTo(this.map);
-      });
-      this.map.on('mouseenter', 'limiteucsfederais_a_fill', () => { this.map.getCanvas().style.cursor = 'pointer'; });
-      this.map.on('mouseleave', 'limiteucsfederais_a_fill', () => { this.map.getCanvas().style.cursor = ''; });
+        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(coordinates).setHTML(html).addTo(this.map);
+      };
 
-      // Popup handler for ICMBio Embargoes
-      this.map.on('click', 'embargos_icmbio_fill', (e) => {
-        const properties = e.features?.[0]?.properties;
-        if (!properties) return;
+      // 3. ICMBio Embargoes
+      const renderEmbargosPopup = (properties: any, coordinates: any) => {
         const numEmb = properties['numero_emb'] || 'N/A';
         const autuado = properties['autuado'] || 'N/A';
         const cpfCnpj = properties['cpf_cnpj'] || '';
@@ -531,15 +652,11 @@ export class App implements AfterViewInit {
             </div>
           </div>
         `;
-        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(e.lngLat).setHTML(html).addTo(this.map);
-      });
-      this.map.on('mouseenter', 'embargos_icmbio_fill', () => { this.map.getCanvas().style.cursor = 'pointer'; });
-      this.map.on('mouseleave', 'embargos_icmbio_fill', () => { this.map.getCanvas().style.cursor = ''; });
+        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(coordinates).setHTML(html).addTo(this.map);
+      };
 
-      // Popup handler for ICMBio Autos de Infração
-      this.map.on('click', 'autos_infracao_icmbio_circle', (e) => {
-        const properties = e.features?.[0]?.properties;
-        if (!properties) return;
+      // 4. ICMBio Infraction Notices
+      const renderAutosPopup = (properties: any, coordinates: any) => {
         const numAi = properties['numero_ai'] || 'N/A';
         const autuado = properties['autuado'] || 'N/A';
         const valor = properties['valor_mult'] ? 'R$ ' + Number(properties['valor_mult']).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : 'N/A';
@@ -575,16 +692,11 @@ export class App implements AfterViewInit {
             </div>
           </div>
         `;
-        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(e.lngLat).setHTML(html).addTo(this.map);
-      });
-      this.map.on('mouseenter', 'autos_infracao_icmbio_circle', () => { this.map.getCanvas().style.cursor = 'pointer'; });
-      this.map.on('mouseleave', 'autos_infracao_icmbio_circle', () => { this.map.getCanvas().style.cursor = ''; });
+        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(coordinates).setHTML(html).addTo(this.map);
+      };
 
-      // Popup handler for DataJud Judicial Conflict Lawsuits (TJPE & TRF5)
-      this.map.on('click', 'processos_conflitos_judiciais_circle', (e) => {
-        const properties = e.features?.[0]?.properties;
-        if (!properties) return;
-
+      // 5. DataJud Judicial Disputes (TJPE & TRF5)
+      const renderDataJudPopup = (properties: any, coordinates: any) => {
         const numProc = properties['numero_processo'] || 'N/A';
         const tribunal = properties['tribunal'] || 'Judiciário';
         const grau = properties['grau'] || '1º Grau';
@@ -610,17 +722,14 @@ export class App implements AfterViewInit {
               <span>Processo Judicial (${tribunal})</span>
               <span class="popup-badge">${grau}</span>
             </div>
-            
             <div class="popup-section">
               <span class="popup-label">Processo CNJ:</span>
               <span class="popup-value-code">${numProc}</span>
             </div>
-
             <div class="popup-section">
               <span class="popup-label">Classificação:</span>
               <span class="popup-value" style="font-weight: 500;">${categoria}</span>
             </div>
-
             <div class="popup-section">
               <span class="popup-label">Vara / Órgão Julgador:</span>
               <span class="popup-value" style="font-weight: 500;">${orgao}</span>
@@ -633,19 +742,16 @@ export class App implements AfterViewInit {
                 </div>
               ` : ''}
             </div>
-
             <div class="popup-section">
               <span class="popup-label">Classe Processual:</span>
               <span class="popup-value">${classe}</span>
             </div>
-
             <div class="popup-section">
               <span class="popup-label">Assuntos (TPU/CNJ):</span>
               <div class="popup-detail-box-content" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 5px 7px;">
                 ${assuntos}
               </div>
             </div>
-
             <div class="popup-section" style="border-top: 1px solid #f1f5f9; padding-top: 6px; margin-top: 2px;">
               <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #64748b;">
                 <span>Ajuizamento: <strong style="color: #1e293b;">${dataAjuiz}</strong></span>
@@ -655,22 +761,16 @@ export class App implements AfterViewInit {
                 <span>Último Andamento: <span style="color: #334155;">${ultimoMov}</span> ${dataUltimoMov ? `(${dataUltimoMov})` : ''}</span>
               </div>
             </div>
-
             <a href="${urlConsulta}" target="_blank" rel="noopener noreferrer" class="popup-btn">
               Consultar no PJe (${tribunal})
             </a>
           </div>
         `;
-        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(e.lngLat).setHTML(html).addTo(this.map);
-      });
-      this.map.on('mouseenter', 'processos_conflitos_judiciais_circle', () => { this.map.getCanvas().style.cursor = 'pointer'; });
-      this.map.on('mouseleave', 'processos_conflitos_judiciais_circle', () => { this.map.getCanvas().style.cursor = ''; });
+        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(coordinates).setHTML(html).addTo(this.map);
+      };
 
-      // Popup handler for MapBiomas Alertas de Desmatamento (alerts_with_intersections)
-      this.map.on('click', 'alerts_with_intersections_fill', (e) => {
-        const props = e.features?.[0]?.properties;
-        if (!props) return;
-
+      // 6. MapBiomas Deforestation Alerts
+      const renderAlertPopup = (props: any, coordinates: any) => {
         const code = props['alertcode'] || props['alertid'] || 'N/A';
         const areaHa = props['alertha'] ? Number(props['alertha']).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ha' : 'N/A';
         const year = props['detectyear'] ? Math.round(props['detectyear']) : 'N/A';
@@ -687,7 +787,6 @@ export class App implements AfterViewInit {
         const tiName = props['inlandname'] || '';
         const quilName = props['quilname'] || '';
 
-        // Portuguese translation for pressure classes without emojis
         let pressureLabel = pressure;
         if (pressure === 'agriculture') pressureLabel = 'Agropecuária / Agricultura';
         else if (pressure === 'urban_expansion') pressureLabel = 'Expansão Urbana';
@@ -696,7 +795,6 @@ export class App implements AfterViewInit {
         else if (pressure === 'natural_cause') pressureLabel = 'Causa Natural';
         else if (pressure === 'others') pressureLabel = 'Outros Vetores de Supressão';
 
-        // Intersections builder
         let intersections = '';
         if (sicar) {
           const firstCar = sicar.split(',')[0];
@@ -721,17 +819,14 @@ export class App implements AfterViewInit {
               <span>Alerta de Desmatamento</span>
               <span class="popup-badge">${year}</span>
             </div>
-
             <div class="popup-section">
               <span class="popup-label">Código do Alerta:</span>
               <span class="popup-value-code">#${code}</span>
             </div>
-
             <div class="popup-section">
               <span class="popup-label">Vetor de Pressão:</span>
               <span class="popup-value" style="font-weight: 500;">${pressureLabel}</span>
             </div>
-
             <div class="popup-section" style="display: flex; flex-direction: row; justify-content: space-between; gap: 8px;">
               <div>
                 <span class="popup-label">Área Desmatada:</span>
@@ -742,17 +837,14 @@ export class App implements AfterViewInit {
                 <span class="popup-value">${biome}</span>
               </div>
             </div>
-
             <div class="popup-section">
               <span class="popup-label">Localização:</span>
               <span class="popup-value">${city} - PE</span>
             </div>
-
             <div class="popup-section" style="font-size: 0.72rem; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 4px;">
               <div>Detecção: <strong>${detectDate}</strong> (${source})</div>
               ${imgBefore && imgAfter ? `<div>Período: ${imgBefore} a ${imgAfter}</div>` : ''}
             </div>
-
             ${intersections ? `
               <div class="popup-detail-box">
                 <div class="popup-detail-box-title">Sobreposições Identificadas:</div>
@@ -761,17 +853,11 @@ export class App implements AfterViewInit {
             ` : ''}
           </div>
         `;
+        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(coordinates).setHTML(html).addTo(this.map);
+      };
 
-        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(e.lngLat).setHTML(html).addTo(this.map);
-      });
-      this.map.on('mouseenter', 'alerts_with_intersections_fill', () => { this.map.getCanvas().style.cursor = 'pointer'; });
-      this.map.on('mouseleave', 'alerts_with_intersections_fill', () => { this.map.getCanvas().style.cursor = ''; });
-
-      // Popup handler for MapBiomas CAR Imóveis com Alertas (car_with_alerts_and_intersections)
-      this.map.on('click', 'car_with_alerts_and_intersections_fill', (e) => {
-        const props = e.features?.[0]?.properties;
-        if (!props) return;
-
+      // 7. MapBiomas CAR with Deforestation Alerts
+      const renderCarAlertPopup = (props: any, coordinates: any) => {
         const codSicar = props['codsicar'] || 'N/A';
         const alertCode = props['alertcode'] || props['alertid'] || 'N/A';
         const interHa = props['interha'] ? Number(props['interha']).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ha' : 'N/A';
@@ -785,12 +871,10 @@ export class App implements AfterViewInit {
               <span>Imóvel Rural com Alerta (CAR)</span>
               <span class="popup-badge">${year}</span>
             </div>
-
             <div class="popup-section">
               <span class="popup-label">Código do Imóvel Rural (SICAR):</span>
               <span class="popup-value-code" style="word-break: break-all;">${codSicar}</span>
             </div>
-
             <div class="popup-section" style="display: flex; flex-direction: row; justify-content: space-between; gap: 8px;">
               <div>
                 <span class="popup-label">Área Atingida no Imóvel:</span>
@@ -801,24 +885,503 @@ export class App implements AfterViewInit {
                 <span class="popup-value-code">#${alertCode}</span>
               </div>
             </div>
-
             <div class="popup-section">
               <span class="popup-label">Município:</span>
               <span class="popup-value">${city} - PE</span>
             </div>
-
             <div class="popup-section">
               <span class="popup-label">Vetor de Supressão:</span>
               <span class="popup-value">${alertClass}</span>
             </div>
           </div>
         `;
+        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(coordinates).setHTML(html).addTo(this.map);
+      };
 
-        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(e.lngLat).setHTML(html).addTo(this.map);
+      // 8. CAR Properties (Both Analyzed Batateiras & General area_imovel_1)
+      const renderCarPopup = (props: any, coordinates: any, underlyingSigefProps?: any) => {
+        const rawCode = String(props['cod_imovel'] || '').trim();
+        const cleanCode = rawCode.replace(/[\s\.]/g, '').toUpperCase();
+        const enriched = ENRICHED_CAR_DATA[cleanCode] || {};
+
+        const codImovel = rawCode || 'N/A';
+        const nomeImovel = props['nome_imovel'] || enriched.nome_imovel || '';
+        const declarante = props['declarante'] || enriched.declarante || '';
+        const cpfDeclarante = props['cpf_declarante'] || enriched.cpf_declarante || '';
+        const protocolo = props['codigo_protocolo'] || enriched.codigo_protocolo || '';
+        const origemDoc = props['origem_documento'] || enriched.origem_documento || '';
+        const sobreposicaoSigef = props['sobreposicao_sigef'] || enriched.sobreposicao_sigef || (underlyingSigefProps ? `${underlyingSigefProps['nome_area']} (Código: ${underlyingSigefProps['codigo_imo']})` : '');
+        const matriculaCartorio = props['matricula_cartorio'] || enriched.matricula_cartorio || (underlyingSigefProps?.registro_m ? `Matrícula nº ${underlyingSigefProps.registro_m}` : '');
+        const conflitoJudicial = props['conflito_judicial'] || enriched.conflito_judicial || '';
+
+        const areaHa = (props['num_area'] !== undefined && props['num_area'] !== null && props['num_area'] !== '')
+          ? Number(props['num_area']).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) + ' ha'
+          : 'N/A';
+        const modFiscal = (props['mod_fiscal'] !== undefined && props['mod_fiscal'] !== null && props['mod_fiscal'] !== '')
+          ? Number(props['mod_fiscal']).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })
+          : 'N/A';
+        const status = props['ind_status'] || 'AT';
+        const condic = props['des_condic'] || 'Aguardando análise';
+        const municipio = props['municipio'] || 'Maraial';
+        const dataCad = props['data_cadastro'] || props['dat_criaca'] || '';
+
+        const badge = nomeImovel ? 'Análise Fundiária' : 'SICAR';
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title">
+              <span>Imóvel Rural (CAR)</span>
+              <span class="popup-badge">${badge}</span>
+            </div>
+
+            ${nomeImovel ? `
+              <div class="popup-section">
+                <span class="popup-label">Nome do Imóvel:</span>
+                <span class="popup-value" style="font-weight: 600;">${nomeImovel}</span>
+              </div>
+            ` : ''}
+
+            ${declarante ? `
+              <div class="popup-section">
+                <span class="popup-label">Declarante / Titular:</span>
+                <span class="popup-value" style="font-weight: 500;">${declarante}</span>
+                ${cpfDeclarante ? `<span style="font-size: 0.72rem; color: #64748b;">CPF: ${cpfDeclarante}</span>` : ''}
+              </div>
+            ` : ''}
+
+            <div class="popup-section">
+              <span class="popup-label">Código CAR (SICAR):</span>
+              <span class="popup-value-code" style="word-break: break-all;">${codImovel}</span>
+            </div>
+
+            ${protocolo ? `
+              <div class="popup-section">
+                <span class="popup-label">Código do Protocolo:</span>
+                <span class="popup-value-code" style="word-break: break-all;">${protocolo}</span>
+              </div>
+            ` : ''}
+
+            <div class="popup-section" style="display: flex; flex-direction: row; justify-content: space-between; gap: 8px;">
+              <div>
+                <span class="popup-label">Área Declarada:</span>
+                <span class="popup-value" style="font-weight: 600;">${areaHa}</span>
+              </div>
+              <div>
+                <span class="popup-label">Módulos Fiscais:</span>
+                <span class="popup-value">${modFiscal}</span>
+              </div>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Situação Cadastral:</span>
+              <span class="popup-value">${status} (${condic})</span>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Município:</span>
+              <span class="popup-value">${municipio} - PE</span>
+            </div>
+
+            ${dataCad ? `
+              <div class="popup-section" style="font-size: 0.72rem; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 4px;">
+                <div>Cadastro: <strong>${dataCad}</strong></div>
+                ${origemDoc ? `<div style="margin-top: 2px;">Documento: ${origemDoc}</div>` : ''}
+              </div>
+            ` : ''}
+
+            ${sobreposicaoSigef ? `
+              <div class="popup-detail-box">
+                <div class="popup-detail-box-title">Sobreposição Fundiária:</div>
+                <div class="popup-detail-box-content">${sobreposicaoSigef}</div>
+                ${matriculaCartorio ? `<div class="popup-detail-box-note">${matriculaCartorio}</div>` : ''}
+              </div>
+            ` : ''}
+
+            ${conflitoJudicial ? `
+              <div class="popup-detail-box">
+                <div class="popup-detail-box-title">Conflito Judicial na Comarca:</div>
+                <div class="popup-detail-box-content">${conflitoJudicial}</div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+
+        new Popup({ closeButton: true, className: 'custom-popup' })
+          .setLngLat(coordinates)
+          .setHTML(html)
+          .addTo(this.map);
+      };
+
+      // 9. SIGEF Properties (Privado e Público)
+      const renderSigefPopup = (props: any, coordinates: any, isPublic: boolean) => {
+        const nomeArea = props['nome_area'] || 'Imóvel Certificado';
+        const codigoImo = props['codigo_imo'] || 'N/A';
+        const status = props['status'] || 'REGISTRADA';
+        const registroMatricula = props['registro_m'] || '';
+        const registroData = props['registro_d'] ? new Date(props['registro_d']).toLocaleDateString('pt-BR') : '';
+        const dataAprov = props['data_aprov'] ? new Date(props['data_aprov']).toLocaleDateString('pt-BR') : '';
+        const dataSubmi = props['data_submi'] ? new Date(props['data_submi']).toLocaleDateString('pt-BR') : '';
+        const municipioNome = props['municipio_nome'] || '';
+        const municipioIbge = props['municipio'] || '';
+        const localizacao = municipioNome ? `${municipioNome} - PE` : (municipioIbge ? `Município IBGE ${municipioIbge}` : 'Pernambuco');
+        const rt = props['rt'] || '';
+        const art = props['art'] || '';
+        const parcelaId = props['parcela_co'] || '';
+
+        const areaHa = (props['num_area'] !== undefined && props['num_area'] !== null && props['num_area'] !== '')
+          ? Number(props['num_area']).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ha'
+          : 'N/A';
+
+        const isBatateiras = codigoImo === '9510994953100' || (registroMatricula === '73' && (String(municipioIbge) === '2609204' || municipioNome.toLowerCase() === 'maraial'));
+
+        const badge = isPublic ? 'SIGEF Público' : 'SIGEF Privado';
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title">
+              <span>Imóvel Certificado (SIGEF)</span>
+              <span class="popup-badge">${badge}</span>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Nome da Propriedade:</span>
+              <span class="popup-value" style="font-weight: 600;">${nomeArea}</span>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Código INCRA / SIGEF:</span>
+              <span class="popup-value-code">${codigoImo}</span>
+            </div>
+
+            <div class="popup-section" style="display: flex; flex-direction: row; justify-content: space-between; gap: 8px;">
+              <div>
+                <span class="popup-label">Área Certificada:</span>
+                <span class="popup-value" style="font-weight: 600;">${areaHa}</span>
+              </div>
+              <div>
+                <span class="popup-label">Situação:</span>
+                <span class="popup-value">${status}</span>
+              </div>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Localização:</span>
+              <span class="popup-value">${localizacao}</span>
+            </div>
+
+            ${registroMatricula ? `
+              <div class="popup-section">
+                <span class="popup-label">Registro Cartorial (RGI):</span>
+                <span class="popup-value">Matrícula nº ${registroMatricula} ${registroData ? `(${registroData})` : ''}</span>
+              </div>
+            ` : ''}
+
+            <div class="popup-section" style="font-size: 0.72rem; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 4px;">
+              ${dataAprov ? `<div>Aprovação: <strong>${dataAprov}</strong></div>` : ''}
+              ${dataSubmi && dataSubmi !== dataAprov ? `<div>Submissão: ${dataSubmi}</div>` : ''}
+              ${rt || art ? `<div style="margin-top: 2px;">RT: ${rt} ${art ? `• ART: ${art}` : ''}</div>` : ''}
+            </div>
+
+            ${isBatateiras ? `
+              <div class="popup-detail-box">
+                <div class="popup-detail-box-title">Litígio Judicial:</div>
+                <div class="popup-detail-box-content">
+                  Área com conflito fundiário e sobreposição sobre posses rurais da agricultura familiar.
+                </div>
+                <div class="popup-detail-box-note">Ação TJPE Maraial nº 0000263-83.2026.8.17.2940</div>
+              </div>
+            ` : ''}
+
+            ${parcelaId ? `
+              <a href="https://sigef.incra.gov.br/consultar/parcela/${parcelaId}" target="_blank" rel="noopener noreferrer" class="popup-btn">
+                Consultar no Portal SIGEF
+              </a>
+            ` : ''}
+          </div>
+        `;
+
+        new Popup({ closeButton: true, className: 'custom-popup' })
+          .setLngLat(coordinates)
+          .setHTML(html)
+          .addTo(this.map);
+      };
+
+      // 9b. SIGEF Casos Analisados (Histórico Batateiras / Fazenda 2 Irmãos)
+      const renderSigefHistoricoPopup = (props: any, coordinates: any) => {
+        const fase = props['fase'] || 'AV-23-73';
+        const dataAverbacao = props['data_averbacao'] || '';
+        const nomeImovel = props['nome_imovel'] || 'FAZENDA 2 IRMÃOS (Engenho Batateiras)';
+        const codigoImo = props['codigo_imo'] || '9510994953100';
+        const matriculaCartorio = props['matricula_cartorio'] || 'Matrícula nº 73 (Livro 02, RGI Maraial)';
+        const proprietaria = props['proprietaria'] || '';
+        const variacaoDescricao = props['variacao_descricao'] || '';
+        const descricao = props['descricao'] || '';
+        const corHex = props['cor_hex'] || '#8b5cf6';
+        const parcelaCodigo = props['parcela_codigo'] || (codigoImo === '9510994953100' ? '21971a92-35e1-4f18-bda1-85bd31ccb13b' : '');
+
+        const areaHa = (props['num_area'] !== undefined && props['num_area'] !== null && props['num_area'] !== '')
+          ? Number(props['num_area']).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) + ' ha'
+          : 'N/A';
+        const perimetroM = (props['perimetro_m'] !== undefined && props['perimetro_m'] !== null && props['perimetro_m'] !== '')
+          ? Number(props['perimetro_m']).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' m'
+          : 'N/A';
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title">
+              <span>Histórico SIGEF (Evolução)</span>
+              <span class="popup-badge" style="border-color: ${corHex}; color: ${corHex}; font-weight: 600;">${fase}</span>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Imóvel Analisado:</span>
+              <span class="popup-value" style="font-weight: 600;">${nomeImovel}</span>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Código INCRA / SIGEF:</span>
+              <span class="popup-value-code">${codigoImo}</span>
+            </div>
+
+            <div class="popup-section" style="display: flex; flex-direction: row; justify-content: space-between; gap: 8px;">
+              <div>
+                <span class="popup-label">Área Desta Fase:</span>
+                <span class="popup-value" style="font-weight: 600;">${areaHa}</span>
+              </div>
+              <div>
+                <span class="popup-label">Perímetro:</span>
+                <span class="popup-value">${perimetroM}</span>
+              </div>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Proprietária Cadastrada:</span>
+              <span class="popup-value" style="font-weight: 500;">${proprietaria}</span>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Registro Cartorial / Data:</span>
+              <span class="popup-value">${matriculaCartorio} • ${dataAverbacao}</span>
+            </div>
+
+            <div class="popup-detail-box">
+              <div class="popup-detail-box-title">Evolução Territorial (${fase}):</div>
+              <div class="popup-detail-box-content">
+                <strong>Variação:</strong> ${variacaoDescricao}
+              </div>
+              <div class="popup-detail-box-note" style="margin-top: 4px;">
+                ${descricao}
+              </div>
+            </div>
+
+            <div class="popup-detail-box">
+              <div class="popup-detail-box-title">Cronologia das 4 Fases (917 ha → 978 ha):</div>
+              <div class="popup-detail-box-content" style="font-size: 0.72rem; line-height: 1.45;">
+                <div style="padding: 2px 0; border-bottom: 1px dashed #e2e8f0; ${fase === 'AV-17-73' ? 'font-weight:700; color:#1d4ed8;' : ''}">
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#3b82f6; margin-right:4px;"></span>
+                  <strong>AV-17-73 (08/07/2020):</strong> 917,81 ha (Marco originário)
+                </div>
+                <div style="padding: 2px 0; border-bottom: 1px dashed #e2e8f0; ${fase === 'AV-19-73' ? 'font-weight:700; color:#b45309;' : ''}">
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#f59e0b; margin-right:4px;"></span>
+                  <strong>AV-19-73 (08/09/2020):</strong> 940,45 ha (+22,64 ha)
+                </div>
+                <div style="padding: 2px 0; border-bottom: 1px dashed #e2e8f0; ${fase === 'AV-23-73' ? 'font-weight:700; color:#b91c1c;' : ''}">
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ef4444; margin-right:4px;"></span>
+                  <strong>AV-23-73 (04/02/2021):</strong> 977,78 ha (+37,33 ha)
+                </div>
+                <div style="padding: 2px 0; ${fase === 'SIGEF Atual' ? 'font-weight:700; color:#6d28d9;' : ''}">
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#8b5cf6; margin-right:4px;"></span>
+                  <strong>SIGEF Atual (19/05/2021):</strong> 978,93 ha (+61,13 ha total)
+                </div>
+              </div>
+            </div>
+
+            <div class="popup-detail-box">
+              <div class="popup-detail-box-title">Litígio Judicial:</div>
+              <div class="popup-detail-box-content">
+                Área com conflito fundiário e sobreposição sobre posses rurais da agricultura familiar.
+              </div>
+              <div class="popup-detail-box-note">Ação TJPE Maraial nº 0000263-83.2026.8.17.2940</div>
+            </div>
+
+            ${parcelaCodigo ? `
+              <a href="https://sigef.incra.gov.br/consultar/parcela/${parcelaCodigo}" target="_blank" rel="noopener noreferrer" class="popup-btn">
+                Consultar Parcela Atual no SIGEF
+              </a>
+            ` : ''}
+          </div>
+        `;
+
+        new Popup({ closeButton: true, className: 'custom-popup' })
+          .setLngLat(coordinates)
+          .setHTML(html)
+          .addTo(this.map);
+      };
+
+      // 10. SNCI Properties (Privado e Público)
+      const renderSnciPopup = (props: any, coordinates: any, isPublic: boolean) => {
+        const nomeImovel = props['nome_imove'] || 'Imóvel Certificado (SNCI)';
+        const codImovel = props['cod_imovel'] || 'N/A';
+        const numCertif = props['num_certif'] || 'N/A';
+        const numProces = props['num_proces'] || 'N/A';
+        const dataCerti = props['data_certi'] ? new Date(props['data_certi']).toLocaleDateString('pt-BR') : '';
+        const areaHa = props['qtd_area_p'] ? Number(props['qtd_area_p']).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ha' : 'N/A';
+        const sr = props['sr'] ? `SR-${props['sr']} (${props['sr'] === '03' ? 'Petrolina/PE' : 'Recife/PE'})` : 'INCRA';
+        const credenciado = props['cod_profis'] || '';
+        const municipioNome = props['municipio_nome'] || props['uf_municip'] || 'Pernambuco';
+
+        const badge = isPublic ? 'SNCI Público' : 'SNCI Privado';
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title">
+              <span>Imóvel Certificado (SNCI)</span>
+              <span class="popup-badge">${badge}</span>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Nome do Imóvel:</span>
+              <span class="popup-value" style="font-weight: 600;">${nomeImovel}</span>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Código SNCI (INCRA):</span>
+              <span class="popup-value-code">${codImovel}</span>
+            </div>
+
+            <div class="popup-section" style="display: flex; flex-direction: row; justify-content: space-between; gap: 8px;">
+              <div>
+                <span class="popup-label">Área Certificada:</span>
+                <span class="popup-value" style="font-weight: 600;">${areaHa}</span>
+              </div>
+              <div>
+                <span class="popup-label">Superintendência:</span>
+                <span class="popup-value">${sr}</span>
+              </div>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Município:</span>
+              <span class="popup-value">${municipioNome} - PE</span>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Certificação INCRA:</span>
+              <span class="popup-value-code">Nº ${numCertif}</span>
+            </div>
+
+            <div class="popup-section" style="font-size: 0.72rem; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 4px;">
+              ${numProces && numProces !== 'N/A' ? `<div>Processo: ${numProces}</div>` : ''}
+              ${dataCerti ? `<div>Certificação em: <strong>${dataCerti}</strong></div>` : ''}
+              ${credenciado ? `<div>Credenciado: ${credenciado}</div>` : ''}
+            </div>
+          </div>
+        `;
+
+        new Popup({ closeButton: true, className: 'custom-popup' })
+          .setLngLat(coordinates)
+          .setHTML(html)
+          .addTo(this.map);
+      };
+
+      // --- UNIFIED PRIORITY CLICK DISPATCHER ---
+      // Layers sorted by click priority (top visual element wins):
+      // Center pins & points > Analyzed CAR smallholdings > Conflict zones & Alerts > Base Cadastral Polygons (SIGEF / SNCI / general CAR)
+      const priorityOrder = [
+        'land_overlaps_points_symbol',
+        'processos_conflitos_judiciais_circle',
+        'autos_infracao_icmbio_circle',
+        'car_casos_analisados_fill',
+        'sigef_casos_analisados_fill',
+        'land_overlaps_fill',
+        'alerts_with_intersections_fill',
+        'car_with_alerts_and_intersections_fill',
+        'embargos_icmbio_fill',
+        'limiteucsfederais_a_fill',
+        'sigef_privado_pe_fill',
+        'sigef_publico_pe_fill',
+        'imovel_certificado_snci_privado_pe_fill',
+        'imovel_certificado_snci_publico_pe_fill',
+        'area_imovel_1_fill'
+      ];
+
+      // Setup hover cursor on all interactive layers
+      priorityOrder.forEach(layerId => {
+        if (this.map.getLayer(layerId)) {
+          this.map.on('mouseenter', layerId, () => {
+            this.map.getCanvas().style.cursor = 'pointer';
+          });
+          this.map.on('mouseleave', layerId, () => {
+            this.map.getCanvas().style.cursor = '';
+          });
+        }
       });
-      this.map.on('mouseenter', 'car_with_alerts_and_intersections_fill', () => { this.map.getCanvas().style.cursor = 'pointer'; });
-      this.map.on('mouseleave', 'car_with_alerts_and_intersections_fill', () => { this.map.getCanvas().style.cursor = ''; });
+
+      // Single click listener: queries visible layers and selects the top-priority feature
+      this.map.on('click', (e) => {
+        const activeLayers = priorityOrder.filter(id => {
+          return this.map.getLayer(id) && this.map.getLayoutProperty(id, 'visibility') !== 'none';
+        });
+
+        if (activeLayers.length === 0) return;
+
+        const rendered = this.map.queryRenderedFeatures(e.point, { layers: activeLayers });
+        if (!rendered || rendered.length === 0) return;
+
+        // Sort rendered features by priority order
+        const sorted = rendered.sort((a, b) => {
+          const idxA = priorityOrder.indexOf(a.layer.id);
+          const idxB = priorityOrder.indexOf(b.layer.id);
+          return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+        });
+
+        const topFeature = sorted[0];
+        const layerId = topFeature.layer.id;
+        const props = topFeature.properties;
+        if (!props) return;
+
+        if (layerId === 'land_overlaps_points_symbol' || layerId === 'land_overlaps_fill') {
+          renderConflictPopup(props, e.lngLat);
+        } else if (layerId === 'processos_conflitos_judiciais_circle') {
+          renderDataJudPopup(props, e.lngLat);
+        } else if (layerId === 'autos_infracao_icmbio_circle') {
+          renderAutosPopup(props, e.lngLat);
+        } else if (layerId === 'car_casos_analisados_fill' || layerId === 'area_imovel_1_fill') {
+          // If clicking on CAR, also check if there is an underlying SIGEF parcel to reference in the detail box
+          const sigefFeature = sorted.find(f => f.layer.id === 'sigef_privado_pe_fill' || f.layer.id === 'sigef_publico_pe_fill' || f.layer.id === 'sigef_casos_analisados_fill');
+          renderCarPopup(props, e.lngLat, sigefFeature?.properties);
+        } else if (layerId === 'sigef_casos_analisados_fill') {
+          renderSigefHistoricoPopup(props, e.lngLat);
+        } else if (layerId === 'alerts_with_intersections_fill') {
+          renderAlertPopup(props, e.lngLat);
+        } else if (layerId === 'car_with_alerts_and_intersections_fill') {
+          renderCarAlertPopup(props, e.lngLat);
+        } else if (layerId === 'embargos_icmbio_fill') {
+          renderEmbargosPopup(props, e.lngLat);
+        } else if (layerId === 'limiteucsfederais_a_fill') {
+          renderUcsPopup(props, e.lngLat);
+        } else if (layerId === 'sigef_privado_pe_fill') {
+          renderSigefPopup(props, e.lngLat, false);
+        } else if (layerId === 'sigef_publico_pe_fill') {
+          renderSigefPopup(props, e.lngLat, true);
+        } else if (layerId === 'imovel_certificado_snci_privado_pe_fill') {
+          renderSnciPopup(props, e.lngLat, false);
+        } else if (layerId === 'imovel_certificado_snci_publico_pe_fill') {
+          renderSnciPopup(props, e.lngLat, true);
+        }
+      });
     });
+  }
+
+  focusBatateiras(event?: MouseEvent) {
+    if (event) event.stopPropagation();
+    if (this.map) {
+      this.map.flyTo({
+        center: [-35.73, -8.81],
+        zoom: 13.5,
+        essential: true
+      });
+    }
   }
 
   toggleLayer(layer: LayerConfig) {
@@ -836,6 +1399,13 @@ export class App implements AfterViewInit {
       }
       if (this.map.getLayer(`${layer.id}_circle`)) {
         this.map.setLayoutProperty(`${layer.id}_circle`, 'visibility', visibility);
+      }
+
+      if ((layer.id === 'car_casos_analisados' || layer.id === 'sigef_casos_analisados') && layer.visible) {
+        this.focusBatateiras();
+      }
+      if (layer.id === 'sigef_casos_analisados' && layer.visible) {
+        this.applySigefFilter();
       }
     }
   }

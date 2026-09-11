@@ -91,6 +91,51 @@ This document outlines the guidelines and protocols that AI coding agents must s
 - **Typography & Institutional Design**: Standardized card hierarchy with dark neutral titles (`#0f172a`), subtle metadata badges (`.popup-badge`), monospace codes (`.popup-value-code`), clean key-value pairs, and neutral institutional action buttons (`.popup-btn`).
 - **DataJud Legend Component**: Replaced floating button emoji with a minimalist scales SVG icon.
 
+### September 2026: CAR OCR Extraction & Batateiras Tenure Overlap Analysis
+- **OCR Pipeline & Code Recovery**: Executed automated Optical Character Recognition using `RapidOCR` across 8 raw PDF documents in `data/raw/` (Maraial/PE). Successfully extracted all CAR registration numbers (`Registro no CAR`), protocol numbers, declarant names/CPFs, and declared areas.
+- **Database Verification (`area_imovel_1`)**: Verified a 100% match in the PostGIS database. All 7 CAR rural declarations (Odílio, Francisco Zeferino, Joselito, José Manoel, Kleiton, Severino Wanderley, and Edvania Cordeiro) are officially stored and active (`AT` - Aguardando análise).
+- **Spatial Overlap on Certified Land**: Spatially intersected the 7 CAR parcels against `sigef_brasil_pe`, discovering that 99.86% of their collective perimeter (144.41 ha) lies directly within the certified macro-property `FAZENDA 2 IRMÃOS` (SIGEF `9510994953100`, 978.93 ha, Matrícula 73 de Maraial).
+- **Dedicated PostGIS Table & Tile Service**: Created `public.car_casos_analisados` with spatial GIST index, storing geometry and consolidated PDF OCR metadata, served as vector tiles via Martin (`http://localhost:3000/car_casos_analisados`).
+- **Frontend Layer Filter & Interactive Popups**: Added a clean, non-emoji layer filter in `frontend/src/app/app.ts` (`CAR - Casos Analisados (Batateiras)`) with auto-pan/flyTo capability and focus button (`.layer-focus-btn`). Implemented enriched click popups (`setupCarPopup`) for both `car_casos_analisados` and `area_imovel_1` showing declarant names, CPFs, declared property names, protocols, SICAR status, and tenure/dispute links (SIGEF Matrícula 73 and TJPE Maraial lawsuit).
+- **Comprehensive Report**: Published detailed analytical report in [`docs/CAR_BATATEIRAS_ANALYSIS.md`](file:///home/raylandsoncesario/github/conflict-solver/docs/CAR_BATATEIRAS_ANALYSIS.md).
+
+### September 2026: Interactive Inspection Popups for All SIGEF and SNCI Properties
+- **PostGIS Attribute Enrichment**: Computed and enriched real-time geodesic areas (`num_area` in hectares) and normalized municipality names (`municipio_nome`) across `sigef_privado_pe` (21,187 parcels), `sigef_publico_pe` (2,826 parcels), `imovel_certificado_snci_privado_pe` (81 parcels), and `imovel_certificado_snci_publico_pe` (29 parcels).
+- **Martin Vector Tile Catalog Sync**: Reloaded Martin daemon with the enhanced schema fields, delivering instant attribute availability across zoom levels.
+- **Frontend Click Handlers (`app.ts`)**:
+  - `setupSigefPopup`: Enabled interactive popups on `sigef_privado_pe` and `sigef_publico_pe`. Displays property name, INCRA/SIGEF code, certified area (ha), municipality name, cartorial registry (`Matrícula RGI` and date), approval/submission dates, technical responsibility (RT/ART), direct 1-click consultation link to the official SIGEF INCRA parcel portal (`sigef.incra.gov.br/consultar/parcela/<UUID>`), and automated cross-conflict detection (highlighting the Batateiras tenure dispute on `FAZENDA 2 IRMÃOS - Matrícula 73`).
+  - `setupSnciPopup`: Enabled interactive popups on `imovel_certificado_snci_privado_pe` and `imovel_certificado_snci_publico_pe`. Displays property name, SNCI code, certified area, INCRA Regional Superintendency (SR-03 Petrolina / SR-29 Recife), certification number (`num_certif`), administrative process number, and date of certification.
+
+### September 2026: SIGEF Historical Evolution & Georeferencing Retifications (Batateiras)
+- **KML Ingestion Pipeline (`src/import_sigef_historico.py`)**: Parsed 3 historical georeferencing boundary versions of Engenho Batateiras (Matrícula 73 - CRI Maraial) from `data/raw/`:
+  - `AV-17-73 (08/07/2020)`: 917.81 ha (12,751.03 m perimeter), SIMARCO - Administração e Participação Ltda. (original certification).
+  - `AV-19-73 (08/09/2020)`: 940.45 ha (+22.64 ha expansion, 13,302.54 m perimeter), IC Consultoria e Empreendimentos Imobiliários Ltda.
+  - `AV-23-73 (04/02/2021)`: 977.78 ha (+37.33 ha expansion / +59.97 ha accumulated vs origin, 13,956.20 m perimeter), IR Agropecuária Fazenda 2 Irmãos Ltda.
+  - Connected with current active registered SIGEF parcel (19/05/2021 - 14/06/2021) with 978.93 ha (total expansion of +61.13 ha), Parcela UUID `21971a92-35e1-4f18-bda1-85bd31ccb13b`, RT CCWB / ART PE20210624725-PE.
+- **Dedicated PostGIS Table & Spatial Index**: Created `public.sigef_casos_analisados` with spatial GIST index and metadata on chronological order, variation descriptions, area, perimeters, cartorial registrations, and tenure overlaps.
+- **Martin Vector Tile Layer**: Served through Martin as `http://localhost:3000/sigef_casos_analisados`.
+- **Frontend Layer Filter & Interactive Popups**: Added `SIGEF - Casos Analisados (Batateiras)` layer filter in `frontend/src/app/app.ts` and `app.html` with focus button (`.layer-focus-btn`), data-driven perimeter border coloring (`#3b82f6` for AV-17, `#f59e0b` for AV-19, `#ef4444` for AV-23, and `#8b5cf6` for SIGEF Atual), and interactive chronological comparison popups (`renderSigefHistoricoPopup`) highlighting territorial expansion and overlap onto family farming smallholdings.
+
+### September 2026: Interactive SIGEF Historical Phases Filter Panel (Left Side Minimalist Redesign)
+- **Component Architecture**: Developed `SigefBatateirasFilterComponent` (`frontend/src/app/sigef-batateiras-filter/`) as an Angular 20 Standalone Component matching the DataJud glassmorphism aesthetic (`width: 320px`).
+- **Left-Side Vertical Stack**: Integrated inside `.left-panels-stack` in `frontend/src/app/app.html` and `app.css` to cleanly host and stack both `app-datajud-legend` and `app-sigef-batateiras-filter` without collisions.
+- **Minimalist UX Refinement**: Streamlined to mirror DataJud's visual clarity:
+  - Header: *Histórico SIGEF - Fazenda 2 Irmãos*
+  - List items: Checkbox + Color Indicator + Phase Code (`AV-17-73`, `AV-19-73`, `AV-23-73`, `SIGEF Atual`) + Date (`08/07/2020`, `08/09/2020`, `04/02/2021`, `14/06/2021`).
+  - Removed extraneous textual noise ("Matrícula 73", instructional subheaders, and hectare labels) from the left panel.
+  - Removed false "7 posses" / "144 ha" text from both the filter and map inspection popups to preserve strict data accuracy, retaining generic references to family farming possession disputes and Maraial lawsuit nº 0000263-83.2026.8.17.2940.
+- **MapLibre GL Dynamic Filtering**: Applies real-time MapLibre filter expressions (`setFilter`) across both fill and line layers (`sigef_casos_analisados_fill` and `sigef_casos_analisados_line`) based on selected checkboxes.
+
+### September 2026: Judicial Conflicts Catalog for Palmares and Maraial
+- **Catalog Documentation (`docs/PROCESSOS_JUDICIAIS_PALMARES_MARAIAL.md`)**: Consolidated all 75 judicial land conflict cases identified in Palmares and Maraial from PostGIS (`public.processos_conflitos_judiciais`).
+- **Jurisdictional Coverage**: Documented distribution across State Justice (TJPE Vara Única de Maraial and 1ª/2ª Varas Cíveis de Palmares) and Federal Justice (TRF5 Subseção Judiciária de Palmares / 26ª Vara Federal, covering 14 Mata Sul municipalities including Maraial, and appellate court proceedings).
+- **Metadata Standardization**: Extracted full CNJ process masks, procedural classes, TPU subjects, filing dates, last movements, and PJe consultation endpoints.
+
+
+
+
+
+
 
 
 

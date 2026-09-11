@@ -60,6 +60,7 @@ conflict-solver/
     ├── database.py          # SQLAlchemy engine setup and PostGIS extension helper
     ├── etl.py               # Main ETL pipeline with axis-swap & geometry correction
     ├── etl_datajud.py       # DataJud CNJ pipeline for TJPE and TRF5 land conflict lawsuits
+    ├── import_sigef_historico.py # Historical georeferencing evolution importer (Batateiras)
     └── overlaps.py          # Spatial conflict detection engine & DBSCAN clustering
 ```
 
@@ -115,7 +116,13 @@ The ETL workflow consists of two main pipeline scripts:
    ```
    > Fetches land conflict lawsuits from the official CNJ DataJud API, categorizes them according to CNJ TPUs, geolocates comarcas across Pernambuco, links them to territorial jurisdictions (including daughter municipalities/termos), and updates `processos_conflitos_judiciais` and `processos_conflitos_municipios`.
 
-4. **Reload Tile Server (Martin)**:
+4. **Import SIGEF Historical Georeferencing Retifications (Batateiras Case Analysis)**:
+   ```bash
+   uv run python -m src.import_sigef_historico
+   ```
+   > Parses official KML boundaries for Engenho Batateiras (Matrícula 73 - Maraial) across historical retifications (AV-17, AV-19, AV-23, and current SIGEF 9510994953100), populating `public.sigef_casos_analisados` with spatial GIST indexes.
+
+5. **Reload Tile Server (Martin)**:
    ```bash
    docker compose restart martin
    ```
@@ -219,6 +226,8 @@ The ETL successfully manages and serves the following datasets:
 | `jurisdicoes_pe_municipios` | Mapeamento territorial unificado dos 185 municípios de PE | Point | GIST |
 | `processos_conflitos_judiciais` | Processos Judiciais de Conflito Agrário (DataJud - TJPE & TRF5) | Point | GIST |
 | `processos_conflitos_municipios` | Agregação Municipal de Conflitos na Justiça (185 municípios de PE) | Point | GIST |
+| `car_casos_analisados` | Imóveis Rurais CAR com OCR e verificação analítica (Batateiras) | MultiPolygon | GIST |
+| `sigef_casos_analisados` | Evolução histórica do georreferenciamento SIGEF (Batateiras - AV-17, AV-19, AV-23, Atual) | MultiPolygon | GIST |
 
 ---
 

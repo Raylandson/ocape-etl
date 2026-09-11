@@ -6,6 +6,19 @@
   left: 0;
 }
 
+/* Left side floating panels container (vertical stack) */
+.left-panels-stack {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+  max-height: calc(100vh - 40px);
+}
+
 /* Floating Open Button */
 .panel-toggle-badge {
   position: absolute;
@@ -206,6 +219,26 @@
 .layer-name.disabled {
   color: #9ca3af;
   text-decoration: line-through;
+}
+
+.layer-focus-btn {
+  margin-left: auto;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: #0369a1;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 4px;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.layer-focus-btn:hover {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #0284c7;
 }
 
 /* Custom Popup Styling */

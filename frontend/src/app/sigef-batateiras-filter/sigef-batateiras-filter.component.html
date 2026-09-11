@@ -1,0 +1,48 @@
+@if (isVisible) {
+  <!-- Floating Toggle Button when panel is closed -->
+  @if (!isOpen) {
+    <button class="panel-toggle-badge left-toggle" (click)="toggleOpen()" title="Abrir histórico SIGEF">
+      <svg class="toggle-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+      </svg>
+      <span class="toggle-badge-text">Histórico SIGEF</span>
+      <span class="toggle-badge-count">{{ getSelectedCount() }}/{{ phases.length }}</span>
+    </button>
+  }
+
+  <!-- Main Filter Panel -->
+  <div class="legend-panel left-panel" [class.panel-hidden]="!isOpen">
+    <div class="legend-header">
+      <div class="legend-header-text">
+        <h3>Histórico SIGEF</h3>
+        <p>Fazenda 2 Irmãos</p>
+      </div>
+      <button class="close-panel-btn" (click)="toggleOpen()" title="Ocultar painel">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="legend-body">
+      @for (phase of phases; track phase.id) {
+        <div class="legend-item phase-item" [class.item-inactive]="!phase.checked" (click)="togglePhase(phase, $event)">
+          <input 
+            type="checkbox" 
+            [checked]="phase.checked"
+            class="phase-checkbox"
+            (click)="$event.stopPropagation()"
+            (change)="onCheckboxChange(phase, $event)"
+          />
+          <div 
+            class="color-indicator" 
+            [style.backgroundColor]="phase.color"
+            [style.borderColor]="phase.borderColor"
+          ></div>
+          <span class="phase-version" [style.color]="phase.borderColor">{{ phase.version }}</span>
+          <span class="phase-date">{{ phase.date }}</span>
+        </div>
+      }
+    </div>
+  </div>
+}

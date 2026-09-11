@@ -1,20 +1,19 @@
 /* Floating Open Button on the left */
 .panel-toggle-badge.left-toggle {
   position: relative;
-  z-index: 10;
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(229, 231, 235, 0.8);
   border-radius: 9999px;
-  padding: 10px 16px;
+  padding: 8px 14px;
   color: #111827;
   font-weight: 600;
-  font-size: 0.875rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  font-size: 0.84rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none;
@@ -25,13 +24,13 @@
 .panel-toggle-badge.left-toggle:hover {
   background: rgba(255, 255, 255, 1);
   transform: translateY(-2px);
-  box-shadow: 0 14px 28px -5px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 14px 28px -5px rgba(0, 0, 0, 0.18);
 }
 
 .toggle-badge-icon {
-  width: 18px;
-  height: 18px;
-  color: #475569;
+  width: 17px;
+  height: 17px;
+  color: #6366f1;
 }
 
 .toggle-badge-text {
@@ -39,9 +38,9 @@
 }
 
 .toggle-badge-count {
-  background: #8b5cf6;
+  background: #6366f1;
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 9999px;
@@ -49,7 +48,7 @@
   text-align: center;
 }
 
-/* Main Panel on the left */
+/* Main Panel on the left - identical width & style to DataJud */
 .legend-panel.left-panel {
   position: relative;
   z-index: 10;
@@ -57,13 +56,13 @@
   max-height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(229, 231, 235, 0.6);
+  border: 1px solid rgba(229, 231, 235, 0.8);
   border-radius: 18px;
   box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.12), 0 8px 12px -6px rgba(0, 0, 0, 0.06);
-  padding: 18px;
+  padding: 16px;
   color: #1f2937;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
   box-sizing: border-box;
@@ -128,18 +127,13 @@
   gap: 6px;
   overflow-y: auto;
   padding-right: 4px;
-  margin-right: -4px;
   max-height: calc(100vh - 120px);
   scrollbar-width: thin;
   scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
 }
 
 .legend-body::-webkit-scrollbar {
-  width: 5px;
-}
-
-.legend-body::-webkit-scrollbar-track {
-  background: transparent;
+  width: 4px;
 }
 
 .legend-body::-webkit-scrollbar-thumb {
@@ -147,26 +141,36 @@
   border-radius: 9999px;
 }
 
-.legend-body::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(107, 114, 128, 0.7);
-}
-
-.legend-item {
+.legend-item.phase-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 8px;
+  gap: 8px;
+  padding: 8px 10px;
   border-radius: 8px;
   transition: background-color 0.15s ease;
+  cursor: pointer;
 }
 
-.legend-item:hover {
+.legend-item.phase-item:hover {
   background-color: rgba(0, 0, 0, 0.04);
 }
 
+.legend-item.phase-item.item-inactive {
+  opacity: 0.45;
+}
+
+.phase-checkbox {
+  cursor: pointer;
+  accent-color: #6366f1;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  margin: 0;
+}
+
 .color-indicator {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 4px;
   border-width: 2px;
   border-style: solid;
@@ -174,10 +178,16 @@
   flex-shrink: 0;
 }
 
-.layer-name {
-  font-size: 0.85rem;
+.phase-version {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.phase-date {
+  font-size: 0.78rem;
   font-weight: 500;
-  user-select: none;
-  line-height: 1.25;
-  color: #1f2937;
+  color: #374151;
+  white-space: nowrap;
 }

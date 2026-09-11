@@ -1,7 +1,13 @@
 <div id="map" class="map-container"></div>
 
-<!-- DataJud Judicial Conflict Categories Legend (Left Side) -->
-<app-datajud-legend [isVisible]="isDataJudVisible()"></app-datajud-legend>
+<!-- Left Side Floating Panels (DataJud Legend & SIGEF Casos Analisados Filter) -->
+<div class="left-panels-stack">
+  <app-datajud-legend [isVisible]="isDataJudVisible()"></app-datajud-legend>
+  <app-sigef-batateiras-filter 
+    [isVisible]="isSigefCasosAnalisadosVisible()"
+    (filterChanged)="onSigefFilterChanged($event)">
+  </app-sigef-batateiras-filter>
+</div>
 
 <!-- Floating Toggle Button when panel is closed -->
 @if (!isPanelOpen) {
@@ -43,6 +49,11 @@
         <span class="layer-name" [class.disabled]="!layer.visible">
           {{ layer.name }}
         </span>
+        @if ((layer.id === 'car_casos_analisados' || layer.id === 'sigef_casos_analisados') && layer.visible) {
+          <button class="layer-focus-btn" (click)="focusBatateiras($event)" title="Aproximar visualização no mapa">
+            Focar
+          </button>
+        }
       </div>
     }
   </div>
