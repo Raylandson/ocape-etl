@@ -312,6 +312,42 @@ export class App implements AfterViewInit {
       borderColor: '#b45309',
       visible: false
     },
+    {
+      id: 'assentamentos_incra_pe',
+      name: 'INCRA - Assentamentos (SIPRA)',
+      sourceUrl: 'http://localhost:3000/assentamentos_incra_pe',
+      sourceLayer: 'assentamentos_incra_pe',
+      fillColor: '#ea580c',
+      borderColor: '#c2410c',
+      visible: false
+    },
+    {
+      id: 'ucs_estaduais_cprh_pe',
+      name: 'CPRH - UCs Estaduais',
+      sourceUrl: 'http://localhost:3000/ucs_estaduais_cprh_pe',
+      sourceLayer: 'ucs_estaduais_cprh_pe',
+      fillColor: '#10b981',
+      borderColor: '#047857',
+      visible: false
+    },
+    {
+      id: 'processos_minerarios_pe',
+      name: 'ANM - Processos Minerários',
+      sourceUrl: 'http://localhost:3000/processos_minerarios_pe',
+      sourceLayer: 'processos_minerarios_pe',
+      fillColor: '#eab308',
+      borderColor: '#a16207',
+      visible: false
+    },
+    {
+      id: 'ibge_favelas_comunidades_pe',
+      name: 'IBGE - Favelas e Comunidades (2022)',
+      sourceUrl: 'http://localhost:3000/ibge_favelas_comunidades_pe',
+      sourceLayer: 'ibge_favelas_comunidades_pe',
+      fillColor: '#ec4899',
+      borderColor: '#be185d',
+      visible: false
+    },
     // {
     //   id: 'land_overlaps',
     //   name: '⚠️ Áreas de Conflito (Sobreposições)',
@@ -333,6 +369,37 @@ export class App implements AfterViewInit {
   ];
 
   ngAfterViewInit() {
+    // Global handler for copy buttons inside map popups (e.g., Processo CNJ)
+    document.addEventListener('click', (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest('.popup-copy-btn') as HTMLButtonElement | null;
+      if (!target) return;
+      const textToCopy = target.getAttribute('data-copy');
+      if (!textToCopy) return;
+
+      const setSuccess = () => {
+        target.classList.add('copied');
+        const span = target.querySelector('.copy-label') || target;
+        const originalText = span.textContent;
+        span.textContent = 'Copiado!';
+        setTimeout(() => {
+          target.classList.remove('copied');
+          span.textContent = originalText;
+        }, 2000);
+      };
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(textToCopy)
+          .then(setSuccess)
+          .catch(() => {
+            this.fallbackCopyText(textToCopy);
+            setSuccess();
+          });
+      } else {
+        this.fallbackCopyText(textToCopy);
+        setSuccess();
+      }
+    });
+
     this.map = new Map({
       container: 'map',
       style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
@@ -697,7 +764,8 @@ export class App implements AfterViewInit {
 
       // 5. DataJud Judicial Disputes (TJPE & TRF5)
       const renderDataJudPopup = (properties: any, coordinates: any) => {
-        const numProc = properties['numero_processo'] || 'N/A';
+        const rawNumProc = properties['numero_processo'] || 'N/A';
+        const numProc = this.formatCNJ(rawNumProc);
         const tribunal = properties['tribunal'] || 'Judiciário';
         const grau = properties['grau'] || '1º Grau';
         const categoria = properties['categoria_conflito'] || 'Conflito Fundiário';
@@ -723,8 +791,19 @@ export class App implements AfterViewInit {
               <span class="popup-badge">${grau}</span>
             </div>
             <div class="popup-section">
-              <span class="popup-label">Processo CNJ:</span>
-              <span class="popup-value-code">${numProc}</span>
+              <div class="popup-code-header">
+                <span class="popup-label">Processo CNJ:</span>
+                <button type="button" class="popup-copy-btn" data-copy="${numProc}" title="Copiar processo com pontuação padrão CNJ">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <span class="copy-label">Copiar</span>
+                </button>
+              </div>
+              <div class="popup-code-container">
+                <span class="popup-value-code cnj-code select-all" title="Número do processo formatado com pontuação padrão CNJ">${numProc}</span>
+              </div>
             </div>
             <div class="popup-section">
               <span class="popup-label">Classificação:</span>
@@ -1084,11 +1163,20 @@ export class App implements AfterViewInit {
 
             ${isBatateiras ? `
               <div class="popup-detail-box">
-                <div class="popup-detail-box-title">Litígio Judicial:</div>
+                <div class="popup-code-header">
+                  <span class="popup-detail-box-title">Litígio Judicial:</span>
+                  <button type="button" class="popup-copy-btn" data-copy="0000263-83.2026.8.17.2940" title="Copiar processo com pontuação padrão CNJ">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span class="copy-label">Copiar</span>
+                  </button>
+                </div>
                 <div class="popup-detail-box-content">
                   Área com conflito fundiário e sobreposição sobre posses rurais da agricultura familiar.
                 </div>
-                <div class="popup-detail-box-note">Ação TJPE Maraial nº 0000263-83.2026.8.17.2940</div>
+                <div class="popup-detail-box-note select-all">Ação TJPE Maraial nº 0000263-83.2026.8.17.2940</div>
               </div>
             ` : ''}
 
@@ -1197,11 +1285,20 @@ export class App implements AfterViewInit {
             </div>
 
             <div class="popup-detail-box">
-              <div class="popup-detail-box-title">Litígio Judicial:</div>
+              <div class="popup-code-header">
+                <span class="popup-detail-box-title">Litígio Judicial:</span>
+                <button type="button" class="popup-copy-btn" data-copy="0000263-83.2026.8.17.2940" title="Copiar processo com pontuação padrão CNJ">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <span class="copy-label">Copiar</span>
+                </button>
+              </div>
               <div class="popup-detail-box-content">
                 Área com conflito fundiário e sobreposição sobre posses rurais da agricultura familiar.
               </div>
-              <div class="popup-detail-box-note">Ação TJPE Maraial nº 0000263-83.2026.8.17.2940</div>
+              <div class="popup-detail-box-note select-all">Ação TJPE Maraial nº 0000263-83.2026.8.17.2940</div>
             </div>
 
             ${parcelaCodigo ? `
@@ -1284,6 +1381,199 @@ export class App implements AfterViewInit {
           .addTo(this.map);
       };
 
+      // 10. Assentamentos INCRA (SIPRA)
+      const renderAssentamentoPopup = (properties: any, coordinates: any) => {
+        const nomeProjeto = properties['no_projeto'] || 'Assentamento Rural';
+        const cdSipra = properties['cd_sipra'] || 'N/A';
+        const modalidade = properties['sg_modalidade'] || 'PA';
+        const municipio = properties['no_municipio'] || 'Pernambuco';
+        const capacidade = properties['nu_capacidade'] ? `${properties['nu_capacidade']} famílias` : 'N/A';
+        const beneficio = properties['nu_beneficio'] ? `${properties['nu_beneficio']} beneficiários` : 'N/A';
+        const areaHa = properties['nu_area_ha'] ? `${Number(properties['nu_area_ha']).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} ha` : 'N/A';
+        const formaObtencao = properties['ds_forma_obtencao'] || 'N/A';
+        const dataCriacao = properties['dt_criacao'] || properties['nu_ano_criacao'] || '';
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title">
+              <span>${nomeProjeto}</span>
+              <span class="popup-badge">${modalidade}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Código SIPRA:</span>
+              <span class="popup-value-code">${cdSipra}</span>
+            </div>
+            <div class="popup-section" style="display: flex; justify-content: space-between; gap: 8px;">
+              <div>
+                <span class="popup-label">Capacidade:</span>
+                <span class="popup-value">${capacidade}</span>
+              </div>
+              <div>
+                <span class="popup-label">Beneficiários:</span>
+                <span class="popup-value">${beneficio}</span>
+              </div>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Área Total:</span>
+              <span class="popup-value" style="font-weight: 600;">${areaHa}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Município:</span>
+              <span class="popup-value">${municipio} - PE</span>
+            </div>
+            <div class="popup-section" style="font-size: 0.72rem; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 4px;">
+              <div>Obtenção: ${formaObtencao}</div>
+              ${dataCriacao ? `<div>Criação: <strong>${dataCriacao}</strong></div>` : ''}
+            </div>
+          </div>
+        `;
+
+        new Popup({ closeButton: true, className: 'custom-popup' })
+          .setLngLat(coordinates)
+          .setHTML(html)
+          .addTo(this.map);
+      };
+
+      // 11. CPRH - Unidades de Conservação Estaduais
+      const renderUcsEstadualPopup = (properties: any, coordinates: any) => {
+        const nomeUc = properties['nome_uc'] || 'Unidade de Conservação Estadual';
+        const categoria = properties['categoria'] || 'UC Estadual';
+        const grupo = properties['grupo'] || 'Proteção Integral';
+        const orgGestor = properties['org_gestor'] || 'CPRH / PE';
+        const areaHa = properties['ha_total'] ? `${Number(properties['ha_total']).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} ha` : (properties['area_ha'] ? `${Number(properties['area_ha']).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} ha` : 'N/A');
+        const municipio = properties['municipio'] || 'Pernambuco';
+        const cdCnuc = properties['cd_cnuc'] || 'N/A';
+        const criaAto = properties['cria_ato'] || properties['cria_ano'] || '';
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title">
+              <span>${nomeUc}</span>
+              <span class="popup-badge">${categoria}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Código CNUC:</span>
+              <span class="popup-value-code">${cdCnuc}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Grupo de Manejo:</span>
+              <span class="popup-value">${grupo}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Área da Unidade:</span>
+              <span class="popup-value" style="font-weight: 600;">${areaHa}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Órgão Gestor:</span>
+              <span class="popup-value">${orgGestor}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Município:</span>
+              <span class="popup-value">${municipio}</span>
+            </div>
+            ${criaAto ? `
+            <div class="popup-section" style="font-size: 0.72rem; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 4px;">
+              <div>Ato Legal: ${criaAto}</div>
+            </div>` : ''}
+          </div>
+        `;
+
+        new Popup({ closeButton: true, className: 'custom-popup' })
+          .setLngLat(coordinates)
+          .setHTML(html)
+          .addTo(this.map);
+      };
+
+      // 12. ANM - Processos Minerários
+      const renderMineracaoPopup = (properties: any, coordinates: any) => {
+        const processo = properties['processo'] || properties['dsprocesso'] || 'N/A';
+        const fase = properties['fase'] || 'Processo Minerário';
+        const subs = properties['subs'] || 'Substância Mineral';
+        const nome = properties['nome'] || 'Titular Não Informado';
+        const areaHa = properties['area_ha'] ? `${Number(properties['area_ha']).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} ha` : 'N/A';
+        const ultEvento = properties['ult_evento'] || '';
+        const ano = properties['ano'] || '';
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title">
+              <span>Processo ANM</span>
+              <span class="popup-badge">${fase}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Nº do Processo:</span>
+              <span class="popup-value-code">${processo}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Substância:</span>
+              <span class="popup-value" style="font-weight: 600;">${subs}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Requerente / Titular:</span>
+              <span class="popup-value">${nome}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Área Outorgada:</span>
+              <span class="popup-value">${areaHa}</span>
+            </div>
+            ${ultEvento ? `
+            <div class="popup-section" style="font-size: 0.72rem; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 4px;">
+              <div>Último Evento: ${ultEvento}</div>
+              ${ano ? `<div>Ano: ${ano}</div>` : ''}
+            </div>` : ''}
+          </div>
+        `;
+
+        new Popup({ closeButton: true, className: 'custom-popup' })
+          .setLngLat(coordinates)
+          .setHTML(html)
+          .addTo(this.map);
+      };
+
+      // 13. IBGE - Favelas e Comunidades Urbanas (2022)
+      const renderFavelasPopup = (properties: any, coordinates: any) => {
+        const nomeComunidade = properties['nm_fcu'] || properties['nm_aglom'] || 'Comunidade Urbana';
+        const municipio = properties['nm_mun'] || 'Pernambuco';
+        const bairro = properties['nm_bairro'] || 'Não Informado';
+        const cdSetor = properties['cd_setor'] || 'N/A';
+        const cdFcu = properties['cd_fcu'] || properties['cd_aglom'] || 'N/A';
+        const areaKm2 = properties['area_km2'] ? `${Number(properties['area_km2']).toLocaleString('pt-BR', { maximumFractionDigits: 3 })} km²` : 'N/A';
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title">
+              <span>${nomeComunidade}</span>
+              <span class="popup-badge">Favela / Comunidade</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Código FCU:</span>
+              <span class="popup-value-code">${cdFcu}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Setor Censitário:</span>
+              <span class="popup-value-code">${cdSetor}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Município:</span>
+              <span class="popup-value" style="font-weight: 600;">${municipio} - PE</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Bairro:</span>
+              <span class="popup-value">${bairro}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Área do Setor:</span>
+              <span class="popup-value">${areaKm2}</span>
+            </div>
+          </div>
+        `;
+
+        new Popup({ closeButton: true, className: 'custom-popup' })
+          .setLngLat(coordinates)
+          .setHTML(html)
+          .addTo(this.map);
+      };
+
       // --- UNIFIED PRIORITY CLICK DISPATCHER ---
       // Layers sorted by click priority (top visual element wins):
       // Center pins & points > Analyzed CAR smallholdings > Conflict zones & Alerts > Base Cadastral Polygons (SIGEF / SNCI / general CAR)
@@ -1296,6 +1586,10 @@ export class App implements AfterViewInit {
         'land_overlaps_fill',
         'alerts_with_intersections_fill',
         'car_with_alerts_and_intersections_fill',
+        'assentamentos_incra_pe_fill',
+        'ucs_estaduais_cprh_pe_fill',
+        'processos_minerarios_pe_fill',
+        'ibge_favelas_comunidades_pe_fill',
         'embargos_icmbio_fill',
         'limiteucsfederais_a_fill',
         'sigef_privado_pe_fill',
@@ -1356,6 +1650,14 @@ export class App implements AfterViewInit {
           renderAlertPopup(props, e.lngLat);
         } else if (layerId === 'car_with_alerts_and_intersections_fill') {
           renderCarAlertPopup(props, e.lngLat);
+        } else if (layerId === 'assentamentos_incra_pe_fill') {
+          renderAssentamentoPopup(props, e.lngLat);
+        } else if (layerId === 'ucs_estaduais_cprh_pe_fill') {
+          renderUcsEstadualPopup(props, e.lngLat);
+        } else if (layerId === 'processos_minerarios_pe_fill') {
+          renderMineracaoPopup(props, e.lngLat);
+        } else if (layerId === 'ibge_favelas_comunidades_pe_fill') {
+          renderFavelasPopup(props, e.lngLat);
         } else if (layerId === 'embargos_icmbio_fill') {
           renderEmbargosPopup(props, e.lngLat);
         } else if (layerId === 'limiteucsfederais_a_fill') {
@@ -1408,5 +1710,35 @@ export class App implements AfterViewInit {
         this.applySigefFilter();
       }
     }
+  }
+
+  formatCNJ(raw: string | null | undefined): string {
+    if (!raw || raw === 'N/A') return 'N/A';
+    const clean = String(raw).replace(/\D/g, '');
+    if (clean.length === 20) {
+      return `${clean.slice(0, 7)}-${clean.slice(7, 9)}.${clean.slice(9, 13)}.${clean.slice(13, 14)}.${clean.slice(14, 16)}.${clean.slice(16, 20)}`;
+    }
+    if (clean.length >= 15 && clean.length < 20) {
+      const padded = clean.padStart(20, '0');
+      return `${padded.slice(0, 7)}-${padded.slice(7, 9)}.${padded.slice(9, 13)}.${padded.slice(13, 14)}.${padded.slice(14, 16)}.${padded.slice(16, 20)}`;
+    }
+    return String(raw);
+  }
+
+  private fallbackCopyText(text: string) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    textArea.style.top = '-9999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+    } catch (err) {
+      console.error('Fallback copy failed', err);
+    }
+    document.body.removeChild(textArea);
   }
 }

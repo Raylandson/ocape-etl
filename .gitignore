@@ -20,6 +20,12 @@ data/extracted/embargos_icmbio/
 data/extracted/limiteucsfederais_a/
 data/extracted/mapbiomas_alertas/
 data/extracted/mapbiomas_car_alertas/
+data/extracted/pe_setores_cd2022/
+data/extracted/assentamentos_incra_pe/
+data/extracted/ucs_estaduais_cprh_pe/
+data/extracted/processos_minerarios_pe/
+data/extracted/ibge_favelas_comunidades_pe/
 
 # Local backup archives
 *.tar.gz
+

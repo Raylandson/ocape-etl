@@ -131,15 +131,36 @@ This document outlines the guidelines and protocols that AI coding agents must s
 - **Jurisdictional Coverage**: Documented distribution across State Justice (TJPE Vara Única de Maraial and 1ª/2ª Varas Cíveis de Palmares) and Federal Justice (TRF5 Subseção Judiciária de Palmares / 26ª Vara Federal, covering 14 Mata Sul municipalities including Maraial, and appellate court proceedings).
 - **Metadata Standardization**: Extracted full CNJ process masks, procedural classes, TPU subjects, filing dates, last movements, and PJe consultation endpoints.
 
+### September 2026: Phase 1 Data Sources Catalog & Direct Download Pipeline
+- **Direct Download Inventory (`docs/PHASE_1_DATA_DOWNLOADS.md`)**: Cataloged raw, uncut, verified URLs, WFS GeoJSON endpoints, and direct download links for immediate Phase 1 spatial layers:
+  - **INCRA SIPRA Assentamentos**: Direct WFS GeoJSON endpoint returning 567 official agrarian reform settlements in Pernambuco (`CMR-PUBLICO:lim_assentamento_rural_a`).
+  - **CPRH / CNUC Unidades de Conservação Estaduais**: Direct WFS GeoJSON endpoint returning 60 state conservation units in Pernambuco (`CMR-PUBLICO:lim_cnuc_2024_02_estadual_a`) and direct MMA CKAN shapefile zip (`shp_cnuc_2025_08.zip`).
+  - **ANM SIGMINE Processos Minerários**: Daily updated direct shapefile zip download for Pernambuco (`https://dadosabertos.anm.gov.br/SIGMINE/PROCESSOS_MINERARIOS/PE.zip`).
+  - **IBGE Favelas e Comunidades Urbanas (Censo 2022)**: Direct shapefile zip download covering intramunicipal census sectors for Pernambuco (`PE_setores_CD2022.zip`) with `CD_AGLOM` and `NM_AGLOM` classification.
+  - **Campanha Despejo Zero**: Portal and open datasets links for grassroots monitoring of eviction threats.
+### September 2026: CNJ Standard Punctuation Mask & 1-Click Copy in Map Popups
+- **CNJ Mask Standardization (`NNNNNNN-DD.YYYY.J.TR.OOOO`)**:
+  - Normalized all 2,000 judicial lawsuit records in `public.processos_conflitos_judiciais` to the standard CNJ mask (Resolução CNJ nº 65/2008), solving compatibility breakage when pasting process numbers into TJPE and TRF5 PJe portal search forms.
+  - Updated `src/etl_datajud.py` with `format_cnj()` to ensure all future extractions from CNJ DataJud API are formatted with standard punctuation.
+- **Frontend Formatting & One-Click Copy**:
+  - Enriched `frontend/src/app/app.ts` with `formatCNJ()` and event-delegated copy functionality with clipboard fallback (`fallbackCopyText`).
+  - Added modern `.popup-copy-btn` with visual confirmation ("Copiado!") and `select-all` CSS behavior in `frontend/src/app/app.css`, allowing users to copy the punctuated CNJ code with a single click or mouse selection without breaking court portal queries.
+  - Added copy action to Batateiras judicial dispute cards in CAR and SIGEF map popups.
 
-
-
-
-
-
-
-
-
-
-
+### September 2026: Phase 1 Datasets Ingestion & Frontend Integration
+- **ETL Multi-Format Expansion (`src/etl.py`)**:
+  - Added automatic dual-format discovery for both `.shp` and `.geojson` files, automatically prioritizing GeoJSON when available to preserve complete attribute names.
+  - Integrated automated `shapely.make_valid` and `shapely.force_2d` to sanitize geometries and convert 3D/measured coordinates (ANM SIGMINE) into standard 2D MultiPolygons/Polygons in EPSG:4326.
+  - Added explicit spatial GIST index creation (`idx_{table_name}_geometry`) and transaction commits.
+- **PostGIS Ingestion Summary**:
+  - `public.assentamentos_incra_pe`: 567 official INCRA agrarian reform settlements (PA, PDS, etc.).
+  - `public.ucs_estaduais_cprh_pe`: 60 state-administered conservation units (CPRH).
+  - `public.processos_minerarios_pe`: 5,235 ANM active mineral concessions and research permits.
+  - `public.ibge_favelas_comunidades_pe`: 2,381 census sectors classified as Favelas e Comunidades Urbanas (Censo 2022).
+  - `public.pe_setores_cd2022`: 19,578 complete census sectors of Pernambuco.
+- **Martin Vector Tile Server Sync**:
+  - Reloaded Martin daemon with the new tables, publishing all 5 new tile services on port 3000.
+- **Frontend Map & Popups (`frontend/src/app/app.ts`)**:
+  - Added 4 interactive toggle layers in `LayerConfig`: INCRA Assentamentos, CPRH UCs Estaduais, ANM Processos Minerários, and IBGE Favelas e Comunidades.
+  - Added rich custom popup cards (`renderAssentamentoPopup`, `renderUcsEstadualPopup`, `renderMineracaoPopup`, `renderFavelasPopup`) and integrated them into the unified priority click dispatcher.
 

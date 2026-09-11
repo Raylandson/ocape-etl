@@ -19,7 +19,10 @@ Este documento centraliza o inventário de dados da **Plataforma de Mapeamento e
 | **e** | **Unidades de Conservação (UCs ICMBio)** | ICMBio / CNUC | Áreas federais de Proteção Integral e Uso Sustentável |  **Importado** |
 | **e.1** | **Áreas Embargadas (ICMBio)** | ICMBio / MMA | Polígonos de embargos ambientais e restrição de uso |  **Importado** |
 | **e.2** | **Autos de Infração (ICMBio)** | ICMBio / MMA | Autos de infração ambiental georreferenciados |  **Importado** |
-| **h** | **SIPRA** | INCRA | Assentamentos e projetos de reforma agrária federais | ⏳ **A Importar** |
+| **e.3** | **Unidades de Conservação Estaduais** | CPRH / MMA | Áreas estaduais de proteção integral e uso sustentável (APAs, RVS, RPPNs) |  **Importado** |
+| **h** | **SIPRA** | INCRA | Assentamentos e projetos de reforma agrária federais (`assentamentos_incra_pe`) |  **Importado** |
+| **k** | **Processos Minerários (SIGMINE)** | ANM | Concessões de lavra, autorizações e direitos minerários (`processos_minerarios_pe`) |  **Importado** |
+| **l** | **Favelas e Comunidades Urbanas (2022)** | IBGE | Ocupações, núcleos e favelas do Censo 2022 (`ibge_favelas_comunidades_pe`) |  **Importado** |
 | **i** | **Moradia Legal** | TJPE | Núcleos urbanos/rurais em regularização fundiária (REURB) | ⏳ **A Importar** |
 | **j** | **Acervo Fundiário ITERPE** | ITERPE (via ACT) | Glebas estaduais, terras devolutas e regularização rural | ⏳ **A Importar** |
 

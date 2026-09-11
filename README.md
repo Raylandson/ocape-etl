@@ -24,7 +24,8 @@ conflict-solver/
 ├── AGENTS.md                # AI Agent guidelines and rules
 ├── docs/
 │   ├── DATA_ANALYSIS.md     # Comprehensive Data Systems & Metadata Analysis
-│   └── DATA_SOURCES.md      # Ecosystem Inventory: Current Imported vs Future Data Sources Roadmap
+│   ├── DATA_SOURCES.md      # Ecosystem Inventory: Current Imported vs Future Data Sources Roadmap
+│   └── PHASE_1_DATA_DOWNLOADS.md # Direct uncut URLs and batch download commands for Phase 1 data sources
 ├── data/
 │   ├── raw/                 # Untouched ZIP backups of source data [GIT IGNORED]
 │   │   ├── autos_infracao_icmbio.zip
@@ -114,7 +115,7 @@ The ETL workflow consists of two main pipeline scripts:
    ```bash
    uv run python -m src.etl_datajud
    ```
-   > Fetches land conflict lawsuits from the official CNJ DataJud API, categorizes them according to CNJ TPUs, geolocates comarcas across Pernambuco, links them to territorial jurisdictions (including daughter municipalities/termos), and updates `processos_conflitos_judiciais` and `processos_conflitos_municipios`.
+   > Fetches land conflict lawsuits from the official CNJ DataJud API, categorizes them according to CNJ TPUs, formats lawsuit numbers with standard CNJ punctuation (`NNNNNNN-DD.YYYY.J.TR.OOOO`), geolocates comarcas across Pernambuco, links them to territorial jurisdictions (including daughter municipalities/termos), and updates `processos_conflitos_judiciais` and `processos_conflitos_municipios`.
 
 4. **Import SIGEF Historical Georeferencing Retifications (Batateiras Case Analysis)**:
    ```bash

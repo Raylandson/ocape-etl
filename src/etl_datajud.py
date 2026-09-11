@@ -315,6 +315,14 @@ def extract_datajud_processes(max_pages_per_tribunal: int = 10) -> List[Dict[str
     return all_processes
 
 
+def format_cnj(raw_num: str) -> str:
+    """Format raw CNJ process number into standard masked format NNNNNNN-DD.YYYY.J.TR.OOOO."""
+    digits = re.sub(r'\D', '', str(raw_num or ''))
+    if len(digits) == 20:
+        return f"{digits[:7]}-{digits[7:9]}.{digits[9:13]}.{digits[13:14]}.{digits[14:16]}.{digits[16:20]}"
+    return str(raw_num or 'N/A')
+
+
 def process_and_geolocate_records(raw_records: List[Dict[str, Any]], muni_lookup: Dict[int, Tuple[float, float, str]]) -> List[Dict[str, Any]]:
     """Transforms, classifies, and geolocates process records."""
     processed = []
@@ -323,12 +331,13 @@ def process_and_geolocate_records(raw_records: List[Dict[str, Any]], muni_lookup
     for item in raw_records:
         tribunal_source = item["tribunal_source"]
         s = item["source"]
-        proc_id = s.get("id") or f"{tribunal_source}_{s.get('numeroProcesso')}"
+        raw_num = s.get("numeroProcesso") or "N/A"
+        proc_id = s.get("id") or f"{tribunal_source}_{raw_num}"
         if proc_id in seen_ids:
             continue
         seen_ids.add(proc_id)
 
-        numero_processo = s.get("numeroProcesso") or "N/A"
+        numero_processo = format_cnj(raw_num)
         grau = s.get("grau") or "G1"
         data_ajuiz = parse_date(s.get("dataAjuizamento"))
         
@@ -363,7 +372,8 @@ def process_and_geolocate_records(raw_records: List[Dict[str, Any]], muni_lookup
         
         # TRF5 resolution from number or court name if IBGE is 0 / None
         if tribunal_source == "TRF5" or not muni_ibge:
-            subsecao_code = numero_processo[-4:] if len(numero_processo) >= 4 else "8300"
+            clean_digits = re.sub(r'\D', '', numero_processo)
+            subsecao_code = clean_digits[-4:] if len(clean_digits) >= 4 else "8300"
             if subsecao_code in TRF5_PE_SUBSECOES:
                 muni_ibge, muni_nome = TRF5_PE_SUBSECOES[subsecao_code]
             else:

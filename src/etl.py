@@ -75,6 +75,12 @@ def sanitize_and_fix_geometries(gdf: gpd.GeoDataFrame, filename: str) -> gpd.Geo
         new_minx, new_miny, new_maxx, new_maxy = gdf.total_bounds
         logger.info(f"Coordinates swapped successfully. New bounds: [{new_minx:.2f}, {new_miny:.2f}, {new_maxx:.2f}, {new_maxy:.2f}]")
 
+    # Ensure valid geometries
+    gdf.geometry = gdf.geometry.apply(shapely.make_valid)
+
+    # Ensure 2D geometries (force 2D to strip Z/M dimensions if present, e.g. ANM mining layers)
+    gdf.geometry = shapely.force_2d(gdf.geometry)
+
     return gdf
 
 def load_pe_boundary():
@@ -165,13 +171,23 @@ def run_etl():
     engine = get_engine()
     pe_geom = load_pe_boundary()
 
-    # Find all .shp files in the extracted data directory recursively
-    shp_files = list(EXTRACTED_DATA_DIR.glob("**/*.shp"))
-    if not shp_files:
-        logger.warning(f"No .shp files found in directory: {EXTRACTED_DATA_DIR}")
+    # Discover spatial files (.shp, .geojson)
+    # If both exist for the same dataset, prefer .geojson (preserves complete unshortened attribute names)
+    raw_spatial_paths = list(EXTRACTED_DATA_DIR.glob("**/*.shp")) + list(EXTRACTED_DATA_DIR.glob("**/*.geojson"))
+    if not raw_spatial_paths:
+        logger.warning(f"No spatial files (.shp/.geojson) found in directory: {EXTRACTED_DATA_DIR}")
         return
 
-    logger.info(f"Found {len(shp_files)} shapefile(s) to process.")
+    spatial_files = {}
+    for p in sorted(raw_spatial_paths):
+        table_name = sanitize_name(p.stem)
+        if table_name in spatial_files:
+            if p.suffix.lower() == ".geojson":
+                spatial_files[table_name] = p
+        else:
+            spatial_files[table_name] = p
+
+    logger.info(f"Found {len(spatial_files)} unique spatial dataset(s) to process.")
 
     import sys
     force = "--force" in sys.argv
@@ -182,9 +198,8 @@ def run_etl():
         elif arg.startswith("--only-icmbio"):
             table_filter = "icmbio"
 
-    for shp_path in shp_files:
+    for table_name, shp_path in spatial_files.items():
         filename = shp_path.stem
-        table_name = sanitize_name(filename)
 
         if table_filter:
             if table_filter == "icmbio" and not any(k in table_name for k in ["icmbio", "limiteucsfederais"]):
@@ -203,7 +218,7 @@ def run_etl():
                         logger.info(f"Table '{table_name}' already exists with {count} rows. Skipping (use --force to reload).")
                         continue
 
-        logger.info(f"Processing '{filename}' -> target table '{table_name}'")
+        logger.info(f"Processing '{filename}' ({shp_path.suffix}) -> target table '{table_name}'")
 
         try:
             # 1. Load GeoDataFrame directly from the extracted shapefile
@@ -260,6 +275,8 @@ def run_etl():
             
             # 7. Verify row count and ensure GIST index
             with engine.connect() as conn:
+                conn.execute(text(f"CREATE INDEX IF NOT EXISTS idx_{table_name}_geometry ON {table_name} USING GIST (geometry);"))
+                conn.commit()
                 res = conn.execute(text(f"SELECT COUNT(*) FROM {table_name};"))
                 count = res.scalar()
                 logger.info(f"Successfully loaded {count} rows into '{table_name}' and verified spatial index GIST.")
