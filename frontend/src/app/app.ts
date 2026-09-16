@@ -1,5 +1,5 @@
 import { Component, AfterViewInit } from '@angular/core';
-import { Map, Popup } from 'maplibre-gl';
+import { Map, Popup, AttributionControl } from 'maplibre-gl';
 import { DatajudLegendComponent } from './datajud-legend/datajud-legend.component';
 import { SigefBatateirasFilterComponent } from './sigef-batateiras-filter/sigef-batateiras-filter.component';
 
@@ -107,9 +107,28 @@ export class App implements AfterViewInit {
   map!: Map;
   isPanelOpen: boolean = true;
   selectedSigefPhases: string[] = ['AV-17-73', 'AV-19-73', 'AV-23-73', 'SIGEF Atual'];
+  currentBasemap: 'vector' | 'satellite' = 'vector';
 
   togglePanel() {
     this.isPanelOpen = !this.isPanelOpen;
+  }
+
+  setBasemap(mode: 'vector' | 'satellite') {
+    if (this.currentBasemap === mode) return;
+    this.currentBasemap = mode;
+
+    if (!this.map) return;
+
+    const visibility = mode === 'satellite' ? 'visible' : 'none';
+    if (this.map.getLayer('satellite-layer')) {
+      this.map.setLayoutProperty('satellite-layer', 'visibility', visibility);
+    }
+    if (this.map.getLayer('satellite-boundary-state')) {
+      this.map.setLayoutProperty('satellite-boundary-state', 'visibility', visibility);
+    }
+    if (this.map.getLayer('satellite-boundary-county')) {
+      this.map.setLayoutProperty('satellite-boundary-county', 'visibility', visibility);
+    }
   }
 
   getActiveLayersCount(): number {
@@ -440,10 +459,33 @@ export class App implements AfterViewInit {
       container: 'map',
       style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
       center: [-37.5, -8.5], // Pernambuco
-      zoom: 7
+      zoom: 7,
+      attributionControl: false
     });
 
+    const attribControl = new AttributionControl({ compact: true });
+    attribControl._updateCompact = () => {
+      const container = (attribControl as any)._container;
+      if (!container) return;
+      container.classList.add('maplibregl-compact');
+      if (!container.classList.contains('maplibregl-compact-show')) {
+        container.removeAttribute('open');
+      }
+    };
+    this.map.addControl(attribControl, 'bottom-right');
+
+    const collapseAttribution = () => {
+      const el = this.map?.getContainer()?.querySelector('.maplibregl-ctrl-attrib');
+      if (el) {
+        el.classList.add('maplibregl-compact');
+        el.classList.remove('maplibregl-compact-show');
+        el.removeAttribute('open');
+      }
+    };
+    collapseAttribution();
+
     this.map.on('load', () => {
+      collapseAttribution();
       // Find the first symbol/label layer in the basemap style so that data layers
       // (polygons, lines, and point circles) are rendered underneath city/place names and road labels.
       const styleLayers = this.map.getStyle().layers;
@@ -519,6 +561,78 @@ export class App implements AfterViewInit {
         const imageData = ctx.getImageData(0, 0, width, height);
         this.map.addImage('red-pin', imageData);
       }
+
+      // Add Satellite raster source (ESRI World Imagery - high resolution aerial/satellite photography)
+      this.map.addSource('satellite-source', {
+        type: 'raster',
+        tiles: [
+          'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+        ],
+        tileSize: 256,
+        maxzoom: 19,
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and GIS User Community'
+      });
+
+      // Add Satellite raster layer directly before firstLabelId and before custom data layers
+      this.map.addLayer(
+        {
+          id: 'satellite-layer',
+          type: 'raster',
+          source: 'satellite-source',
+          layout: {
+            visibility: this.currentBasemap === 'satellite' ? 'visible' : 'none'
+          },
+          paint: {
+            'raster-opacity': 1.0,
+            'raster-fade-duration': 300
+          }
+        },
+        firstLabelId
+      );
+
+      // State boundary line overlay for Satellite view
+      this.map.addLayer(
+        {
+          id: 'satellite-boundary-state',
+          type: 'line',
+          source: 'carto',
+          'source-layer': 'boundary',
+          minzoom: 4,
+          filter: ['all', ['==', 'admin_level', 4], ['==', 'maritime', 0]],
+          layout: {
+            visibility: this.currentBasemap === 'satellite' ? 'visible' : 'none'
+          },
+          paint: {
+            'line-color': '#ffffff',
+            'line-width': 1.4,
+            'line-dasharray': [3, 2],
+            'line-opacity': 0.75
+          }
+        },
+        firstLabelId
+      );
+
+      // Municipal boundary line overlay for Satellite view
+      this.map.addLayer(
+        {
+          id: 'satellite-boundary-county',
+          type: 'line',
+          source: 'carto',
+          'source-layer': 'boundary',
+          minzoom: 8,
+          filter: ['all', ['==', 'admin_level', 6], ['==', 'maritime', 0]],
+          layout: {
+            visibility: this.currentBasemap === 'satellite' ? 'visible' : 'none'
+          },
+          paint: {
+            'line-color': '#ffffff',
+            'line-width': 0.8,
+            'line-dasharray': [2, 2],
+            'line-opacity': 0.45
+          }
+        },
+        firstLabelId
+      );
 
       this.layers.forEach(layer => {
         // Add vector tile source

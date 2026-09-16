@@ -7,15 +7,15 @@
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(229, 231, 235, 0.8);
-  border-radius: 9999px;
+  border: 1px solid rgba(229, 231, 235, 0.85);
+  border-radius: 10px;
   padding: 8px 14px;
-  color: #111827;
+  color: #0f172a;
   font-weight: 600;
   font-size: 0.84rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.12), 0 2px 6px -2px rgba(0, 0, 0, 0.06);
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
   outline: none;
   pointer-events: auto;
   width: fit-content;
@@ -23,14 +23,14 @@
 
 .panel-toggle-badge.left-toggle:hover {
   background: rgba(255, 255, 255, 1);
-  transform: translateY(-2px);
-  box-shadow: 0 14px 28px -5px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px -2px rgba(0, 0, 0, 0.15);
 }
 
 .toggle-badge-icon {
   width: 17px;
   height: 17px;
-  color: #6366f1;
+  color: #0f172a;
 }
 
 .toggle-badge-text {
@@ -38,12 +38,12 @@
 }
 
 .toggle-badge-count {
-  background: #6366f1;
+  background: #0f172a;
   color: #ffffff;
   font-size: 0.72rem;
   font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 9999px;
+  padding: 2px 6px;
+  border-radius: 6px;
   min-width: 18px;
   text-align: center;
 }
@@ -57,11 +57,11 @@
   display: flex;
   flex-direction: column;
   background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(229, 231, 235, 0.8);
-  border-radius: 18px;
-  box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.12), 0 8px 12px -6px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.85);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.12), 0 2px 6px -2px rgba(0, 0, 0, 0.06);
   padding: 16px;
   color: #1f2937;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
@@ -79,7 +79,7 @@
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 12px;
-  border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.85);
   padding-bottom: 10px;
   flex-shrink: 0;
 }
@@ -102,12 +102,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   background: rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(229, 231, 235, 0.8);
-  border-radius: 8px;
-  color: #6b7280;
+  border: 1px solid rgba(229, 231, 235, 0.85);
+  border-radius: 7px;
+  color: #64748b;
   cursor: pointer;
   transition: all 0.2s ease;
   outline: none;
@@ -116,9 +116,9 @@
 }
 
 .close-panel-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
-  border-color: rgba(239, 68, 68, 0.3);
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
 }
 
 .legend-body {
@@ -138,7 +138,7 @@
 
 .legend-body::-webkit-scrollbar-thumb {
   background-color: rgba(156, 163, 175, 0.4);
-  border-radius: 9999px;
+  border-radius: 6px;
 }
 
 .legend-item.phase-item {
@@ -146,7 +146,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  border-radius: 8px;
+  border-radius: 7px;
   transition: background-color 0.15s ease;
   cursor: pointer;
 }
@@ -161,7 +161,7 @@
 
 .phase-checkbox {
   cursor: pointer;
-  accent-color: #6366f1;
+  accent-color: #0f172a;
   width: 15px;
   height: 15px;
   flex-shrink: 0;

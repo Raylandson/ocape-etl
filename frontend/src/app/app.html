@@ -9,6 +9,40 @@
   </app-sigef-batateiras-filter>
 </div>
 
+<!-- Floating Basemap Switcher (Bottom Left) -->
+<div class="basemap-floating-switcher" role="radiogroup" aria-label="Visualização do mapa base">
+  <button 
+    type="button" 
+    class="basemap-switch-btn" 
+    [class.active]="currentBasemap === 'vector'"
+    (click)="setBasemap('vector')"
+    title="Visualização Padrão (Carto Positron)"
+    aria-label="Mapa Institucional">
+    <svg class="basemap-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+      <line x1="8" y1="2" x2="8" y2="18"></line>
+      <line x1="16" y1="6" x2="16" y2="22"></line>
+    </svg>
+    <span>Mapa</span>
+  </button>
+  <button 
+    type="button" 
+    class="basemap-switch-btn" 
+    [class.active]="currentBasemap === 'satellite'"
+    (click)="setBasemap('satellite')"
+    title="Visão de Satélite (ESRI World Imagery)"
+    aria-label="Visão de Satélite">
+    <svg class="basemap-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="9"></circle>
+      <path d="M3.6 9h16.8"></path>
+      <path d="M3.6 15h16.8"></path>
+      <path d="M12 3a14 14 0 0 0 0 18"></path>
+      <path d="M12 3a14 14 0 0 1 0 18"></path>
+    </svg>
+    <span>Satélite</span>
+  </button>
+</div>
+
 <!-- Floating Toggle Button when panel is closed -->
 @if (!isPanelOpen) {
   <button class="panel-toggle-badge" (click)="togglePanel()" title="Abrir painel de camadas">

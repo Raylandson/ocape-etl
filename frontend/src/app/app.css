@@ -19,6 +19,57 @@
   max-height: calc(100vh - 40px);
 }
 
+/* Floating Basemap Switcher (Bottom-Left) */
+.basemap-floating-switcher {
+  position: absolute;
+  bottom: 24px;
+  left: 20px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.85);
+  border-radius: 10px;
+  padding: 4px;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.12), 0 2px 6px -2px rgba(0, 0, 0, 0.06);
+}
+
+.basemap-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  outline: none;
+}
+
+.basemap-switch-btn:hover:not(.active) {
+  background: rgba(0, 0, 0, 0.04);
+  color: #0f172a;
+}
+
+.basemap-switch-btn.active {
+  background: #0f172a;
+  color: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.basemap-btn-icon {
+  width: 15px;
+  height: 15px;
+}
+
 /* Floating Open Button */
 .panel-toggle-badge {
   position: absolute;
@@ -28,31 +79,31 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(229, 231, 235, 0.8);
-  border-radius: 9999px;
-  padding: 10px 16px;
-  color: #111827;
+  border: 1px solid rgba(229, 231, 235, 0.85);
+  border-radius: 10px;
+  padding: 8px 14px;
+  color: #0f172a;
   font-weight: 600;
-  font-size: 0.875rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  font-size: 0.84rem;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.12), 0 2px 6px -2px rgba(0, 0, 0, 0.06);
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
   outline: none;
 }
 
 .panel-toggle-badge:hover {
   background: rgba(255, 255, 255, 1);
-  transform: translateY(-2px);
-  box-shadow: 0 14px 28px -5px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px -2px rgba(0, 0, 0, 0.15);
 }
 
 .toggle-badge-icon {
-  width: 18px;
-  height: 18px;
-  color: #2563eb;
+  width: 17px;
+  height: 17px;
+  color: #0f172a;
 }
 
 .toggle-badge-text {
@@ -60,12 +111,12 @@
 }
 
 .toggle-badge-count {
-  background: #3b82f6;
+  background: #0f172a;
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 9999px;
+  padding: 2px 6px;
+  border-radius: 6px;
   min-width: 18px;
   text-align: center;
 }
@@ -80,13 +131,13 @@
   max-height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(229, 231, 235, 0.6);
-  border-radius: 18px;
-  box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.12), 0 8px 12px -6px rgba(0, 0, 0, 0.06);
-  padding: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.85);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.12), 0 2px 6px -2px rgba(0, 0, 0, 0.06);
+  padding: 16px;
   color: #1f2937;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
   box-sizing: border-box;
@@ -104,7 +155,7 @@
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 12px;
-  border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.85);
   padding-bottom: 10px;
   flex-shrink: 0;
 }
@@ -127,12 +178,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   background: rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(229, 231, 235, 0.8);
-  border-radius: 8px;
-  color: #6b7280;
+  border: 1px solid rgba(229, 231, 235, 0.85);
+  border-radius: 7px;
+  color: #64748b;
   cursor: pointer;
   transition: all 0.2s ease;
   outline: none;
@@ -141,9 +192,9 @@
 }
 
 .close-panel-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
-  border-color: rgba(239, 68, 68, 0.3);
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
 }
 
 .legend-body {
@@ -168,7 +219,7 @@
 
 .legend-body::-webkit-scrollbar-thumb {
   background-color: rgba(156, 163, 175, 0.4);
-  border-radius: 9999px;
+  border-radius: 6px;
 }
 
 .legend-body::-webkit-scrollbar-thumb:hover {
@@ -181,7 +232,7 @@
   gap: 10px;
   cursor: pointer;
   padding: 6px 8px;
-  border-radius: 8px;
+  border-radius: 7px;
   transition: background-color 0.15s ease;
 }
 
@@ -191,9 +242,9 @@
 
 .layer-checkbox {
   cursor: pointer;
-  width: 16px;
-  height: 16px;
-  accent-color: #3b82f6;
+  width: 15px;
+  height: 15px;
+  accent-color: #0f172a;
   pointer-events: none;
   flex-shrink: 0;
 }
@@ -224,11 +275,11 @@
 .layer-focus-btn {
   margin-left: auto;
   font-size: 0.68rem;
-  font-weight: 500;
-  color: #0369a1;
-  background: #f0f9ff;
-  border: 1px solid #bae6fd;
-  border-radius: 4px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #0f172a;
+  border: 1px solid #0f172a;
+  border-radius: 6px;
   padding: 2px 7px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -236,17 +287,19 @@
 }
 
 .layer-focus-btn:hover {
-  background: #e0f2fe;
-  border-color: #7dd3fc;
-  color: #0284c7;
+  background: #1e293b;
+  border-color: #1e293b;
+  color: #ffffff;
 }
 
 /* Custom Popup Styling */
 .custom-popup .maplibregl-popup-content {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.85);
   border-radius: 10px;
-  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.1), 0 2px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.12), 0 2px 6px -2px rgba(0, 0, 0, 0.06);
   padding: 14px 16px;
   max-width: 320px;
   width: 300px;
@@ -260,7 +313,7 @@
   padding: 6px 10px;
   top: 6px;
   right: 6px;
-  border-radius: 4px;
+  border-radius: 6px;
   outline: none !important;
   border: none;
   background: none;
@@ -270,7 +323,7 @@
 
 .custom-popup .maplibregl-popup-close-button:hover {
   background-color: #f1f5f9;
-  color: #334155;
+  color: #0f172a;
 }
 
 .popup-card {
@@ -292,12 +345,12 @@
 
 .popup-badge {
   font-size: 0.68rem;
-  font-weight: 500;
+  font-weight: 600;
   color: #475569;
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: 6px;
   white-space: nowrap;
 }
 
@@ -330,7 +383,7 @@
   background-color: #f8fafc;
   border: 1px solid #e2e8f0;
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: 6px;
   width: fit-content;
 }
 
@@ -353,7 +406,7 @@
   background-color: #f1f5f9;
   border: 1px solid #cbd5e1;
   padding: 3px 8px;
-  border-radius: 4px;
+  border-radius: 6px;
   letter-spacing: 0.02em;
 }
 
@@ -372,7 +425,7 @@
   color: #475569;
   background: #ffffff;
   border: 1px solid #cbd5e1;
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 2px 7px;
   cursor: pointer;
   line-height: 1.2;
@@ -400,7 +453,7 @@
 .popup-detail-box {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border-radius: 7px;
   padding: 6px 8px;
   margin-top: 4px;
   display: flex;
@@ -438,7 +491,7 @@
   color: #0f172a;
   background: #ffffff;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border-radius: 7px;
   padding: 6px 12px;
   margin-top: 6px;
   transition: background-color 0.15s ease, border-color 0.15s ease;
@@ -447,4 +500,71 @@
 .popup-btn:hover {
   background-color: #f8fafc;
   border-color: #94a3b8;
+}
+
+/* Compact Attribution Control ('i' button & expanded panel) */
+.maplibregl-ctrl-attrib {
+  border-radius: 10px !important;
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.85) !important;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.12), 0 2px 6px -2px rgba(0, 0, 0, 0.06) !important;
+  margin-right: 20px !important;
+  margin-bottom: 24px !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Strictly enforce compact 'i' closed by default */
+.maplibregl-ctrl-attrib:not(.maplibregl-compact-show) {
+  padding: 0 !important;
+  width: 26px !important;
+  height: 26px !important;
+  min-height: 26px !important;
+  min-width: 26px !important;
+  overflow: hidden !important;
+}
+
+.maplibregl-ctrl-attrib:not(.maplibregl-compact-show) .maplibregl-ctrl-attrib-inner {
+  display: none !important;
+}
+
+.maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-button {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 9px !important;
+  outline: none !important;
+  cursor: pointer;
+  background-color: transparent !important;
+  border: none !important;
+  top: 0 !important;
+  right: 0 !important;
+}
+
+.maplibregl-ctrl-attrib.maplibregl-compact-show {
+  padding: 4px 32px 4px 10px !important;
+  border-radius: 10px !important;
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.85) !important;
+  color: #475569 !important;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.12), 0 2px 6px -2px rgba(0, 0, 0, 0.06) !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.maplibregl-ctrl-attrib.maplibregl-compact-show .maplibregl-ctrl-attrib-inner {
+  display: block !important;
+  font-size: 0.72rem !important;
+  line-height: 1.4 !important;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: #0f172a !important;
+  font-weight: 500;
+  text-decoration: underline;
 }

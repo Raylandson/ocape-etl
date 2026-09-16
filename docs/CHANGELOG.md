@@ -171,3 +171,17 @@ This document chronicles the architectural evolutions, dataset ingestions, and m
   - Martin tile server synchronized on port 3000 for all 4 new layers.
   - Added 4 interactive toggle layers in `frontend/src/app/app.ts` (`moradia_legal_pe`, `moradia_legal_processos_pe`, `iterpe_glebas_pe`, `iterpe_malha_posses_pe`).
   - Implemented 4 custom rich popup cards with 1-click CNJ copy actions and PJe portal links.
+
+### September 2026: Satellite Vision & Basemap Switcher (ESRI World Imagery)
+- **High-Resolution Satellite Layer**:
+  - Integrated ESRI World Imagery raster tile service (`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}`) into MapLibre GL JS as a dedicated raster source (`satellite-source`) and layer (`satellite-layer`).
+  - Positioned the satellite raster layer immediately below custom data layers and label symbols (`firstLabelId`), preserving the visibility of all thematic polygon layers (CAR, SIGEF, Quilombolas, Terras Indígenas, ICMBio, ITERPE, Moradia Legal) and point circles (DataJud, infractions) directly over high-resolution satellite photography.
+- **Reference Overlays & High-Contrast Typography**:
+  - Maintained vector city, municipal, and road labels (`place_*`, `roadname_*`) above the satellite imagery with 2.5px white halos for high contrast across diverse rural, forest, and urban terrain.
+  - Added dynamic state (`satellite-boundary-state`) and municipal (`satellite-boundary-county`) reference boundary overlays using dashed white lines (`carto` source, `boundary` layer) that activate in satellite mode.
+- **Compact Attribution Control ('i')**:
+  - Configured MapLibre GL `AttributionControl({ compact: true })` at the bottom-right corner and enforced closed-by-default behavior through overridden `_updateCompact` lifecycle management and strict CSS rules (`:not(.maplibregl-compact-show)`). The information badge ('i') now stays neatly collapsed by default at 26x26px without displaying the expanded text banner, expanding only upon explicit user click.
+
+
+
+
