@@ -23,8 +23,8 @@ Este documento centraliza o inventário de dados da **Plataforma de Mapeamento e
 | **h** | **SIPRA** | INCRA | Assentamentos e projetos de reforma agrária federais (`assentamentos_incra_pe`) |  **Importado** |
 | **k** | **Processos Minerários (SIGMINE)** | ANM | Concessões de lavra, autorizações e direitos minerários (`processos_minerarios_pe`) |  **Importado** |
 | **l** | **Favelas e Comunidades Urbanas (2022)** | IBGE | Ocupações, núcleos e favelas do Censo 2022 (`ibge_favelas_comunidades_pe`) |  **Importado** |
-| **i** | **Moradia Legal** | TJPE | Núcleos urbanos/rurais em regularização fundiária (REURB) | ⏳ **A Importar** |
-| **j** | **Acervo Fundiário ITERPE** | ITERPE (via ACT) | Glebas estaduais, terras devolutas e regularização rural | ⏳ **A Importar** |
+| **i** | **Moradia Legal** | TJPE | Núcleos urbanos/rurais em regularização fundiária (REURB) (`moradia_legal_pe`, `moradia_legal_processos_pe`) |  **Importado** |
+| **j** | **Acervo Fundiário ITERPE** | ITERPE (GERAF) | Glebas estaduais, terras devolutas e regularização rural (`iterpe_glebas_pe`, `iterpe_malha_posses_pe`) |  **Importado** |
 
 ---
 
@@ -77,6 +77,22 @@ Todas as bases abaixo já passam pelo pipeline ETL automatizado (`src/etl.py` e 
   * `public.autos_infracao_icmbio`: 861 autos de infração ambiental georreferenciados (pontos) em PE.
 * **Aplicação em Conflitos:** Alerta de ocupação ou titulação irregular sobre áreas protegidas federais e restrições legais de uso econômico.
 
+#### i. Moradia Legal & Regularização Fundiária (TJPE / NUREF / Corregedoria)
+* **Status:** **Importado e Ativo**
+* **Tabelas PostGIS:**
+  * `public.moradia_legal_pe`: 104 polígonos de comunidades e núcleos urbanos consolidados sob REURB (Recife, Timbaúba, Surubim, Carpina, Triunfo, Dormentes, Orocó, Lagoa do Carro, Exu, Ibirajuba, etc.).
+  * `public.moradia_legal_processos_pe`: 12.965 registros judiciais de usucapião e procedimentos do Moradia Legal georreferenciados por comarca municipal.
+* **Descrição:** Programa institucional do Tribunal de Justiça de Pernambuco para regularização fundiária de interesse social (REURB-S e REURB-E, Lei Federal 13.465/2017 e Provimentos da CGJ/TJPE).
+* **Aplicação em Conflitos:** Identificação imediata de áreas sob proteção de procedimento de regularização, prevenindo reintegrações de posse indevidas sobre núcleos comunitários consolidados.
+
+#### j. Acervo Fundiário do ITERPE (Terras Devolutas, Glebas e Posses da Agricultura Familiar)
+* **Status:** **Importado e Ativo**
+* **Tabelas PostGIS:**
+  * `public.iterpe_glebas_pe`: 9 macro-glebas arrecadadas pelo Estado (Arcoverde, Petrolândia, Calçado/Angelim, São João, Triunfo) e territórios quilombolas estaduais (Castainho e Negros de Gilu).
+  * `public.iterpe_malha_posses_pe`: 7.549 polígonos de posses rurais da agricultura familiar (Carnaíba, Itapetim, Camocim de São Félix) com matrícula cartorária, decreto estadual de arrecadação/desapropriação, livro e folha.
+* **Descrição:** Acervo geocartográfico oficial da Gerência de Ações Fundiárias (GERAF) do ITERPE.
+* **Aplicação em Conflitos:** Cruzamento contra cadastros sobrepostos (CAR e SIGEF) para identificação de grilagem de terras públicas estaduais e proteção de pequenos produtores rurais posseiros.
+
 ---
 
 ### 2.2. Camada 2: Cruzamentos Sociojurídicos e Processuais
@@ -110,9 +126,7 @@ Todas as bases abaixo já passam pelo pipeline ETL automatizado (`src/etl.py` e 
 
 | Código | Fonte | Órgão / Responsável | Formato Esperado | Requisitos de Acesso | Prioridade |
 | :---: | :--- | :--- | :--- | :--- | :---: |
-| **h** | **SIPRA** | INCRA (Superintendência SR-03/PE) | Shapefile / KML / GeoJSON | Catálogo Acervo Fundiário INCRA | Alta |
-| **i** | **Moradia Legal** | Corregedoria Geral da Justiça (TJPE) | Shapefiles / Poligonais KML de REURB | Solicitação / Parceria TJPE | Média |
-| **j** | **Acervo ITERPE** | Instituto de Terras e Reforma Agrária de PE | Poligonais das Glebas Estaduais (Shapefile/DWG/KML) | Acordo de Cooperação Técnica (ACT) | Alta |
+| **c** | **MapBiomas Cobertura Raster** | MapBiomas / Obs. Clima | GeoTIFF / Imagens Anuais 1985–2024 | Processamento Google Earth Engine | Média |
 
 ---
 

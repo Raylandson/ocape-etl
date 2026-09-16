@@ -5,6 +5,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 RAW_DATA_DIR = BASE_DIR / "data" / "raw"
 EXTRACTED_DATA_DIR = BASE_DIR / "data" / "extracted"
+EXPORTS_DIR = BASE_DIR / "data" / "exports"
 
 # Database Configuration
 DB_USER = os.getenv("DB_USER", "postgres")

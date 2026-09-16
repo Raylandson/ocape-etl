@@ -23,6 +23,7 @@ conflict-solver/
 ├── README.md                # Project documentation (this file)
 ├── AGENTS.md                # AI Agent guidelines and rules
 ├── docs/
+│   ├── CHANGELOG.md         # Project change log and architectural evolution
 │   ├── DATA_ANALYSIS.md     # Comprehensive Data Systems & Metadata Analysis
 │   ├── DATA_SOURCES.md      # Ecosystem Inventory: Current Imported vs Future Data Sources Roadmap
 │   └── PHASE_1_DATA_DOWNLOADS.md # Direct uncut URLs and batch download commands for Phase 1 data sources
@@ -51,6 +52,8 @@ conflict-solver/
 │       ├── reserva_legal_sicar/
 │       ├── vegetacao_nativa_sicar/
 │       └── tis_poligonais/
+│   └── exports/             # Exported application data, analysis deliverables, and reports (KML, GeoJSON, CSV)
+│       └── kml/
 ├── frontend/                # Angular Web Front-end with MapLibre GL JS
 │   ├── src/                 # Angular source code (Map component integration)
 │   ├── package.json         # Node package configuration
@@ -123,7 +126,13 @@ The ETL workflow consists of two main pipeline scripts:
    ```
    > Parses official KML boundaries for Engenho Batateiras (Matrícula 73 - Maraial) across historical retifications (AV-17, AV-19, AV-23, and current SIGEF 9510994953100), populating `public.sigef_casos_analisados` with spatial GIST indexes.
 
-5. **Reload Tile Server (Martin)**:
+5. **Ingest Moradia Legal (TJPE) & Acervo Fundiário (ITERPE)**:
+   ```bash
+   uv run python -m src.etl_moradia_iterpe
+   ```
+   > Parses official TJPE Moradia Legal KMZ/KML (104 REURB community perimeters and 12,965 usucapião judicial cases) and ITERPE GERAF KMLs (9 state macro-glebas and 7,549 smallholder possession parcels with RGI matrículas and decrees), loading `moradia_legal_pe`, `moradia_legal_processos_pe`, `iterpe_glebas_pe`, and `iterpe_malha_posses_pe`.
+
+6. **Reload Tile Server (Martin)**:
    ```bash
    docker compose restart martin
    ```

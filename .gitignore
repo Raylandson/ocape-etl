@@ -25,7 +25,13 @@ data/extracted/assentamentos_incra_pe/
 data/extracted/ucs_estaduais_cprh_pe/
 data/extracted/processos_minerarios_pe/
 data/extracted/ibge_favelas_comunidades_pe/
+data/extracted/moradia_legal_pe/
+data/extracted/iterpe_acervo_fundiario/
+
+# Exported application data
+data/exports/
 
 # Local backup archives
 *.tar.gz
+
 

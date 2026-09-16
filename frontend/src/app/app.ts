@@ -211,7 +211,7 @@ export class App implements AfterViewInit {
       sourceLayer: 'car_casos_analisados',
       fillColor: '#0284c7',
       borderColor: '#0369a1',
-      visible: true
+      visible: false
     },
     {
       id: 'sigef_casos_analisados',
@@ -220,7 +220,7 @@ export class App implements AfterViewInit {
       sourceLayer: 'sigef_casos_analisados',
       fillColor: '#8b5cf6',
       borderColor: '#6d28d9',
-      visible: true
+      visible: false
     },
     {
       id: 'area_imovel_1',
@@ -346,6 +346,42 @@ export class App implements AfterViewInit {
       sourceLayer: 'ibge_favelas_comunidades_pe',
       fillColor: '#ec4899',
       borderColor: '#be185d',
+      visible: false
+    },
+    {
+      id: 'moradia_legal_pe',
+      name: 'TJPE - Moradia Legal (REURB)',
+      sourceUrl: 'http://localhost:3000/moradia_legal_pe',
+      sourceLayer: 'moradia_legal_pe',
+      fillColor: '#10b981',
+      borderColor: '#047857',
+      visible: false
+    },
+    {
+      id: 'moradia_legal_processos_pe',
+      name: 'TJPE - Usucapião (Moradia Legal)',
+      sourceUrl: 'http://localhost:3000/moradia_legal_processos_pe',
+      sourceLayer: 'moradia_legal_processos_pe',
+      fillColor: '#059669',
+      borderColor: '#064e3b',
+      visible: false
+    },
+    {
+      id: 'iterpe_glebas_pe',
+      name: 'ITERPE - Glebas Públicas Estaduais',
+      sourceUrl: 'http://localhost:3000/iterpe_glebas_pe',
+      sourceLayer: 'iterpe_glebas_pe',
+      fillColor: '#d97706',
+      borderColor: '#b45309',
+      visible: false
+    },
+    {
+      id: 'iterpe_malha_posses_pe',
+      name: 'ITERPE - Malha de Posses Rurais',
+      sourceUrl: 'http://localhost:3000/iterpe_malha_posses_pe',
+      sourceLayer: 'iterpe_malha_posses_pe',
+      fillColor: '#a16207',
+      borderColor: '#713f12',
       visible: false
     },
     // {
@@ -507,8 +543,8 @@ export class App implements AfterViewInit {
               'visibility': layer.visible ? 'visible' : 'none'
             }
           });
-        } else if (layer.id === 'autos_infracao_icmbio' || layer.id === 'processos_conflitos_judiciais') {
-          // Add circle layer for points (ICMBio infractions or DataJud judicial processes) below city labels
+        } else if (layer.id === 'autos_infracao_icmbio' || layer.id === 'processos_conflitos_judiciais' || layer.id === 'moradia_legal_processos_pe') {
+          // Add circle layer for points (ICMBio infractions, DataJud lawsuits, or Moradia Legal usucapião) below city labels
           const circleColor: any = layer.id === 'processos_conflitos_judiciais'
             ? [
                 'match',
@@ -530,10 +566,10 @@ export class App implements AfterViewInit {
             'source-layer': layer.sourceLayer,
             paint: {
               'circle-color': circleColor,
-              'circle-radius': layer.id === 'processos_conflitos_judiciais' 
-                ? ['interpolate', ['linear'], ['zoom'], 6, 5, 10, 7.5, 14, 10]
+              'circle-radius': (layer.id === 'processos_conflitos_judiciais' || layer.id === 'moradia_legal_processos_pe')
+                ? ['interpolate', ['linear'], ['zoom'], 6, 4.5, 10, 6.5, 14, 9]
                 : 4.5,
-              'circle-stroke-width': 1.8,
+              'circle-stroke-width': 1.6,
               'circle-stroke-color': '#ffffff',
               'circle-opacity': 0.9
             },
@@ -1574,15 +1610,241 @@ export class App implements AfterViewInit {
           .addTo(this.map);
       };
 
+      // 14. Moradia Legal - REURB Polygons (TJPE)
+      const renderMoradiaLegalPopup = (properties: any, coordinates: any) => {
+        const nome = properties['nome'] || 'Área de Regularização';
+        const municipio = properties['municipio'] || 'Pernambuco';
+        const comunidade = properties['comunidade'] || nome;
+        const tipo = properties['tipo'] || 'REURB / Regularização Fundiária';
+        const origem = properties['origem'] || 'TJPE - Moradia Legal (NUREF)';
+        const areaHa = properties['area_ha'] ? `${Number(properties['area_ha']).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} ha` : 'N/A';
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title">
+              <span>${comunidade}</span>
+              <span class="popup-badge">REURB / TJPE</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Programa:</span>
+              <span class="popup-value" style="font-weight: 600;">${origem}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Município:</span>
+              <span class="popup-value" style="font-weight: 500;">${municipio} - PE</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Área do Núcleo:</span>
+              <span class="popup-value" style="font-weight: 600;">${areaHa}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Enquadramento:</span>
+              <span class="popup-value">${tipo}</span>
+            </div>
+            <div class="popup-detail-box">
+              <div class="popup-detail-box-title">Garantia Dominial:</div>
+              <div class="popup-detail-box-content">
+                Área sob procedimento de regularização fundiária urbana/rural chancelada pela CGJ/TJPE.
+              </div>
+            </div>
+          </div>
+        `;
+
+        new Popup({ closeButton: true, className: 'custom-popup' })
+          .setLngLat(coordinates)
+          .setHTML(html)
+          .addTo(this.map);
+      };
+
+      // 15. Moradia Legal - Processos de Usucapião (TJPE)
+      const renderMoradiaProcessoPopup = (properties: any, coordinates: any) => {
+        const rawProc = properties['numero_processo'] || 'N/A';
+        const numProc = this.formatCNJ(rawProc);
+        const orgao = properties['orgao_judiciario'] || 'Vara Não Informada';
+        const cidade = properties['cidade'] || 'Pernambuco';
+        const bairro = properties['bairro'] || '';
+        const logradouro = properties['logradouro'] || '';
+        const numero = properties['numero'] || '';
+        const cep = properties['cep'] || '';
+        const obs = properties['observacao'] || '';
+        const responsavel = properties['nome_responsavel'] || '';
+        const dtCad = properties['data_cadastro'] || '';
+
+        const enderecoCompleto = [logradouro, numero, bairro, cidade, cep ? `CEP ${cep}` : ''].filter(Boolean).join(', ');
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title">
+              <span>Usucapião / Moradia Legal</span>
+              <span class="popup-badge">TJPE</span>
+            </div>
+            <div class="popup-section">
+              <div class="popup-code-header">
+                <span class="popup-label">Processo Judicial:</span>
+                <button type="button" class="popup-copy-btn" data-copy="${numProc}" title="Copiar processo com pontuação padrão CNJ">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <span class="copy-label">Copiar</span>
+                </button>
+              </div>
+              <div class="popup-code-container">
+                <span class="popup-value-code cnj-code select-all">${numProc}</span>
+              </div>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Órgão Julgador:</span>
+              <span class="popup-value" style="font-weight: 500;">${orgao}</span>
+              <span style="font-size: 0.72rem; color: #64748b;">Comarca: ${cidade}</span>
+            </div>
+            ${enderecoCompleto ? `
+            <div class="popup-section">
+              <span class="popup-label">Imóvel Cadastrado:</span>
+              <span class="popup-value">${enderecoCompleto}</span>
+            </div>` : ''}
+            ${obs ? `
+            <div class="popup-detail-box">
+              <div class="popup-detail-box-title">Observações do Cadastro:</div>
+              <div class="popup-detail-box-content">${obs}</div>
+            </div>` : ''}
+            ${responsavel ? `
+            <div class="popup-section" style="font-size: 0.72rem; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 4px;">
+              <div>Responsável: <strong>${responsavel}</strong></div>
+              ${dtCad ? `<div>Cadastro: ${dtCad}</div>` : ''}
+            </div>` : ''}
+            <a href="https://pje.tjpe.jus.br/1g/ConsultaPublica/listView.seam" target="_blank" rel="noopener noreferrer" class="popup-btn">
+              Consultar no PJe (TJPE)
+            </a>
+          </div>
+        `;
+
+        new Popup({ closeButton: true, className: 'custom-popup' })
+          .setLngLat(coordinates)
+          .setHTML(html)
+          .addTo(this.map);
+      };
+
+      // 16. ITERPE - Glebas Públicas Estaduais e Quilombos
+      const renderIterpeGlebaPopup = (properties: any, coordinates: any) => {
+        const nome = properties['nome'] || 'Gleba Estadual';
+        const municipio = properties['municipio'] || 'Pernambuco';
+        const tipo = properties['tipo'] || 'Gleba Estadual Arrecadada';
+        const origem = properties['origem'] || 'ITERPE - Gerência de Ações Fundiárias (GERAF)';
+        const areaHa = properties['area_ha'] ? `${Number(properties['area_ha']).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} ha` : 'N/A';
+
+        const isQuilombo = String(tipo).toLowerCase().includes('quilombola');
+        const badge = isQuilombo ? 'Quilombo Estadual' : 'Gleba Estadual';
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title">
+              <span>${nome}</span>
+              <span class="popup-badge">${badge}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Classificação:</span>
+              <span class="popup-value" style="font-weight: 600;">${tipo}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Município:</span>
+              <span class="popup-value" style="font-weight: 500;">${municipio} - PE</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Área Discriminada/Arrecadada:</span>
+              <span class="popup-value" style="font-weight: 600;">${areaHa}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Órgão Fundiário:</span>
+              <span class="popup-value">${origem}</span>
+            </div>
+            <div class="popup-detail-box">
+              <div class="popup-detail-box-title">Status Dominial:</div>
+              <div class="popup-detail-box-content">
+                Patrimônio territorial do Estado de Pernambuco discriminado para destinação fundiária e comunitária.
+              </div>
+            </div>
+          </div>
+        `;
+
+        new Popup({ closeButton: true, className: 'custom-popup' })
+          .setLngLat(coordinates)
+          .setHTML(html)
+          .addTo(this.map);
+      };
+
+      // 17. ITERPE - Malha de Posses Rurais
+      const renderIterpePossePopup = (properties: any, coordinates: any) => {
+        const numLote = properties['num_lote'] || 'N/A';
+        const comarca = properties['comarca'] || properties['municipio'] || 'Pernambuco';
+        const municipio = properties['municipio'] || comarca;
+        const decreto = properties['decreto'] || 'N/A';
+        const matricula = properties['matricula'] || 'N/A';
+        const livro = properties['livro'] || '';
+        const folha = properties['folha'] || '';
+        const registro = properties['registro'] || '';
+        const areaHa = properties['area_ha'] ? `${Number(properties['area_ha']).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} ha` : 'N/A';
+
+        let cartorioStr = '';
+        if (matricula && matricula !== 'N/A') {
+          cartorioStr = `Matrícula nº ${matricula}`;
+          if (livro) cartorioStr += ` (Livro ${livro}`;
+          if (folha) cartorioStr += `, Fls. ${folha}`;
+          if (livro) cartorioStr += `)`;
+          if (registro) cartorioStr += ` - R-${registro}`;
+        }
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title">
+              <span>Lote ${numLote} (Posse Rural)</span>
+              <span class="popup-badge">ITERPE</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Comarca / Município:</span>
+              <span class="popup-value" style="font-weight: 600;">${municipio} (Comarca de ${comarca})</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Decreto de Arrecadação:</span>
+              <span class="popup-value-code">${decreto}</span>
+            </div>
+            ${cartorioStr ? `
+            <div class="popup-section">
+              <span class="popup-label">Registro Imobiliário (RGI):</span>
+              <span class="popup-value">${cartorioStr}</span>
+            </div>` : ''}
+            <div class="popup-section">
+              <span class="popup-label">Área da Posse:</span>
+              <span class="popup-value" style="font-weight: 600;">${areaHa}</span>
+            </div>
+            <div class="popup-detail-box">
+              <div class="popup-detail-box-title">Agricultura Familiar:</div>
+              <div class="popup-detail-box-content">
+                Posse rural cadastrada na malha de terras devolutas e regularização agrária do ITERPE.
+              </div>
+            </div>
+          </div>
+        `;
+
+        new Popup({ closeButton: true, className: 'custom-popup' })
+          .setLngLat(coordinates)
+          .setHTML(html)
+          .addTo(this.map);
+      };
+
       // --- UNIFIED PRIORITY CLICK DISPATCHER ---
       // Layers sorted by click priority (top visual element wins):
       // Center pins & points > Analyzed CAR smallholdings > Conflict zones & Alerts > Base Cadastral Polygons (SIGEF / SNCI / general CAR)
       const priorityOrder = [
         'land_overlaps_points_symbol',
         'processos_conflitos_judiciais_circle',
+        'moradia_legal_processos_pe_circle',
         'autos_infracao_icmbio_circle',
         'car_casos_analisados_fill',
         'sigef_casos_analisados_fill',
+        'moradia_legal_pe_fill',
+        'iterpe_glebas_pe_fill',
+        'iterpe_malha_posses_pe_fill',
         'land_overlaps_fill',
         'alerts_with_intersections_fill',
         'car_with_alerts_and_intersections_fill',
@@ -1638,8 +1900,16 @@ export class App implements AfterViewInit {
           renderConflictPopup(props, e.lngLat);
         } else if (layerId === 'processos_conflitos_judiciais_circle') {
           renderDataJudPopup(props, e.lngLat);
+        } else if (layerId === 'moradia_legal_processos_pe_circle') {
+          renderMoradiaProcessoPopup(props, e.lngLat);
         } else if (layerId === 'autos_infracao_icmbio_circle') {
           renderAutosPopup(props, e.lngLat);
+        } else if (layerId === 'moradia_legal_pe_fill') {
+          renderMoradiaLegalPopup(props, e.lngLat);
+        } else if (layerId === 'iterpe_glebas_pe_fill') {
+          renderIterpeGlebaPopup(props, e.lngLat);
+        } else if (layerId === 'iterpe_malha_posses_pe_fill') {
+          renderIterpePossePopup(props, e.lngLat);
         } else if (layerId === 'car_casos_analisados_fill' || layerId === 'area_imovel_1_fill') {
           // If clicking on CAR, also check if there is an underlying SIGEF parcel to reference in the detail box
           const sigefFeature = sorted.find(f => f.layer.id === 'sigef_privado_pe_fill' || f.layer.id === 'sigef_publico_pe_fill' || f.layer.id === 'sigef_casos_analisados_fill');
