@@ -2281,9 +2281,6 @@ export class App implements AfterViewInit {
         this.map.setLayoutProperty(`${layer.id}_circle`, 'visibility', visibility);
       }
 
-      if ((layer.id === 'car_casos_analisados' || layer.id === 'sigef_casos_analisados') && layer.visible) {
-        this.focusBatateiras();
-      }
       if (layer.id === 'sigef_casos_analisados' && layer.visible) {
         this.applySigefFilter();
       }

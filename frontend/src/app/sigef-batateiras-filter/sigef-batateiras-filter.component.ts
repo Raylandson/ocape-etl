@@ -19,8 +19,14 @@ export interface SigefPhaseItem {
 export class SigefBatateirasFilterComponent {
   @Input() isVisible: boolean = false;
   @Output() filterChanged = new EventEmitter<string[]>();
+  @Output() focusRequested = new EventEmitter<void>();
 
   isOpen: boolean = true;
+
+  onFocusClick(event: Event) {
+    event.stopPropagation();
+    this.focusRequested.emit();
+  }
 
   phases: SigefPhaseItem[] = [
     {

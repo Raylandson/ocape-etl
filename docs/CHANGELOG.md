@@ -199,3 +199,6 @@ This document chronicles the architectural evolutions, dataset ingestions, and m
   - Added dynamic single-feature highlight ring and instant KML download named with standard conventions (e.g. `SIGEF_Privado_<codigo>.kml`).
 - **Area Selection Tool Deactivation**:
   - Deactivated the experimental bounding-box tool and cleaned up mouse drag listeners to prevent map pan/drag locking.
+- **Batateiras Focus Decoupling**:
+  - Removed automatic camera `flyTo` from `toggleLayer` for both 'CAR - Casos Analisados (Batateiras)' and 'SIGEF - Casos Analisados (Batateiras)'.
+  - Camera centering/zoom now triggers strictly upon clicking the explicit "Focar" button in the layer list or the "Histórico SIGEF" filter panel header.

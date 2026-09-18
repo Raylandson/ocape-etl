@@ -5,7 +5,8 @@
   <app-datajud-legend [isVisible]="isDataJudVisible()"></app-datajud-legend>
   <app-sigef-batateiras-filter 
     [isVisible]="isSigefCasosAnalisadosVisible()"
-    (filterChanged)="onSigefFilterChanged($event)">
+    (filterChanged)="onSigefFilterChanged($event)"
+    (focusRequested)="focusBatateiras()">
   </app-sigef-batateiras-filter>
 </div>
 

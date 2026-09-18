@@ -14,7 +14,12 @@
   <div class="legend-panel left-panel" [class.panel-hidden]="!isOpen">
     <div class="legend-header">
       <div class="legend-header-text">
-        <h3>Histórico SIGEF</h3>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <h3>Histórico SIGEF</h3>
+          <button class="layer-focus-btn" (click)="onFocusClick($event)" title="Aproximar visualização no mapa">
+            Focar
+          </button>
+        </div>
         <p>Fazenda 2 Irmãos</p>
       </div>
       <button class="close-panel-btn" (click)="toggleOpen()" title="Ocultar painel">
