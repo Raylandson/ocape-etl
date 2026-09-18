@@ -1,7 +1,8 @@
-import { Component, AfterViewInit } from '@angular/core';
+import { Component, AfterViewInit, inject, ViewEncapsulation } from '@angular/core';
 import { Map, Popup, AttributionControl } from 'maplibre-gl';
 import { DatajudLegendComponent } from './datajud-legend/datajud-legend.component';
 import { SigefBatateirasFilterComponent } from './sigef-batateiras-filter/sigef-batateiras-filter.component';
+import { KmlExportService, KmlExportItem } from './services/kml-export.service';
 
 interface LayerConfig {
   id: string;
@@ -101,13 +102,47 @@ export const ENRICHED_CAR_DATA: Record<string, EnrichedCarInfo> = {
   selector: 'app-root',
   imports: [DatajudLegendComponent, SigefBatateirasFilterComponent],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
+  encapsulation: ViewEncapsulation.None
 })
 export class App implements AfterViewInit {
+  private kmlExportService = inject(KmlExportService);
+
   map!: Map;
   isPanelOpen: boolean = true;
   selectedSigefPhases: string[] = ['AV-17-73', 'AV-19-73', 'AV-23-73', 'SIGEF Atual'];
   currentBasemap: 'vector' | 'satellite' = 'vector';
+
+  // Active clicked feature state
+  activeSelectedFeatureItem: KmlExportItem | null = null;
+
+  readonly priorityOrder: string[] = [
+    'land_overlaps_points_symbol',
+    'processos_conflitos_judiciais_circle',
+    'moradia_legal_processos_pe_circle',
+    'autos_infracao_icmbio_circle',
+    'car_casos_analisados_fill',
+    'sigef_casos_analisados_fill',
+    'moradia_legal_pe_fill',
+    'iterpe_glebas_pe_fill',
+    'iterpe_malha_posses_pe_fill',
+    'land_overlaps_fill',
+    'alerts_with_intersections_fill',
+    'car_with_alerts_and_intersections_fill',
+    'assentamentos_incra_pe_fill',
+    'ucs_estaduais_cprh_pe_fill',
+    'processos_minerarios_pe_fill',
+    'ibge_favelas_comunidades_pe_fill',
+    'tis_poligonais_fill',
+    'areas_de_quilombolas_pe_fill',
+    'embargos_icmbio_fill',
+    'limiteucsfederais_a_fill',
+    'sigef_privado_pe_fill',
+    'sigef_publico_pe_fill',
+    'imovel_certificado_snci_privado_pe_fill',
+    'imovel_certificado_snci_publico_pe_fill',
+    'area_imovel_1_fill'
+  ];
 
   togglePanel() {
     this.isPanelOpen = !this.isPanelOpen;
@@ -424,8 +459,16 @@ export class App implements AfterViewInit {
   ];
 
   ngAfterViewInit() {
-    // Global handler for copy buttons inside map popups (e.g., Processo CNJ)
+    // Global handler for copy and KML export buttons inside map popups
     document.addEventListener('click', (e: MouseEvent) => {
+      const kmlBtn = (e.target as HTMLElement).closest('[data-action="export-single-kml"]') as HTMLButtonElement | null;
+      if (kmlBtn && this.activeSelectedFeatureItem) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.kmlExportService.exportSingleFeature(this.activeSelectedFeatureItem);
+        return;
+      }
+
       const target = (e.target as HTMLElement).closest('.popup-copy-btn') as HTMLButtonElement | null;
       if (!target) return;
       const textToCopy = target.getAttribute('data-copy');
@@ -732,7 +775,75 @@ export class App implements AfterViewInit {
 
       this.applySigefFilter();
 
+      // Add Sources and Layers for Selection & KML Export Features
+      this.map.addSource('selected-feature-source', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] }
+      });
+
+      this.map.addLayer({
+        id: 'selected-feature-fill',
+        type: 'fill',
+        source: 'selected-feature-source',
+        filter: ['any', ['==', '$type', 'Polygon'], ['==', '$type', 'MultiPolygon']],
+        paint: {
+          'fill-color': '#2563eb',
+          'fill-opacity': 0.18
+        }
+      }, firstLabelId);
+
+      this.map.addLayer({
+        id: 'selected-feature-line',
+        type: 'line',
+        source: 'selected-feature-source',
+        filter: ['any', ['==', '$type', 'Polygon'], ['==', '$type', 'MultiPolygon'], ['==', '$type', 'LineString']],
+        paint: {
+          'line-color': '#2563eb',
+          'line-width': 2.8,
+          'line-dasharray': [3, 2]
+        }
+      }, firstLabelId);
+
+      this.map.addLayer({
+        id: 'selected-feature-circle',
+        type: 'circle',
+        source: 'selected-feature-source',
+        filter: ['==', '$type', 'Point'],
+        paint: {
+          'circle-radius': 11,
+          'circle-color': 'transparent',
+          'circle-stroke-color': '#2563eb',
+          'circle-stroke-width': 2.8
+        }
+      }, firstLabelId);
+
       // --- POPUP RENDERERS ---
+      const openCustomPopup = (html: string, coordinates: any) => {
+        const kmlBtnHtml = `
+          <button type="button" class="popup-btn popup-btn-kml" data-action="export-single-kml" title="Exportar feição selecionada e metadados para KML">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Baixar KML</span>
+          </button>
+        `;
+        const enhancedHtml = html.includes('</div>')
+          ? html.replace(/(<\/div>\s*)$/, `${kmlBtnHtml}$1`)
+          : `${html}${kmlBtnHtml}`;
+
+        const popup = new Popup({ closeButton: true, className: 'custom-popup' })
+          .setLngLat(coordinates)
+          .setHTML(enhancedHtml)
+          .addTo(this.map);
+
+        popup.on('close', () => {
+          this.clearFeatureHighlight();
+        });
+
+        return popup;
+      };
 
       // 1. Conflict Areas & Center Pins
       const renderConflictPopup = (properties: any, coordinates: any) => {
@@ -794,10 +905,7 @@ export class App implements AfterViewInit {
           </div>
         `;
 
-        new Popup({ closeButton: true, className: 'custom-popup' })
-          .setLngLat(coordinates)
-          .setHTML(html)
-          .addTo(this.map);
+        openCustomPopup(html, coordinates);
       };
 
       // 2. Federal Conservation Units (ICMBio)
@@ -833,7 +941,7 @@ export class App implements AfterViewInit {
             </div>
           </div>
         `;
-        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(coordinates).setHTML(html).addTo(this.map);
+        openCustomPopup(html, coordinates);
       };
 
       // 3. ICMBio Embargoes
@@ -869,7 +977,7 @@ export class App implements AfterViewInit {
             </div>
           </div>
         `;
-        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(coordinates).setHTML(html).addTo(this.map);
+        openCustomPopup(html, coordinates);
       };
 
       // 4. ICMBio Infraction Notices
@@ -909,7 +1017,7 @@ export class App implements AfterViewInit {
             </div>
           </div>
         `;
-        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(coordinates).setHTML(html).addTo(this.map);
+        openCustomPopup(html, coordinates);
       };
 
       // 5. DataJud Judicial Disputes (TJPE & TRF5)
@@ -995,7 +1103,7 @@ export class App implements AfterViewInit {
             </a>
           </div>
         `;
-        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(coordinates).setHTML(html).addTo(this.map);
+        openCustomPopup(html, coordinates);
       };
 
       // 6. MapBiomas Deforestation Alerts
@@ -1082,7 +1190,7 @@ export class App implements AfterViewInit {
             ` : ''}
           </div>
         `;
-        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(coordinates).setHTML(html).addTo(this.map);
+        openCustomPopup(html, coordinates);
       };
 
       // 7. MapBiomas CAR with Deforestation Alerts
@@ -1124,7 +1232,7 @@ export class App implements AfterViewInit {
             </div>
           </div>
         `;
-        new Popup({ closeButton: true, className: 'custom-popup' }).setLngLat(coordinates).setHTML(html).addTo(this.map);
+        openCustomPopup(html, coordinates);
       };
 
       // 8. CAR Properties (Both Analyzed Batateiras & General area_imovel_1)
@@ -1235,10 +1343,7 @@ export class App implements AfterViewInit {
           </div>
         `;
 
-        new Popup({ closeButton: true, className: 'custom-popup' })
-          .setLngLat(coordinates)
-          .setHTML(html)
-          .addTo(this.map);
+        openCustomPopup(html, coordinates);
       };
 
       // 9. SIGEF Properties (Privado e Público)
@@ -1338,10 +1443,7 @@ export class App implements AfterViewInit {
           </div>
         `;
 
-        new Popup({ closeButton: true, className: 'custom-popup' })
-          .setLngLat(coordinates)
-          .setHTML(html)
-          .addTo(this.map);
+        openCustomPopup(html, coordinates);
       };
 
       // 9b. SIGEF Casos Analisados (Histórico Batateiras / Fazenda 2 Irmãos)
@@ -1459,10 +1561,7 @@ export class App implements AfterViewInit {
           </div>
         `;
 
-        new Popup({ closeButton: true, className: 'custom-popup' })
-          .setLngLat(coordinates)
-          .setHTML(html)
-          .addTo(this.map);
+        openCustomPopup(html, coordinates);
       };
 
       // 10. SNCI Properties (Privado e Público)
@@ -1525,10 +1624,7 @@ export class App implements AfterViewInit {
           </div>
         `;
 
-        new Popup({ closeButton: true, className: 'custom-popup' })
-          .setLngLat(coordinates)
-          .setHTML(html)
-          .addTo(this.map);
+        openCustomPopup(html, coordinates);
       };
 
       // 10. Assentamentos INCRA (SIPRA)
@@ -1578,10 +1674,7 @@ export class App implements AfterViewInit {
           </div>
         `;
 
-        new Popup({ closeButton: true, className: 'custom-popup' })
-          .setLngLat(coordinates)
-          .setHTML(html)
-          .addTo(this.map);
+        openCustomPopup(html, coordinates);
       };
 
       // 11. CPRH - Unidades de Conservação Estaduais
@@ -1628,10 +1721,7 @@ export class App implements AfterViewInit {
           </div>
         `;
 
-        new Popup({ closeButton: true, className: 'custom-popup' })
-          .setLngLat(coordinates)
-          .setHTML(html)
-          .addTo(this.map);
+        openCustomPopup(html, coordinates);
       };
 
       // 12. ANM - Processos Minerários
@@ -1674,10 +1764,7 @@ export class App implements AfterViewInit {
           </div>
         `;
 
-        new Popup({ closeButton: true, className: 'custom-popup' })
-          .setLngLat(coordinates)
-          .setHTML(html)
-          .addTo(this.map);
+        openCustomPopup(html, coordinates);
       };
 
       // 13. IBGE - Favelas e Comunidades Urbanas (2022)
@@ -1718,10 +1805,7 @@ export class App implements AfterViewInit {
           </div>
         `;
 
-        new Popup({ closeButton: true, className: 'custom-popup' })
-          .setLngLat(coordinates)
-          .setHTML(html)
-          .addTo(this.map);
+        openCustomPopup(html, coordinates);
       };
 
       // 14. Moradia Legal - REURB Polygons (TJPE)
@@ -1764,10 +1848,7 @@ export class App implements AfterViewInit {
           </div>
         `;
 
-        new Popup({ closeButton: true, className: 'custom-popup' })
-          .setLngLat(coordinates)
-          .setHTML(html)
-          .addTo(this.map);
+        openCustomPopup(html, coordinates);
       };
 
       // 15. Moradia Legal - Processos de Usucapião (TJPE)
@@ -1833,10 +1914,7 @@ export class App implements AfterViewInit {
           </div>
         `;
 
-        new Popup({ closeButton: true, className: 'custom-popup' })
-          .setLngLat(coordinates)
-          .setHTML(html)
-          .addTo(this.map);
+        openCustomPopup(html, coordinates);
       };
 
       // 16. ITERPE - Glebas Públicas Estaduais e Quilombos
@@ -1881,10 +1959,7 @@ export class App implements AfterViewInit {
           </div>
         `;
 
-        new Popup({ closeButton: true, className: 'custom-popup' })
-          .setLngLat(coordinates)
-          .setHTML(html)
-          .addTo(this.map);
+        openCustomPopup(html, coordinates);
       };
 
       // 17. ITERPE - Malha de Posses Rurais
@@ -1940,43 +2015,85 @@ export class App implements AfterViewInit {
           </div>
         `;
 
-        new Popup({ closeButton: true, className: 'custom-popup' })
-          .setLngLat(coordinates)
-          .setHTML(html)
-          .addTo(this.map);
+        openCustomPopup(html, coordinates);
+      };
+
+      // 18. Terras Indígenas (FUNAI)
+      const renderTiPopup = (props: any, coordinates: any) => {
+        const terraiNom = props['terrai_nom'] || 'Terra Indígena';
+        const etnia = props['etnia_nome'] || 'Não informada';
+        const faseTi = props['fase_ti'] || 'Homologada / Regularizada';
+        const modalidade = props['modalidade'] || 'Tradicionalmente Ocupada';
+        const municipio = props['municipio_'] || 'Pernambuco';
+        const superficie = props['superficie'] ? `${Number(props['superficie']).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} ha` : 'N/A';
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title">
+              <span>${terraiNom}</span>
+              <span class="popup-badge">FUNAI</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Povo / Etnia:</span>
+              <span class="popup-value" style="font-weight: 600;">${etnia}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Fase de Demarcação:</span>
+              <span class="popup-value">${faseTi} (${modalidade})</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Superfície Declarada:</span>
+              <span class="popup-value" style="font-weight: 600;">${superficie}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Município:</span>
+              <span class="popup-value">${municipio} - PE</span>
+            </div>
+          </div>
+        `;
+
+        openCustomPopup(html, coordinates);
+      };
+
+      // 19. Áreas de Quilombolas (INCRA)
+      const renderQuilomboPopup = (props: any, coordinates: any) => {
+        const comunidade = props['nm_comunid'] || 'Território Quilombola';
+        const municipio = props['nm_municip'] || 'Pernambuco';
+        const fase = props['fase'] || 'Certificado / Titulado';
+        const processo = props['nr_process'] || 'N/A';
+        const codigo = props['cd_quilomb'] || 'N/A';
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title">
+              <span>${comunidade}</span>
+              <span class="popup-badge">INCRA</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Código Quilombo:</span>
+              <span class="popup-value-code">${codigo}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Fase do Processo:</span>
+              <span class="popup-value" style="font-weight: 600;">${fase}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Nº Processo Administrativo:</span>
+              <span class="popup-value-code">${processo}</span>
+            </div>
+            <div class="popup-section">
+              <span class="popup-label">Município:</span>
+              <span class="popup-value">${municipio} - PE</span>
+            </div>
+          </div>
+        `;
+
+        openCustomPopup(html, coordinates);
       };
 
       // --- UNIFIED PRIORITY CLICK DISPATCHER ---
-      // Layers sorted by click priority (top visual element wins):
-      // Center pins & points > Analyzed CAR smallholdings > Conflict zones & Alerts > Base Cadastral Polygons (SIGEF / SNCI / general CAR)
-      const priorityOrder = [
-        'land_overlaps_points_symbol',
-        'processos_conflitos_judiciais_circle',
-        'moradia_legal_processos_pe_circle',
-        'autos_infracao_icmbio_circle',
-        'car_casos_analisados_fill',
-        'sigef_casos_analisados_fill',
-        'moradia_legal_pe_fill',
-        'iterpe_glebas_pe_fill',
-        'iterpe_malha_posses_pe_fill',
-        'land_overlaps_fill',
-        'alerts_with_intersections_fill',
-        'car_with_alerts_and_intersections_fill',
-        'assentamentos_incra_pe_fill',
-        'ucs_estaduais_cprh_pe_fill',
-        'processos_minerarios_pe_fill',
-        'ibge_favelas_comunidades_pe_fill',
-        'embargos_icmbio_fill',
-        'limiteucsfederais_a_fill',
-        'sigef_privado_pe_fill',
-        'sigef_publico_pe_fill',
-        'imovel_certificado_snci_privado_pe_fill',
-        'imovel_certificado_snci_publico_pe_fill',
-        'area_imovel_1_fill'
-      ];
-
       // Setup hover cursor on all interactive layers
-      priorityOrder.forEach(layerId => {
+      this.priorityOrder.forEach(layerId => {
         if (this.map.getLayer(layerId)) {
           this.map.on('mouseenter', layerId, () => {
             this.map.getCanvas().style.cursor = 'pointer';
@@ -1989,7 +2106,8 @@ export class App implements AfterViewInit {
 
       // Single click listener: queries visible layers and selects the top-priority feature
       this.map.on('click', (e) => {
-        const activeLayers = priorityOrder.filter(id => {
+
+        const activeLayers = this.priorityOrder.filter(id => {
           return this.map.getLayer(id) && this.map.getLayoutProperty(id, 'visibility') !== 'none';
         });
 
@@ -2000,8 +2118,8 @@ export class App implements AfterViewInit {
 
         // Sort rendered features by priority order
         const sorted = rendered.sort((a, b) => {
-          const idxA = priorityOrder.indexOf(a.layer.id);
-          const idxB = priorityOrder.indexOf(b.layer.id);
+          const idxA = this.priorityOrder.indexOf(a.layer.id);
+          const idxB = this.priorityOrder.indexOf(b.layer.id);
           return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
         });
 
@@ -2009,6 +2127,17 @@ export class App implements AfterViewInit {
         const layerId = topFeature.layer.id;
         const props = topFeature.properties;
         if (!props) return;
+
+        // Track selected feature for KML export & highlight on map
+        const layerInfo = this.getLayerInfoForFeature(layerId);
+        this.activeSelectedFeatureItem = {
+          feature: topFeature,
+          layerId: layerInfo.id,
+          layerName: layerInfo.name,
+          fillColor: layerInfo.fillColor,
+          borderColor: layerInfo.borderColor
+        };
+        this.highlightFeature(topFeature);
 
         if (layerId === 'land_overlaps_points_symbol' || layerId === 'land_overlaps_fill') {
           renderConflictPopup(props, e.lngLat);
@@ -2042,6 +2171,10 @@ export class App implements AfterViewInit {
           renderMineracaoPopup(props, e.lngLat);
         } else if (layerId === 'ibge_favelas_comunidades_pe_fill') {
           renderFavelasPopup(props, e.lngLat);
+        } else if (layerId === 'tis_poligonais_fill') {
+          renderTiPopup(props, e.lngLat);
+        } else if (layerId === 'areas_de_quilombolas_pe_fill') {
+          renderQuilomboPopup(props, e.lngLat);
         } else if (layerId === 'embargos_icmbio_fill') {
           renderEmbargosPopup(props, e.lngLat);
         } else if (layerId === 'limiteucsfederais_a_fill') {
@@ -2058,6 +2191,67 @@ export class App implements AfterViewInit {
       });
     });
   }
+
+
+
+  highlightFeature(feature: any) {
+    if (!this.map) return;
+    const source = this.map.getSource('selected-feature-source') as any;
+    if (source) {
+      source.setData({
+        type: 'FeatureCollection',
+        features: [feature]
+      });
+    }
+  }
+
+  clearFeatureHighlight() {
+    if (!this.map) return;
+    this.activeSelectedFeatureItem = null;
+    const source = this.map.getSource('selected-feature-source') as any;
+    if (source) {
+      source.setData({
+        type: 'FeatureCollection',
+        features: []
+      });
+    }
+  }
+
+  getLayerInfoForFeature(renderedLayerId: string): { id: string; name: string; fillColor: string; borderColor: string } {
+    const baseId = renderedLayerId
+      .replace(/_fill$/, '')
+      .replace(/_line$/, '')
+      .replace(/_circle$/, '')
+      .replace(/_symbol$/, '');
+
+    const found = this.layers.find(l => l.id === baseId);
+    if (found) {
+      return {
+        id: found.id,
+        name: found.name,
+        fillColor: found.fillColor,
+        borderColor: found.borderColor
+      };
+    }
+
+    if (renderedLayerId.startsWith('land_overlaps')) {
+      return {
+        id: 'land_overlaps',
+        name: 'Áreas de Conflito (Sobreposições)',
+        fillColor: '#ef4444',
+        borderColor: '#b91c1c'
+      };
+    }
+
+    return {
+      id: renderedLayerId,
+      name: 'Feição Territorial',
+      fillColor: '#3b82f6',
+      borderColor: '#1d4ed8'
+    };
+  }
+
+
 
   focusBatateiras(event?: MouseEvent) {
     if (event) event.stopPropagation();

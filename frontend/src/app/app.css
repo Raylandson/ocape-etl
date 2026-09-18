@@ -19,12 +19,19 @@
   max-height: calc(100vh - 40px);
 }
 
-/* Floating Basemap Switcher (Bottom-Left) */
-.basemap-floating-switcher {
+/* Floating Basemap Controls (Bottom-Left) */
+.bottom-left-controls {
   position: absolute;
   bottom: 24px;
   left: 20px;
   z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Floating Basemap Switcher */
+.basemap-floating-switcher {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -301,24 +308,39 @@
   border-radius: 10px;
   box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.12), 0 2px 6px -2px rgba(0, 0, 0, 0.06);
   padding: 14px 16px;
-  max-width: 320px;
-  width: 300px;
+  max-width: 340px;
+  width: 310px;
   font-family: inherit;
   color: #0f172a;
+  overflow: hidden;
+  position: relative;
+}
+
+.custom-popup.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+.custom-popup.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+.custom-popup.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: #0f172a !important;
 }
 
 .custom-popup .maplibregl-popup-close-button {
   color: #94a3b8;
   font-size: 16px;
-  padding: 6px 10px;
-  top: 6px;
-  right: 6px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  top: 8px;
+  right: 8px;
   border-radius: 6px;
   outline: none !important;
   border: none;
   background: none;
   cursor: pointer;
+  line-height: 1;
   transition: color 0.15s ease, background-color 0.15s ease;
+  z-index: 5;
 }
 
 .custom-popup .maplibregl-popup-close-button:hover {
@@ -341,6 +363,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  padding-right: 26px;
+}
+
+.popup-title span:first-child {
+  min-width: 0;
+  word-break: break-word;
 }
 
 .popup-badge {
@@ -352,6 +380,7 @@
   padding: 1px 6px;
   border-radius: 6px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .popup-section {
@@ -568,3 +597,38 @@
   font-weight: 500;
   text-decoration: underline;
 }
+
+/* Popup KML Export Action Button */
+.popup-btn-kml {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+  margin-left: -16px;
+  margin-right: -16px;
+  margin-bottom: -14px;
+  width: calc(100% + 32px);
+  background: #0f172a;
+  color: #ffffff !important;
+  border: none;
+  border-top: 1px solid #1e293b;
+  font-size: 0.76rem;
+  font-weight: 600;
+  border-radius: 0 0 9px 9px;
+  padding: 10px 16px;
+  cursor: pointer;
+  box-sizing: border-box;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.popup-btn-kml:hover {
+  background: #1e293b;
+  color: #ffffff !important;
+}
+
+.popup-btn-kml svg {
+  flex-shrink: 0;
+}
+

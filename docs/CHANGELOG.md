@@ -182,6 +182,20 @@ This document chronicles the architectural evolutions, dataset ingestions, and m
 - **Compact Attribution Control ('i')**:
   - Configured MapLibre GL `AttributionControl({ compact: true })` at the bottom-right corner and enforced closed-by-default behavior through overridden `_updateCompact` lifecycle management and strict CSS rules (`:not(.maplibregl-compact-show)`). The information badge ('i') now stays neatly collapsed by default at 26x26px without displaying the expanded text banner, expanding only upon explicit user click.
 
-
-
-
+### September 2026: KML Export Engine & Popup Styling
+- **Dedicated KML 2.2 Serialization Service (`frontend/src/app/services/kml-export.service.ts`)**:
+  - Engineered client-side zero-dependency OGC KML 2.2 XML serializer supporting Point, Polygon, MultiPolygon, LineString, and MultiLineString geometries.
+  - Implemented AABBGGRR color hex translation for vector styling (fill, outline, and point placemarks).
+  - Implemented **Hybrid Metadata Packaging**:
+    - `<ExtendedData>` with `<Data name="...">`: Machine-readable key-value pairs formatted for GIS software attribute tables (QGIS, ArcGIS, Google Earth).
+    - `<description>` with formatted HTML CDATA: Institutional metadata inspection cards (key properties, titles, badges, and attributes) optimized for Google Earth Pro and Google Earth Web balloon viewers.
+  - Added hierarchical `<Folder>` organization grouping selected features by thematic layer name.
+  - Integrated client-side file download streaming via `Blob` and dynamic anchor generation.
+- **1-Click KML Export in Map Popups**:
+  - Standardized `.popup-btn-kml` export action button across all 19 inspection popup cards (CAR, SIGEF, SNCI, Terras Indígenas, Quilombolas, ICMBio UCs, ICMBio Embargoes, DataJud Judicial Lawsuits, CPRH UCs, ANM Mining, Moradia Legal, ITERPE Glebas/Posses, Settlements, Overlaps, etc.).
+  - Configured `ViewEncapsulation.None` in `frontend/src/app/app.ts` so all MapLibre dynamically injected popup DOM elements receive their styles from `app.css`.
+  - Styled `.popup-btn-kml` as a full-bleed footer button filling the popup card's width edge-to-edge (`width: calc(100% + 32px)` with negative margins) and matching bottom tip anchor color, while keeping the download icon and label centered.
+  - Refined `.popup-title` with `padding-right: 26px`, flex-shrink protection on `.popup-badge`, and standardized close button bounds (`24x24px`) to prevent badges from colliding with the popup close button.
+  - Added dynamic single-feature highlight ring and instant KML download named with standard conventions (e.g. `SIGEF_Privado_<codigo>.kml`).
+- **Area Selection Tool Deactivation**:
+  - Deactivated the experimental bounding-box tool and cleaned up mouse drag listeners to prevent map pan/drag locking.
