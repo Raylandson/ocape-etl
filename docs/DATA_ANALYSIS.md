@@ -77,6 +77,7 @@ Every record in a dBase attribute table (`.dbf`) corresponds **1-to-1** with an 
 | **Processos Minerários (ANM SIGMINE)** | 5,235 | Polygon | Concessões de lavra, autorizações e pesquisa | Substâncias (gipsita, calcário, água), titulares e fases da ANM |
 | **Favelas e Comunidades (IBGE 2022)** | 2,381 | Polygon | Setores censitários de aglomerados urbanos em PE | Classificação oficial `CD_FCU` / `NM_FCU` do Censo Demográfico 2022 |
 | **Setores Censitários Gerais (IBGE 2022)** | 19,578 | Polygon | Malha censitária intramunicipal de Pernambuco | Divisões territoriais e demográficas dos 185 municípios |
+| **Despejo Zero (Comunidades Ameaçadas)** | 365 | Point | 43,585 famílias sob ameaça ativa de despejo<br>8,397 famílias removidas | Monitoramento comunitário da sociedade civil (FNDR, LabCidade, MST, CPT, MTST) |
 
 
 
@@ -240,5 +241,35 @@ Every record in a dBase attribute table (`.dbf`) corresponds **1-to-1** with an 
   * **Polígonos de Sobreposição Litigiosa (`land_overlaps`):** 371 alertas incidem diretamente sobre zonas de conflito mapeadas na plataforma (310 em UCs Federais, 43 em embargos ambientais, 37 em TIs e 10 em Quilombos).
   * **Correlação com Conflitos Judiciais:** Alta co-ocorrência em Serra Talhada (717 alertas | 81 processos), Petrolina (460 alertas | 111 processos), Salgueiro (165 alertas | 32 processos), Ouricuri/Araripe (>2.000 alertas) e Pesqueira (302 alertas | 96 em TIs).
 
+---
 
-
+### 10. Campanha Nacional Despejo Zero (`despejo_zero_pe`)
+* **Managing Body:** Articulação Nacional da Campanha Despejo Zero (Fórum Nacional de Reforma Urbana - FNRU, LabCidade FAU-USP, Observatório de Remoções, Habitat para a Humanidade Brasil, Movimento dos Trabalhadores Rurais Sem Terra - MST, Comissão Pastoral da Terra - CPT, Movimento dos Trabalhadores Sem Teto - MTST).
+* **Legal & Human Rights Framework:**
+  * Pacto Internacional dos Direitos Econômicos, Sociais e Culturais (PIDESC / Comentário Geral nº 7 da ONU).
+  * Arguição de Descumprimento de Preceito Fundamental nº 828 (ADPF 828 / STF).
+  * Resolução CNJ nº 510/2023 (Criação de Comissões Regionais de Soluções Fundiárias e diretrizes para cumprimento de mandados de reintegração de posse).
+* **Total Georeferenced Conflicts in Pernambuco:** **365 casos ativos e documentados**.
+* **Family Impact Totals:**
+  * **Famílias Ameaçadas (Risco Ativo de Despejo):** **43,585 famílias**.
+  * **Famílias Despejadas (Remoções Já Executadas):** **8,397 famílias**.
+  * **Famílias com Ordens Suspensas / Conflitos Sanados:** **3,400 famílias**.
+  * **Impacto Total Consolidado:** **55,382 famílias** atingidas em Pernambuco.
+* **Geographic Distribution & Hotspots:**
+  * **Recife:** 93 conflitos (comunidades nas bacias do Beberibe, Tejipió e Capibaribe, beira-trilhos do Metrô/CBTU e ocupações históricas do centro e zona norte).
+  * **Jaboatão dos Guararapes:** 30 conflitos (Muribeca, Prazeres, Cavaleiro, Curado).
+  * **Olinda:** 28 conflitos (Peixinhos, Passarinho, Rio Doce).
+  * **Goiana:** 18 conflitos (pressão de polo industrial, cana-de-açúcar e pesca artesanal).
+  * **Cabo de Santo Agostinho:** 15 conflitos (pressão do Complexo Industrial Portuário de Suape e conflitos em comunidades tradicionais e posseiros).
+  * **Camaragibe:** 12 conflitos.
+  * **Caruaru:** 10 conflitos.
+  * **Petrolina:** 9 conflitos (assentamentos de irrigação, beira do Rio São Francisco).
+  * **Outros Municípios:** Timbaúba (6), Vitória de Santo Antão (4), Tamandaré (3), Moreno (3), Ipojuca (3), Paulista (3), São Lourenço da Mata (3), Sertânia (2), Tupanatinga (1).
+* **Primary Conflict Causes (`causa_conflito`):**
+  * *Ação de Reintegração de Posse* (Violação alegada de posse/propriedade): ~78% dos casos.
+  * *Impacto de Obras Públicas / Projetos de Urbanização*: ~12% dos casos (ferrovias, drenagem, anéis viários, Suape).
+  * *Alegação de Área de Risco Geológico/Hidrológico*: ~7% dos casos (encostas e margens de rios).
+  * *Conflito em Área de Proteção Ambiental*: ~3% dos casos (restingas, manguezais, UCs).
+* **Judicial Representation:**
+  * Defensoria Pública do Estado (DPPE) e Defensoria Pública da União (DPU) acompanham mais de 65% dos casos formalizados.
+  * Assessorias jurídicas populares (CPT, FNDR, advogados voluntários) cobrem 25% dos casos rurais.

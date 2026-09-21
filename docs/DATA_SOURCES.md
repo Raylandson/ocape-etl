@@ -33,7 +33,7 @@ Este documento centraliza o inventário de dados da **Plataforma de Mapeamento e
 | Código | Fonte de Dados | Órgão / Entidade | Finalidade Sociojurídica | Status de Ingestão |
 | :---: | :--- | :--- | :--- | :---: |
 | **f** | **DataJud** | CNJ / TJPE / TRF5 | Processos judiciais ativos de litígio fundiário e posse |  **Importado** |
-| **g** | **DespejoZero** | Campanha Despejo Zero | Mapeamento comunitário de áreas sob risco ou ameaça de despejo | ⏳ **A Importar** |
+| **g** | **DespejoZero** | Campanha Despejo Zero | Mapeamento comunitário de áreas sob risco ou ameaça de despejo (`despejo_zero_pe`) |  **Importado** |
 | **h** | **ONR** | Operador Nacional (SREI) | Registro eletrônico de imóveis e cadeia de matrículas | ⏳ **A Importar** |
 
 
@@ -120,6 +120,14 @@ Todas as bases abaixo já passam pelo pipeline ETL automatizado (`src/etl.py` e 
 * **Arquivos Exportados:** `data/extracted/jurisdicoes/tjpe_comarcas_municipios.csv`, `jfpe_subsecoes_municipios.csv`, `jurisdicoes_pe_completo.csv`.
 * **Resolução Fundiária / Jurídica:** Corrige a distorção onde municípios sem comarca própria ("municípios filhas" ou "termos judiciários", como Iguaracy, Dormentes, Casinhas, Primavera, Xexéu, Granito, etc.) ficavam invisíveis ou com contagem zero de processos. Permite identificar com exatidão a comarca sede responsável, as filhas abrangidas e enriquece os dados do DataJud com metadados de competência territorial e popups informativos.
 
+#### h. Despejo Zero — Mapeamento Comunitário de Famílias sob Ameaça de Remoção
+* **Status:** **Importado e Ativo**
+* **Tabela PostGIS:** `public.despejo_zero_pe` (365 conflitos georreferenciados em Pernambuco).
+* **Descrição:** Base comunitária e participativa mantida pela Campanha Nacional Despejo Zero (FNDR, LabCidade, Habitat Brasil, MST, CPT, MTST) monitorando ocupações urbanas e comunidades rurais sob risco iminente de desocupação forçada ou remoção coletiva.
+* **Métricas em PE:** 43.585 famílias sob ameaça ativa de despejo, 8.397 famílias já removidas e 3.400 ordens suspensas/sanadas. Municípios líderes: Recife (93), Jaboatão dos Guararapes (30), Olinda (28), Goiana (18), Cabo de Santo Agostinho (15).
+* **Atributos Chave:** `conflito_id`, `nome_comunidade`, `municipio`, `familias_ameacadas`, `familias_despejadas`, `familias_suspensas`, `total_familias`, `status_conflito`, `causa_conflito`, `acompanhamento_juridico`, `agente_promotor`, `descricao`.
+* **Aplicação em Conflitos:** Fornece o contraponto empírico e humanitário às ações do DataJud, alertando magistrados e órgãos de conciliação agrária sobre o impacto social de reintegrações de posse.
+
 ---
 
 ### 3.1. Futuras Fontes — Camada 1: Cruzamentos Topológicos Espaciais
@@ -134,7 +142,6 @@ Todas as bases abaixo já passam pelo pipeline ETL automatizado (`src/etl.py` e 
 
 | Código | Fonte | Órgão / Responsável | Formato Esperado | Requisitos de Acesso | Prioridade |
 | :---: | :--- | :--- | :--- | :--- | :---: |
-| **g** | **DespejoZero** | Campanha Nacional Despejo Zero | GeoJSON / CSV / KML | Dados abertos da sociedade civil | Alta |
 | **h** | **ONR** | Operador Nacional do Registro de Imóveis | API REST / Geocódigo de Matrículas / KML | Credenciamento / Convênio ONR | Média |
 
 ---
@@ -161,13 +168,6 @@ Todas as bases abaixo já passam pelo pipeline ETL automatizado (`src/etl.py` e 
 ### j. Acervo Fundiário ITERPE (Glebas e Terras Devolutas Estaduais)
 * **Objetivo:** Integração das glebas públicas estaduais discriminadas, arrecadadas ou sob regularização fundiária pelo Instituto de Terras e Reforma Agrária de Pernambuco (ITERPE).
 * **Importância:** Fecha a lacuna entre a base federal (SIGEF/INCRA) e as terras estaduais/devolutas de Pernambuco, permitindo verificar conflitos de competência dominial entre Estado e particulares.
-* **Origem dos Dados:** Acordo de Cooperação Técnica (ACT) para cessão das bases georreferenciadas do acervo do ITERPE.
-
-### g. Campanha Nacional Despejo Zero
-* **Objetivo:** Mapeamento comunitário e colaborativo de comunidades, ocupações urbanas e áreas rurais ameaçadas ou sujeitas a ordens de remoção forçada e despejo.
-* **Importância:** Camada de alerta preventivo humanitário e sociojurídico, correlacionando o risco comunitário com ações judiciais catalogadas no DataJud.
-* **Origem dos Dados:** Dados geoespaciais e relatórios públicos da articulação Despejo Zero e entidades parceiras (MST, CPT, MTST, FNDR).
-
 ### h. ONR — Operador Nacional do Registro de Imóveis Eletrônico
 * **Objetivo:** Cruzamento com o Sistema de Registro Eletrônico de Imóveis (SREI/SAEC).
 * **Importância:** Verificação da cadeia dominial, identificação de duplicidade de matrículas sobre a mesma poligonal (grilagem cartorial) e consulta da situação de ônus reais e penhoras em cartórios de registro de imóveis de Pernambuco.
@@ -189,17 +189,17 @@ flowchart TD
         C1 --> CAR[CAR Imóveis, APPs e Reservas]
         C1 --> TI[Terras Indígenas FUNAI]
         C1 --> QUILOMBO[Territórios Quilombolas INCRA]
-        C1 --> UC[Unidades de Conservação ICMBio]
-        C1 --> SIPRA[Assentamentos INCRA - A Importar]
-        C1 --> ITERPE[Glebas ITERPE - A Importar]
-        C1 --> MORADIA[Moradia Legal TJPE - A Importar]
-        C1 --> MAPBIO[Uso MapBiomas - A Importar]
+        C1 --> UC[Unidades de Conservação ICMBio e CPRH]
+        C1 --> SIPRA[Assentamentos INCRA SIPRA]
+        C1 --> ITERPE[Glebas e Posses ITERPE]
+        C1 --> MORADIA[Moradia Legal TJPE REURB]
+        C1 --> MAPBIO[Alertas de Desmatamento MapBiomas]
     end
 
     subgraph "Camada 2: Contexto Sociojurídico e Processual"
         C2 --> DATAJUD[DataJud: Ações Judiciais Ativas na Comarca]
         C2 --> EMBARGOS[ICMBio: Autos e Embargos Ambientais]
-        C2 --> DESPEJO[DespejoZero: Ameaças Comunitárias - A Importar]
+        C2 --> DESPEJO[DespejoZero: 365 Comunidades sob Risco em PE]
         C2 --> ONR[ONR: Registro de Imóveis / Matrículas - A Importar]
     end
 

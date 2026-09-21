@@ -27,6 +27,7 @@ data/extracted/processos_minerarios_pe/
 data/extracted/ibge_favelas_comunidades_pe/
 data/extracted/moradia_legal_pe/
 data/extracted/iterpe_acervo_fundiario/
+data/extracted/despejo_zero_pe/
 
 # Exported application data
 data/exports/

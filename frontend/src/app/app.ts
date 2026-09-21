@@ -119,6 +119,7 @@ export class App implements AfterViewInit {
   readonly priorityOrder: string[] = [
     'land_overlaps_points_symbol',
     'processos_conflitos_judiciais_circle',
+    'despejo_zero_pe_circle',
     'moradia_legal_processos_pe_circle',
     'autos_infracao_icmbio_circle',
     'car_casos_analisados_fill',
@@ -346,6 +347,15 @@ export class App implements AfterViewInit {
       sourceLayer: 'processos_conflitos_judiciais',
       fillColor: '#8b5cf6',
       borderColor: '#4c1d95',
+      visible: false
+    },
+    {
+      id: 'despejo_zero_pe',
+      name: 'Campanha Despejo Zero (Comunidades sob Risco)',
+      sourceUrl: 'http://localhost:3000/despejo_zero_pe',
+      sourceLayer: 'despejo_zero_pe',
+      fillColor: '#dc2626',
+      borderColor: '#7f1d1d',
       visible: false
     },
     {
@@ -700,8 +710,8 @@ export class App implements AfterViewInit {
               'visibility': layer.visible ? 'visible' : 'none'
             }
           });
-        } else if (layer.id === 'autos_infracao_icmbio' || layer.id === 'processos_conflitos_judiciais' || layer.id === 'moradia_legal_processos_pe') {
-          // Add circle layer for points (ICMBio infractions, DataJud lawsuits, or Moradia Legal usucapião) below city labels
+        } else if (layer.id === 'autos_infracao_icmbio' || layer.id === 'processos_conflitos_judiciais' || layer.id === 'moradia_legal_processos_pe' || layer.id === 'despejo_zero_pe') {
+          // Add circle layer for points (ICMBio infractions, DataJud lawsuits, Moradia Legal, or Despejo Zero) below city labels
           const circleColor: any = layer.id === 'processos_conflitos_judiciais'
             ? [
                 'match',
@@ -714,7 +724,17 @@ export class App implements AfterViewInit {
                 'Conflito Coletivo Rural & Agrário', '#ec4899',
                 /* default */ '#8b5cf6'
               ]
-            : layer.fillColor;
+            : (layer.id === 'despejo_zero_pe'
+                ? [
+                    'match',
+                    ['get', 'status_conflito'],
+                    'Despejo/Remoção Total Executada', '#991b1b',
+                    'Remoção Parcial Executada', '#ea580c',
+                    'Ordem de Despejo Suspensa Temporariamente', '#f59e0b',
+                    'Despejo Suspenso Definitivamente / Conflito Sanado', '#10b981',
+                    /* default: Ameaça de Despejo */ '#dc2626'
+                  ]
+                : layer.fillColor);
 
           this.map.addLayer({
             id: `${layer.id}_circle`,
@@ -723,12 +743,12 @@ export class App implements AfterViewInit {
             'source-layer': layer.sourceLayer,
             paint: {
               'circle-color': circleColor,
-              'circle-radius': (layer.id === 'processos_conflitos_judiciais' || layer.id === 'moradia_legal_processos_pe')
+              'circle-radius': (layer.id === 'processos_conflitos_judiciais' || layer.id === 'moradia_legal_processos_pe' || layer.id === 'despejo_zero_pe')
                 ? ['interpolate', ['linear'], ['zoom'], 6, 4.5, 10, 6.5, 14, 9]
                 : 4.5,
               'circle-stroke-width': 1.6,
               'circle-stroke-color': '#ffffff',
-              'circle-opacity': 0.9
+              'circle-opacity': 0.92
             },
             layout: {
               visibility: layer.visible ? 'visible' : 'none'
@@ -1917,6 +1937,79 @@ export class App implements AfterViewInit {
         openCustomPopup(html, coordinates);
       };
 
+      // 15.1. Campanha Despejo Zero (Conflitos Comunitários e Risco de Despejo)
+      const renderDespejoZeroPopup = (properties: any, coordinates: any) => {
+        const nome = properties['nome_comunidade'] || 'Comunidade em Conflito';
+        const municipio = properties['municipio'] || 'Pernambuco';
+        const status = properties['status_conflito'] || 'Ameaça de Despejo';
+        const causa = properties['causa_conflito'] || 'Conflito Fundiário / Posse';
+        const familiasAmeacadas = Number(properties['familias_ameacadas'] || 0);
+        const familiasDespejadas = Number(properties['familias_despejadas'] || 0);
+        const familiasSuspensas = Number(properties['familias_suspensas'] || 0);
+        const totalFamilias = Number(properties['total_familias'] || (familiasAmeacadas + familiasDespejadas + familiasSuspensas));
+        const acompanhamento = properties['acompanhamento_juridico'] || 'Não informado';
+        const agentePromotor = properties['agente_promotor'] || 'Não informado';
+        const descricao = properties['descricao'] || '';
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title">
+              <span>${nome}</span>
+              <span class="popup-badge" style="background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca;">Despejo Zero</span>
+            </div>
+            
+            <div class="popup-section" style="display: flex; flex-direction: row; justify-content: space-between; gap: 8px;">
+              <div>
+                <span class="popup-label">Município:</span>
+                <span class="popup-value" style="font-weight: 600;">${municipio} - PE</span>
+              </div>
+              <div>
+                <span class="popup-label">Total Famílias:</span>
+                <span class="popup-value" style="font-weight: 700; color: #b91c1c;">${totalFamilias.toLocaleString('pt-BR')}</span>
+              </div>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Status do Conflito:</span>
+              <span class="popup-value" style="font-weight: 600;">${status}</span>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Causa Primária:</span>
+              <span class="popup-value">${causa}</span>
+            </div>
+
+            <div class="popup-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #f8fafc; padding: 6px 8px; border-radius: 4px; font-size: 0.72rem;">
+              <div>Ameaçadas: <strong>${familiasAmeacadas.toLocaleString('pt-BR')}</strong></div>
+              <div>Despejadas: <strong>${familiasDespejadas.toLocaleString('pt-BR')}</strong></div>
+              ${familiasSuspensas > 0 ? `<div style="grid-column: span 2;">Ordens Suspensas: <strong>${familiasSuspensas.toLocaleString('pt-BR')}</strong></div>` : ''}
+            </div>
+
+            ${agentePromotor && agentePromotor !== 'Não informado' ? `
+            <div class="popup-section" style="font-size: 0.73rem; color: #475569;">
+              <span>Agente Promotor: <strong>${agentePromotor}</strong></span>
+            </div>` : ''}
+
+            ${acompanhamento && acompanhamento !== 'Não informado' ? `
+            <div class="popup-section" style="font-size: 0.73rem; color: #475569;">
+              <span>Assessoria / Defesa: <strong>${acompanhamento}</strong></span>
+            </div>` : ''}
+
+            ${descricao ? `
+            <div class="popup-detail-box">
+              <div class="popup-detail-box-title">Histórico e Relato do Conflito:</div>
+              <div class="popup-detail-box-content">${descricao}</div>
+            </div>` : ''}
+
+            <a href="https://mapa.despejozero.org.br/" target="_blank" rel="noopener noreferrer" class="popup-btn" style="background-color: #dc2626; border-color: #b91c1c;">
+              Plataforma Despejo Zero
+            </a>
+          </div>
+        `;
+
+        openCustomPopup(html, coordinates);
+      };
+
       // 16. ITERPE - Glebas Públicas Estaduais e Quilombos
       const renderIterpeGlebaPopup = (properties: any, coordinates: any) => {
         const nome = properties['nome'] || 'Gleba Estadual';
@@ -2143,6 +2236,8 @@ export class App implements AfterViewInit {
           renderConflictPopup(props, e.lngLat);
         } else if (layerId === 'processos_conflitos_judiciais_circle') {
           renderDataJudPopup(props, e.lngLat);
+        } else if (layerId === 'despejo_zero_pe_circle') {
+          renderDespejoZeroPopup(props, e.lngLat);
         } else if (layerId === 'moradia_legal_processos_pe_circle') {
           renderMoradiaProcessoPopup(props, e.lngLat);
         } else if (layerId === 'autos_infracao_icmbio_circle') {

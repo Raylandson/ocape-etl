@@ -76,6 +76,18 @@ Este documento reúne os links diretos e não truncados para download e replica�
 ---
 
 ## 5. Campanha Nacional Despejo Zero (Monitoramento Popular de Conflitos)
-* **Órgão / Entidade:** Campanha Despejo Zero (Articulação da Sociedade Civil / MST / MTST / CPT)
-* **Portal / Repositório:** `https://campanhadespejozero.org/`
-* **Formato Esperado:** Planilhas públicas e relatórios com coordenadas de famílias sob risco de desocupação forçada.
+* **Órgão / Entidade:** Campanha Despejo Zero (Articulação da Sociedade Civil / MST / MTST / CPT / FNDR / LabCidade)
+* **Portal / Repositório:** `https://campanhadespejozero.org/` | Mapa Interativo: `https://mapa.despejozero.org.br/`
+* **Endpoint da API Aberta:**
+  ```text
+  https://mapa.despejozero.org.br/wp-json/conflitosurbanos/v1/busca
+  ```
+* **Comando de Download & Ingestão:**
+  ```bash
+  uv run python src/etl_despejo_zero.py
+  ```
+* **Arquivos Gerados:**
+  - `data/raw/despejo_zero_brasil.json` (Base nacional completa)
+  - `data/extracted/despejo_zero_pe/despejo_zero_pe.geojson` (365 comunidades em PE)
+* **Tabela PostGIS:** `public.despejo_zero_pe` (indexada com GIST)
+* **Visualização:** Servida via Martin Vector Tiles (`http://localhost:3000/despejo_zero_pe`) e renderizada na camada *Campanha Despejo Zero (Comunidades sob Risco)*.

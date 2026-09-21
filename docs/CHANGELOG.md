@@ -6,6 +6,17 @@ This document chronicles the architectural evolutions, dataset ingestions, and m
 
 ## Chronological Change Log
 
+### September 2026: Campanha Nacional Despejo Zero Integration (Community Eviction Risks)
+- **Direct API Extraction & ETL**: Developed `src/etl_despejo_zero.py` extracting directly from the official Despejo Zero REST API (`mapa.despejozero.org.br/wp-json/conflitosurbanos/v1/busca`).
+- **Territorial Filtering & Spatial Georeferencing**: Filtered national conflict dataset to Pernambuco using official IBGE boundary polygon (`src/pe_boundary.geojson`) and territorial taxonomies. Processed **365 active georeferenced community conflicts** in Pernambuco, covering **43,585 threatened families** and **8,397 evicted families** (55,382 total impacted families).
+- **Deterministic Micro-Jittering**: Applied deterministic spatial micro-jittering for coincident municipal coordinates, ensuring that multiple community conflicts in the same municipality (e.g. 93 in Recife, 30 in Jaboatão dos Guararapes, 28 in Olinda, 18 in Goiana, 15 in Cabo de Santo Agostinho) remain individually visible and clickable.
+- **PostGIS Layer & GIST Index**: Created table `public.despejo_zero_pe` (EPSG:4326 Point) with spatial GIST and municipal B-tree indexes, alongside clean GeoJSON export in `data/extracted/despejo_zero_pe/despejo_zero_pe.geojson`.
+- **Vector Tile Server (Martin)**: Published `public.despejo_zero_pe` automatically via Martin vector tile server (`http://localhost:3000/despejo_zero_pe`).
+- **Frontend Map Layer & Institutional Popups**:
+  - Added `despejo_zero_pe` circle layer in `frontend/src/app/app.ts` with status-based dynamic color markers (Crimson `#991b1b` for total eviction executed, Red `#dc2626` for active threat, Orange `#ea580c` for partial removal, Amber `#f59e0b` for temporary stay, Emerald `#10b981` for permanent suspension/resolution).
+  - Implemented interactive popup cards displaying community title, municipality, total families impacted breakdown, conflict status, primary cause (Reintegração de Posse, Obras Públicas, Área de Risco), promoter agent, legal defense assistance, full case narrative, and direct link to the Despejo Zero platform.
+- **Documentation**: Updated `docs/DATA_SOURCES.md`, `docs/DATA_ANALYSIS.md`, and `docs/PHASE_1_DATA_DOWNLOADS.md`.
+
 ### July 2026: Conflict Center Pins & Interactive Popups
 - **Postgres/PostGIS**: Modified `src/overlaps.py` to compute conflict region medians/centers using PostGIS `ST_PointOnSurface(geometry)`. This generates the `public.land_overlaps_points` table (which is indexed with a spatial GIST index) for Martin vector tile server to publish automatically.
 - **Spatial Clustering & Dissolving**: Integrated PostGIS DBSCAN spatial clustering (`ST_ClusterDBSCAN` with `eps := 0.0001`) and geometry unioning (`ST_Union`) in `src/overlaps.py` to group and merge neighboring/overlapping conflict polygons. Semicolon-delimited aggregates (`string_agg`) are created for property name, code, and source attributes. The Angular frontend popup logic was updated to parse these lists and display individual property entries cleanly in a scrollable container.
