@@ -100,13 +100,19 @@ This will automatically create a virtual environment (`.venv`) and install depen
 
 ### 3. Run the Ingestion & Analysis Pipelines
 
-The ETL workflow consists of two main pipeline scripts:
+The ETL workflow consists of the following pipeline scripts:
+
+0. **(Optional) Unpack Raw Data Archives**:
+   ```bash
+   uv run python -m src.unpack_raw
+   ```
+   > Automatically unzips and prepares all raw archives (`.zip`, `.kmz`, `.geojson`) from `data/raw/` into their corresponding target directories under `data/extracted/`.
 
 1. **Ingest Spatial Shapefiles & Calculate Overlaps**:
    ```bash
    uv run python -m src.etl
    ```
-   > **Note**: `src/etl.py` processes all shapefiles under `data/extracted/`, cleans and rectifies geometries, filters data to the State of Pernambuco, loads them into PostGIS, and **automatically executes `src/overlaps.py`** at the end to compute spatial conflict zones (`land_overlaps`) and conflict center points (`land_overlaps_points`).
+   > Processes all shapefiles and GeoJSONs under `data/extracted/`, cleans and rectifies geometries, filters data to the State of Pernambuco, loads them into PostGIS, and **automatically executes `src/overlaps.py`** at the end to compute spatial conflict zones (`land_overlaps`) and conflict center points (`land_overlaps_points`).
 
 2. **Process Territorial Jurisdictions & Comarcas/Termos (TJPE & JFPE DOCX)**:
    ```bash
@@ -132,7 +138,13 @@ The ETL workflow consists of two main pipeline scripts:
    ```
    > Parses official TJPE Moradia Legal KMZ/KML (104 REURB community perimeters and 12,965 usucapião judicial cases) and ITERPE GERAF KMLs (9 state macro-glebas and 7,549 smallholder possession parcels with RGI matrículas and decrees), loading `moradia_legal_pe`, `moradia_legal_processos_pe`, `iterpe_glebas_pe`, and `iterpe_malha_posses_pe`.
 
-6. **Reload Tile Server (Martin)**:
+6. **Ingest Campanha Nacional Despejo Zero (Community Eviction Risks)**:
+   ```bash
+   uv run python -m src.etl_despejo_zero
+   ```
+   > Fetches 365 community conflicts under threat or execution of eviction in Pernambuco from the official Despejo Zero API, applies deterministic micro-jittering to coincident municipal coordinates, and loads `public.despejo_zero_pe`.
+
+7. **Reload Tile Server (Martin)**:
    ```bash
    docker compose restart martin
    ```
@@ -158,7 +170,16 @@ uv run python -m src.process_jurisdicoes
 # 4. Re-run judicial conflict lawsuit ingestion & enrichment
 uv run python -m src.etl_datajud
 
-# 5. Restart Martin tile server
+# 5. Import SIGEF historical georeferencing retifications (Batateiras)
+uv run python -m src.import_sigef_historico
+
+# 6. Ingest Moradia Legal (TJPE) & Acervo Fundiário (ITERPE)
+uv run python -m src.etl_moradia_iterpe
+
+# 7. Ingest Campanha Nacional Despejo Zero
+uv run python -m src.etl_despejo_zero
+
+# 8. Restart Martin tile server
 docker compose restart martin
 ```
 
@@ -236,6 +257,15 @@ The ETL successfully manages and serves the following datasets:
 | `jurisdicoes_pe_municipios` | Mapeamento territorial unificado dos 185 municípios de PE | Point | GIST |
 | `processos_conflitos_judiciais` | Processos Judiciais de Conflito Agrário (DataJud - TJPE & TRF5) | Point | GIST |
 | `processos_conflitos_municipios` | Agregação Municipal de Conflitos na Justiça (185 municípios de PE) | Point | GIST |
+| `assentamentos_incra_pe` | Assentamentos de Reforma Agrária Federais (INCRA SIPRA) | MultiPolygon | GIST |
+| `ucs_estaduais_cprh_pe` | Unidades de Conservação Estaduais (CPRH / MMA) | MultiPolygon | GIST |
+| `processos_minerarios_pe` | Concessões e Processos Minerários Ativos (ANM SIGMINE) | MultiPolygon | GIST |
+| `ibge_favelas_comunidades_pe` | Favelas e Comunidades Urbanas Censo 2022 (IBGE) | MultiPolygon | GIST |
+| `moradia_legal_pe` | Perímetros Comunitários REURB Moradia Legal (TJPE) | MultiPolygon | GIST |
+| `moradia_legal_processos_pe` | Processos de Regularização Fundiária Moradia Legal (TJPE) | Point | GIST |
+| `iterpe_glebas_pe` | Macro-glebas Estaduais e Territórios Quilombolas (ITERPE) | MultiPolygon | GIST |
+| `iterpe_malha_posses_pe` | Posses Rurais da Agricultura Familiar (ITERPE) | MultiPolygon | GIST |
+| `despejo_zero_pe` | Comunidades sob Risco ou Ordem de Despejo (Campanha Despejo Zero) | Point | GIST |
 | `car_casos_analisados` | Imóveis Rurais CAR com OCR e verificação analítica (Batateiras) | MultiPolygon | GIST |
 | `sigef_casos_analisados` | Evolução histórica do georreferenciamento SIGEF (Batateiras - AV-17, AV-19, AV-23, Atual) | MultiPolygon | GIST |
 

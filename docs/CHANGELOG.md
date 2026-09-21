@@ -6,6 +6,17 @@ This document chronicles the architectural evolutions, dataset ingestions, and m
 
 ## Chronological Change Log
 
+### September 2026: Option B Repository Standardization & End-to-End Pipeline Verification
+- **Repository Isolation (Option B)**: Untracked all legacy extracted shapefiles and CSVs (~74 MB) from Git, isolating `data/extracted/` entirely via `.gitignore`. The remote repository is now purely source code, infrastructure configs, and documentation.
+- **Automated Unpacker (`src/unpack_raw.py`)**: Built an automated unpacking engine that safely decompresses `.zip`, `.kmz`, and `.geojson` raw archives from `data/raw/` into their standardized `data/extracted/` target directories.
+- **Database Full Reset & End-to-End Re-import Verification**:
+  - Successfully executed a full database purge (`docker compose down -v && docker compose up -d`) and ran all 6 ingestion pipelines sequentially (`src.etl`, `src.process_jurisdicoes`, `src.etl_datajud`, `src.import_sigef_historico`, `src.etl_moradia_iterpe`, `src.etl_despejo_zero`).
+  - Audited all 37 database tables against a pre-reset baseline backup (`data/raw/backup_conflitos_agrarios_pre_reset.sql.gz`), achieving a 100% exact row count match across all 37 tables.
+- **Bug Fixes**:
+  - `src/etl_datajud.py`: Added missing `import re` required for CNJ process number masking.
+  - `src/import_sigef_historico.py`: Rectified `sigef_privado_pe` geometry query and corrected KML filename reference (`Engenho_Batateiras_AV-23-73_2021_04_977ha.kml`).
+- **Documentation**: Updated `README.md` with complete pipeline execution sequence, full re-import commands, and all 37 ingested datasets.
+
 ### September 2026: Campanha Nacional Despejo Zero Integration (Community Eviction Risks)
 - **Direct API Extraction & ETL**: Developed `src/etl_despejo_zero.py` extracting directly from the official Despejo Zero REST API (`mapa.despejozero.org.br/wp-json/conflitosurbanos/v1/busca`).
 - **Territorial Filtering & Spatial Georeferencing**: Filtered national conflict dataset to Pernambuco using official IBGE boundary polygon (`src/pe_boundary.geojson`) and territorial taxonomies. Processed **365 active georeferenced community conflicts** in Pernambuco, covering **43,585 threatened families** and **8,397 evicted families** (55,382 total impacted families).

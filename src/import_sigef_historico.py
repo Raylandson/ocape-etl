@@ -55,8 +55,7 @@ def main():
 
     # Query current registered SIGEF parcel
     cur.execute("""
-        SELECT nome_area, codigo_imo, num_area, registro_m, registro_d, data_submi, data_aprov,
-               situacao_i, municipio_nome, parcela_co, rt, art, ST_AsText(geometry)
+        SELECT ST_AsText(geometry)
         FROM sigef_privado_pe
         WHERE codigo_imo = '9510994953100'
         LIMIT 1;
@@ -65,7 +64,7 @@ def main():
     if not sigef_row:
         raise RuntimeError("Could not find parcel 9510994953100 in sigef_privado_pe!")
 
-    sigef_geom_wkt = sigef_row[12]
+    sigef_geom_wkt = sigef_row[0]
     sigef_geom = shapely.wkt.loads(sigef_geom_wkt)
 
     # 3 KML files in data/raw
@@ -148,8 +147,8 @@ def main():
             "sobreposicao_car_info": "Sobreposição total (100%) sobre 7 posses rurais familiares (Sítios Batateira, Flora Clara, Saputi, Batateirinha e Riachão)",
             "descricao": "2ª retificação do georreferenciamento (+37,33 ha vs AV-19-73; +59,97 ha vs AV-17-73). Proprietária: IR Agropecuária Fazenda 2 Irmãos Ltda.",
             "cor_hex": "#ef4444",
-            "arquivo_origem": "Engenho_Batateiras_AV-23-73_2021_977ha.kml",
-            "polygon": parse_kml_polygon(RAW_DATA_DIR / "Engenho_Batateiras_AV-23-73_2021_977ha.kml")
+            "arquivo_origem": "Engenho_Batateiras_AV-23-73_2021_04_977ha.kml",
+            "polygon": parse_kml_polygon(RAW_DATA_DIR / "Engenho_Batateiras_AV-23-73_2021_04_977ha.kml")
         },
         {
             "fase": "SIGEF Atual",

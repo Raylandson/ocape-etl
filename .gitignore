@@ -9,27 +9,9 @@ wheels/
 # Virtual environments
 .venv
 
-# Data files (raw zip backups & heavy extracted shapefiles > 100MB)
+# Data files (raw backups, extracted shapefiles, and exported deliverables)
 data/raw/
-data/extracted/area_imovel_sicar/
-data/extracted/apps_sicar/
-data/extracted/reserva_legal_sicar/
-data/extracted/vegetacao_nativa_sicar/
-data/extracted/autos_infracao_icmbio/
-data/extracted/embargos_icmbio/
-data/extracted/limiteucsfederais_a/
-data/extracted/mapbiomas_alertas/
-data/extracted/mapbiomas_car_alertas/
-data/extracted/pe_setores_cd2022/
-data/extracted/assentamentos_incra_pe/
-data/extracted/ucs_estaduais_cprh_pe/
-data/extracted/processos_minerarios_pe/
-data/extracted/ibge_favelas_comunidades_pe/
-data/extracted/moradia_legal_pe/
-data/extracted/iterpe_acervo_fundiario/
-data/extracted/despejo_zero_pe/
-
-# Exported application data
+data/extracted/
 data/exports/
 
 # Local backup archives
