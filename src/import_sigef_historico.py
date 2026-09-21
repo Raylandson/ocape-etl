@@ -269,8 +269,71 @@ def main():
     cnt = cur.fetchone()[0]
     print(f"\nSUCCESS: Table public.sigef_casos_analisados populated with {cnt} historical records.")
 
+    # Import CAR analyzed properties (Batateiras 7 smallholder parcels)
+    import_car_casos_analisados(cur)
+
     cur.close()
     conn.close()
+
+
+def import_car_casos_analisados(cur):
+    print("\n" + "=" * 70)
+    print("IMPORTING BATATEIRAS CAR ANALYZED PROPERTIES")
+    print("=" * 70)
+
+    cur.execute("DROP TABLE IF EXISTS public.car_casos_analisados CASCADE;")
+    cur.execute("""
+        CREATE TABLE public.car_casos_analisados (
+            cod_imovel text NOT NULL,
+            nome_imovel text,
+            declarante text,
+            cpf_declarante text,
+            codigo_protocolo text,
+            data_cadastro text,
+            origem_documento text,
+            num_area double precision,
+            mod_fiscal double precision,
+            ind_status text,
+            ind_tipo text,
+            des_condic text,
+            municipio text,
+            cod_estado text,
+            sobreposicao_sigef text,
+            matricula_cartorio text,
+            conflito_judicial text,
+            geometry public.geometry(Geometry,4326)
+        );
+    """)
+
+    car_data = [
+        ("PE-2609204-791D8AA9F2B14CD5A5BC5F051A4AEA63", "Sítio Flora Clara", "José Manoel da Silva", "***.584.094-**", "2609204.437149.791D8AA9F2B14CD5A5BC5F051A4AEA63", "28/11/2017", "CAR José Manoel.pdf", 20.8694, 1.3043, "AT", "IRU", "Aguardando análise", "Maraial", "PE", "FAZENDA 2 IRMÃOS (INCRA 9510994953100) - Matrícula 73", "Posse Histórica / Matrícula 73", "TJPE Maraial 0000263-83.2026.8.17.2940 (Reintegração de Posse)"),
+        ("PE-2609204-691BBA8767C14AAFB43E205CEDBA4E43", "Sítio Batateiras", "Cícera Maria da Conceição / Francisco Zeferino", "***.793.184-**", "2609204.436952.691BBA8767C14AAFB43E205CEDBA4E43", "28/11/2017", "CAR Francisco Zeferino.pdf", 19.9698, 1.2481, "AT", "IRU", "Aguardando análise", "Maraial", "PE", "FAZENDA 2 IRMÃOS (INCRA 9510994953100) - Matrícula 73", "Posse Histórica / Matrícula 73", "TJPE Maraial 0000263-83.2026.8.17.2940 (Reintegração de Posse)"),
+        ("PE-2609204-F2B44463BC594543B17A9ABA928157F9", "Sítio Batateira", "Odílio Severino Nogueira", "***.080.494-**", "2609204.437135.F2B44463BC594543B17A9ABA928157F9", "28/11/2017", "CAR - Odílio.pdf", 21.301, 1.3313, "AT", "IRU", "Aguardando análise", "Maraial", "PE", "FAZENDA 2 IRMÃOS (INCRA 9510994953100) - Matrícula 73", "Posse Histórica / Matrícula 73", "TJPE Maraial 0000263-83.2026.8.17.2940 (Reintegração de Posse)"),
+        ("PE-2609204-C26EA32D98EC43E3A35991D594FF27C2", "Sítio Saputi", "Joselito Nogueira", "***.080.304-**", "2609204.437145.C26EA32D98EC43E3A35991D594FF27C2", "28/11/2017", "CAR Joselito.pdf", 15.9493, 0.9968, "AT", "IRU", "Aguardando análise", "Maraial", "PE", "FAZENDA 2 IRMÃOS (INCRA 9510994953100) - Matrícula 73", "Posse Histórica / Matrícula 73", "TJPE Maraial 0000263-83.2026.8.17.2940 (Reintegração de Posse)"),
+        ("PE-2609204-7B3D2CC5D90C406B968CB72C195793A8", "Sítio Riachão", "José Joaquim Antonio Wanderley / Severino Wanderley", "***.888.764-**", "2609204.437141.7B3D2CC5D90C406B968CB72C195793A8", "28/11/2017", "CAR Severino Wanderley.pdf", 28.8551, 1.8034, "AT", "IRU", "Aguardando análise", "Maraial", "PE", "FAZENDA 2 IRMÃOS (INCRA 9510994953100) - Matrícula 73", "Posse Histórica / Matrícula 73", "TJPE Maraial 0000263-83.2026.8.17.2940 (Reintegração de Posse)"),
+        ("PE-2609204-F07F205EA4CE4657A77D0BDD2BE9B890", "Sítio Batateirinha", "Luiz Cândido da Silva / Kleiton", "***.361.344-**", "2609204.437153.F07F205EA4CE4657A77D0BDD2BE9B890", "28/11/2017", "CAR Kleiton.pdf", 20.457, 1.2785, "AT", "IRU", "Aguardando análise", "Maraial", "PE", "FAZENDA 2 IRMÃOS (INCRA 9510994953100) - Matrícula 73", "Posse Histórica / Matrícula 73", "TJPE Maraial 0000263-83.2026.8.17.2940 (Reintegração de Posse)"),
+        ("PE-2609204-AFDF317B8B3B4F00B25E9F067BE40CD2", "Sítio Batateiras", "Edvania Maria Cordeiro da Silva / José Carlos Cordeiro da Silva", "***.407.494-**", "2609204.484214.AFDF317B8B3B4F00B25E9F067BE40CD2", "27/03/2018", "CAR - Sítio Batateiras (Março de 2018).pdf", 17.2185, 1.0761, "AT", "IRU", "Aguardando análise", "Maraial", "PE", "FAZENDA 2 IRMÃOS (INCRA 9510994953100) - Matrícula 73", "Posse Histórica / Matrícula 73", "TJPE Maraial 0000263-83.2026.8.17.2940 (Reintegração de Posse)")
+    ]
+
+    for item in car_data:
+        cur.execute("""
+            INSERT INTO public.car_casos_analisados (
+                cod_imovel, nome_imovel, declarante, cpf_declarante, codigo_protocolo,
+                data_cadastro, origem_documento, num_area, mod_fiscal, ind_status,
+                ind_tipo, des_condic, municipio, cod_estado, sobreposicao_sigef,
+                matricula_cartorio, conflito_judicial, geometry
+            )
+            SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, geometry
+            FROM public.area_imovel_1
+            WHERE cod_imovel = %s;
+        """, (*item, item[0]))
+        print(f"Inserted analyzed CAR: {item[1]} ({item[0]}) - {item[7]} ha [{item[2]}]")
+
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_car_casos_analisados_geometry ON public.car_casos_analisados USING GIST (geometry);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_car_casos_analisados_cod ON public.car_casos_analisados (cod_imovel);")
+    cur.execute("SELECT count(*) FROM public.car_casos_analisados;")
+    cnt = cur.fetchone()[0]
+    print(f"SUCCESS: Table public.car_casos_analisados populated with {cnt} records.")
 
 
 if __name__ == "__main__":

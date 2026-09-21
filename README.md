@@ -100,13 +100,19 @@ This will automatically create a virtual environment (`.venv`) and install depen
 
 ### 3. Run the Ingestion & Analysis Pipelines
 
-The ETL workflow consists of the following pipeline scripts:
+You can run the entire end-to-end pipeline (unpacking, shapefile ingestion, spatial overlaps, jurisdictions, DataJud lawsuits, Batateiras historical analysis, Moradia Legal, and Despejo Zero) with **a single command**:
 
-0. **(Optional) Unpack Raw Data Archives**:
-   ```bash
-   uv run python -m src.unpack_raw
-   ```
-   > Automatically unzips and prepares all raw archives (`.zip`, `.kmz`, `.geojson`) from `data/raw/` into their corresponding target directories under `data/extracted/`.
+```bash
+uv run python -m src.run_all_pipelines
+```
+
+> **Options**:
+> - `--skip-unpack`: Skip uncompressing archives from `data/raw/` if already extracted.
+> - `--force-unpack`: Re-extract all archives even if target directories already exist.
+> - `--step <name>`: Execute only an individual step (`unpack`, `etl`, `jurisdicoes`, `datajud`, `sigef_historico`, `moradia_iterpe`, `despejo_zero`).
+> - `--no-restart-martin`: Skip restarting the Martin vector tile server container.
+
+Alternatively, individual pipeline steps can be executed separately:
 
 1. **Ingest Spatial Shapefiles & Calculate Overlaps**:
    ```bash
