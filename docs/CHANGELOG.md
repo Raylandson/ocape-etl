@@ -6,7 +6,51 @@ This document chronicles the architectural evolutions, dataset ingestions, and m
 
 ## Chronological Change Log
 
-### September 2026: Option B Repository Standardization & End-to-End Pipeline Verification
+### September 2026: DataJud Standalone Desktop GUI (`datajud-gui`)
+- **Standalone Rust Desktop Application**: Built `datajud-gui` using `eframe` (0.33) and `egui`, allowing researchers and legal analysts to search, filter, preview, and export judicial lawsuits directly from the CNJ DataJud Public API without requiring the main PostgreSQL/PostGIS database or web stack.
+- **Institutional UI/UX Alignment**: Designed the interface following the Land Conflict Mapping Platform's Angular frontend design language:
+  - Clean light institutional theme with neutral slate cards (`#ffffff`, `#f8fafc`, `#e2e8f0`).
+  - Strict color parity with the frontend legend badges (`frontend/src/app/datajud-legend/datajud-legend.component.ts`) for all 6 land conflict categories: Reintegração de Posse (`#8b5cf6`), Reforma Agrária (`#f59e0b`), Povos Indígenas & Quilombolas (`#ef4444`), Terras Devolutas (`#3b82f6`), Usucapião (`#10b981`), and Conflito Coletivo (`#ec4899`).
+- **Concurrent Round-Robin Multi-Tribunal Engine**:
+  - Replaced sequential court processing with concurrent interleaved execution using `std::thread::scope`. When multiple courts are selected (e.g. TJPE and TRF5), each round queries 100 records from each court in parallel, streaming balanced results across all selected courts into the UI from the very first second until the total target quota is satisfied.
+- **Permanent Pernambuco Territorial Scope & Streamlined Query Panel**:
+  - Replaced manual court selection (`SELEÇÃO DE TRIBUNAIS`) with a permanent territorial focus on Pernambuco: every search automatically queries both the state judiciary (**TJPE**) and the federal judiciary restricted to the Pernambuco Section (**TRF5-JFPE**, `*40583*`) concurrently in round-robin batches.
+  - Simplified the left configuration panel with a clean institutional territorial badge (`ÂMBITO TERRITORIAL: Pernambuco (TJPE + TRF5-JFPE)`) and organized remaining controls into clearly numbered sections (`1. CATEGORIAS DE CONFLITO FUNDIÁRIO`, `2. FILTROS ADICIONAIS DE BUSCA (TPU)`, `3. LIMITES E EXTRAÇÃO`).
+- **UI/UX Refinements & Institutional Design**:
+  - Removed all decorative emojis across UI elements, status banners, and pagination controls.
+  - **Symmetric Filter Button Padding (`render_dropdown_filter_button`)**: Eliminated excessive right-side empty space by calculating snug, symmetric horizontal padding (`10.0px` left, `10.0px` right) around the funnel icon and label.
+  - **Dynamic Tribunal Button & Popup**:
+    - Before extraction, the button cleanly displays `"Tribunal"` (no misleading `"Todos"` when zero records are loaded), and the popup explains that tribunals will appear once extraction begins.
+    - Upon extraction, the loaded tribunals appear automatically in the popup and on the button (e.g. `"Tribunal: TJPE, TRF5"` or active subset).
+    - Removed redundant `"Todos os Tribunais"` row from the popup list in favor of standard `"Marcar Todos"` and `"Desmarcar"` header actions.
+  - **Network Error Resilience & Cancellation Suppression**:
+    - Increased HTTP client timeout from 35s to 60s to accommodate complex Elasticsearch leading wildcard queries (`*40583*`) on the TRF5 DataJud cluster.
+    - Added automated 1-retry with backoff for transient network glitches.
+    - Strictly suppressed network error alerts (`[Erro]`) when cancellation is triggered by the user via `"Cancelar Extração"`.
+  - **Centered Cancel Button (`render_cancel_button`)**: Created a dedicated cancel action with both the vector "X" icon and text mathematically centered horizontally in the middle of the button and vertically across the entire panel width.
+  - **Vertical Label Centering**: Aligned `"Filtros:"` and `"Buscar:"` text labels to the exact vertical center of their respective rows using `allocate_ui_with_layout` with `Layout::left_to_right(Align::Center)`.
+  - **Persistent Multi-Select Filter Popups**: Converted Tribunal and Categorias dropdowns to `egui::Popup` with `PopupCloseBehavior::CloseOnClickOutside`. Popups now stay open while toggling multiple options, closing only when clicking outside.
+  - **Interactive Filter Rows (`render_filter_item`)**: The entire row area of each filter item is hoverable (slate-100 `#f1f5f9`), displays a pointing hand cursor, and can be clicked anywhere on the row to toggle. Features crisp vector checkmarks and category color dots.
+  - **Vertically Centered Search Box**: Aligned text and hint text vertically to the center (`vertical_align(Align::Center)`) while preserving left alignment (`horizontal_align(Align::Min)`).
+  - **Full-Row Interactive Lawsuit Table**: Made the entire row of each process in the table clickable to open the detail drawer. Added slate gray hover highlight (`#f1f5f9`), pointing hand cursor, and persistent indigo selection highlight (`#e0e7ff`).
+  - **Vector Search Icon**: Implemented crisp vector search magnifying glass (`paint_search_icon`) drawn directly via egui's vector `Painter` across extraction and filter buttons.
+  - Zero-warning code quality enforced via `cargo check` and `cargo clippy -- -D warnings` on both native Linux and Windows GNU cross-compilation targets.
+- **Client-Side Table Pagination**:
+  - Implemented pagination engine supporting page size choices (`25`, `50`, `100`, `250`, `Todos`) and smooth page navigation (`Anterior`, `Próxima`, `X de Y`). Enables 60 FPS rendering and instant responsiveness even with 10,000+ records in memory.
+- **Masked CNJ Process Number Formatting**:
+  - Standardized all process numbers into the official CNJ mask `NNNNNNN-DD.YYYY.J.TR.OOOO` (matching `format_cnj` in `src/etl_datajud.py`).
+- **Post-Fetch Multidimensional Filtering**:
+  - Dedicated post-fetch filter bar allowing researchers to filter *after* downloading all data: filter by tribunal, category chips with live count, and real-time text search across process numbers, classes, court units, and subjects.
+  - Multi-court dataset accumulation: queries across multiple tribunals are merged with automatic deduplication by process number.
+- **Limit Flexibility & Deep Pagination**:
+  - Removed arbitrary limits: users can query specific limits (e.g. 10 to 200,000+) or check "Sem limite (baixar todos disponíveis)" using Elasticsearch `search_after` deep pagination.
+- **Table Grid & Detailed Inspection**:
+  - Clear columns with court badges (`render_tribunal_badge`), monospace process numbers, category pills, classes, comarcas/municipalities, filing dates, and "Ver" detail actions.
+  - Detail drawer with 1-click clipboard copy for process number and full TPU subject breakdown.
+- **Data Export**: Integrated native file dialogs (`rfd`) for direct export of filtered or full records to spreadsheet-ready CSV and JSON formats.
+- **Cross-Compilation (Linux & Windows)**: Verified zero-warning compilation for both native Linux (`datajud-gui`) and Windows (`x86_64-pc-windows-gnu` generating `datajud-gui.exe` with `windows_subsystem = "windows"`).
+
+
 - **Repository Isolation (Option B)**: Untracked all legacy extracted shapefiles and CSVs (~74 MB) from Git, isolating `data/extracted/` entirely via `.gitignore`. The remote repository is now purely source code, infrastructure configs, and documentation.
 - **Automated Unpacker (`src/unpack_raw.py`)**: Built an automated unpacking engine that safely decompresses `.zip`, `.kmz`, and `.geojson` raw archives from `data/raw/` into their standardized `data/extracted/` target directories.
 - **Unified Pipeline Runner (`src/run_all_pipelines.py`)**: Orchestrates all data ingestion, enrichment, and spatial processing pipelines with a single command (`uv run python -m src.run_all_pipelines`), complete with per-step timing, individual step filters (`--step`), unpack controls (`--skip-unpack`, `--force-unpack`), and Martin tile server reload.

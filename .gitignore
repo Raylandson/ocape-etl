@@ -16,5 +16,12 @@ data/exports/
 
 # Local backup archives
 *.tar.gz
+*.tar.zst
+*.zip
+
+# Rust build artifacts
+target/
+**/target/
+
 
 
