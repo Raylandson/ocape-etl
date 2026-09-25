@@ -12,6 +12,8 @@ interface LayerConfig {
   fillColor: string;
   borderColor: string;
   visible: boolean;
+  // Rendering mode; layers without it keep the default fill + outline (or their id-specific style)
+  geometry?: 'fill' | 'line' | 'circle';
 }
 
 export interface EnrichedCarInfo {
@@ -122,8 +124,24 @@ export class App implements AfterViewInit {
     'despejo_zero_pe_circle',
     'moradia_legal_processos_pe_circle',
     'autos_infracao_icmbio_circle',
+    'aneel_eol_aerogeradores_pe_circle',
+    'aneel_eol_usinas_pe_circle',
+    'aneel_ufv_usinas_pe_circle',
+    'aneel_ute_usinas_pe_circle',
+    'aneel_hidro_aproveitamentos_pe_circle',
+    'epe_subestacoes_pe_circle',
+    'epe_linhas_transmissao_pe_line',
+    'aneel_lt_interesse_restrito_pe_line',
     'car_casos_analisados_fill',
     'sigef_casos_analisados_fill',
+    'aneel_sobreposicoes_territorios_pe_line',
+    'aneel_sobreposicoes_territorios_pe_fill',
+    'aneel_dup_pe_line',
+    'aneel_dup_pe_fill',
+    'aneel_ufv_subestacoes_pe_fill',
+    'aneel_ufv_paineis_pe_fill',
+    'aneel_ufv_parques_pe_fill',
+    'aneel_eol_parques_pe_fill',
     'moradia_legal_pe_fill',
     'iterpe_glebas_pe_fill',
     'iterpe_malha_posses_pe_fill',
@@ -142,6 +160,8 @@ export class App implements AfterViewInit {
     'sigef_publico_pe_fill',
     'imovel_certificado_snci_privado_pe_fill',
     'imovel_certificado_snci_publico_pe_fill',
+    'aneel_eol_interferencia_pe_fill',
+    'aneel_hidro_reservatorios_pe_fill',
     'area_imovel_1_fill'
   ];
 
@@ -448,6 +468,158 @@ export class App implements AfterViewInit {
       borderColor: '#713f12',
       visible: false
     },
+    {
+      id: 'aneel_sobreposicoes_territorios_pe',
+      name: 'ANEEL - Sobreposições Energia × Territórios',
+      sourceUrl: 'http://localhost:3000/aneel_sobreposicoes_territorios_pe',
+      sourceLayer: 'aneel_sobreposicoes_territorios_pe',
+      fillColor: '#c026d3',
+      borderColor: '#86198f',
+      visible: false
+    },
+    {
+      id: 'aneel_dup_pe',
+      name: 'ANEEL - DUP (Servidões e Desapropriações)',
+      sourceUrl: 'http://localhost:3000/aneel_dup_pe',
+      sourceLayer: 'aneel_dup_pe',
+      fillColor: '#be123c',
+      borderColor: '#881337',
+      visible: false
+    },
+    {
+      id: 'epe_linhas_transmissao_pe',
+      name: 'EPE - Linhas de Transmissão (Rede Básica)',
+      sourceUrl: 'http://localhost:3000/epe_linhas_transmissao_pe',
+      sourceLayer: 'epe_linhas_transmissao_pe',
+      fillColor: '#334155',
+      borderColor: '#1e293b',
+      visible: false,
+      geometry: 'line'
+    },
+    {
+      id: 'epe_subestacoes_pe',
+      name: 'EPE - Subestações',
+      sourceUrl: 'http://localhost:3000/epe_subestacoes_pe',
+      sourceLayer: 'epe_subestacoes_pe',
+      fillColor: '#1e293b',
+      borderColor: '#ffffff',
+      visible: false,
+      geometry: 'circle'
+    },
+    {
+      id: 'aneel_lt_interesse_restrito_pe',
+      name: 'ANEEL - Linhas de Interesse Restrito (Usinas)',
+      sourceUrl: 'http://localhost:3000/aneel_lt_interesse_restrito_pe',
+      sourceLayer: 'aneel_lt_interesse_restrito_pe',
+      fillColor: '#0f766e',
+      borderColor: '#115e59',
+      visible: false,
+      geometry: 'line'
+    },
+    {
+      id: 'aneel_eol_parques_pe',
+      name: 'ANEEL - Parques Eólicos (Polígonos)',
+      sourceUrl: 'http://localhost:3000/aneel_eol_parques_pe',
+      sourceLayer: 'aneel_eol_parques_pe',
+      fillColor: '#0e7490',
+      borderColor: '#164e63',
+      visible: false
+    },
+    {
+      id: 'aneel_eol_aerogeradores_pe',
+      name: 'ANEEL - Aerogeradores',
+      sourceUrl: 'http://localhost:3000/aneel_eol_aerogeradores_pe',
+      sourceLayer: 'aneel_eol_aerogeradores_pe',
+      fillColor: '#155e75',
+      borderColor: '#ffffff',
+      visible: false,
+      geometry: 'circle'
+    },
+    {
+      id: 'aneel_eol_usinas_pe',
+      name: 'ANEEL - Usinas Eólicas (EOL)',
+      sourceUrl: 'http://localhost:3000/aneel_eol_usinas_pe',
+      sourceLayer: 'aneel_eol_usinas_pe',
+      fillColor: '#0891b2',
+      borderColor: '#ffffff',
+      visible: false,
+      geometry: 'circle'
+    },
+    {
+      id: 'aneel_eol_interferencia_pe',
+      name: 'ANEEL - Regiões de Interferência Eólica',
+      sourceUrl: 'http://localhost:3000/aneel_eol_interferencia_pe',
+      sourceLayer: 'aneel_eol_interferencia_pe',
+      fillColor: '#67e8f9',
+      borderColor: '#0e7490',
+      visible: false
+    },
+    {
+      id: 'aneel_ufv_parques_pe',
+      name: 'ANEEL - Parques Solares (Polígonos)',
+      sourceUrl: 'http://localhost:3000/aneel_ufv_parques_pe',
+      sourceLayer: 'aneel_ufv_parques_pe',
+      fillColor: '#ca8a04',
+      borderColor: '#854d0e',
+      visible: false
+    },
+    {
+      id: 'aneel_ufv_paineis_pe',
+      name: 'ANEEL - Arranjos de Painéis Solares',
+      sourceUrl: 'http://localhost:3000/aneel_ufv_paineis_pe',
+      sourceLayer: 'aneel_ufv_paineis_pe',
+      fillColor: '#facc15',
+      borderColor: '#a16207',
+      visible: false
+    },
+    {
+      id: 'aneel_ufv_subestacoes_pe',
+      name: 'ANEEL - Subestações de Usinas Solares',
+      sourceUrl: 'http://localhost:3000/aneel_ufv_subestacoes_pe',
+      sourceLayer: 'aneel_ufv_subestacoes_pe',
+      fillColor: '#713f12',
+      borderColor: '#422006',
+      visible: false
+    },
+    {
+      id: 'aneel_ufv_usinas_pe',
+      name: 'ANEEL - Usinas Solares (UFV)',
+      sourceUrl: 'http://localhost:3000/aneel_ufv_usinas_pe',
+      sourceLayer: 'aneel_ufv_usinas_pe',
+      fillColor: '#eab308',
+      borderColor: '#ffffff',
+      visible: false,
+      geometry: 'circle'
+    },
+    {
+      id: 'aneel_ute_usinas_pe',
+      name: 'ANEEL - Usinas Termelétricas (UTE)',
+      sourceUrl: 'http://localhost:3000/aneel_ute_usinas_pe',
+      sourceLayer: 'aneel_ute_usinas_pe',
+      fillColor: '#78716c',
+      borderColor: '#ffffff',
+      visible: false,
+      geometry: 'circle'
+    },
+    {
+      id: 'aneel_hidro_reservatorios_pe',
+      name: 'ANEEL - Reservatórios Hidrelétricos',
+      sourceUrl: 'http://localhost:3000/aneel_hidro_reservatorios_pe',
+      sourceLayer: 'aneel_hidro_reservatorios_pe',
+      fillColor: '#3b82f6',
+      borderColor: '#1d4ed8',
+      visible: false
+    },
+    {
+      id: 'aneel_hidro_aproveitamentos_pe',
+      name: 'ANEEL - Aproveitamentos Hidrelétricos (UHE/PCH/CGH)',
+      sourceUrl: 'http://localhost:3000/aneel_hidro_aproveitamentos_pe',
+      sourceLayer: 'aneel_hidro_aproveitamentos_pe',
+      fillColor: '#1d4ed8',
+      borderColor: '#ffffff',
+      visible: false,
+      geometry: 'circle'
+    },
     // {
     //   id: 'land_overlaps',
     //   name: '⚠️ Áreas de Conflito (Sobreposições)',
@@ -694,7 +866,51 @@ export class App implements AfterViewInit {
           url: layer.sourceUrl
         });
 
-        if (layer.id === 'land_overlaps_points') {
+        if (layer.geometry === 'line') {
+          // Linear infrastructure (transmission and restricted-interest lines) below city labels
+          const lineColor: any = layer.id === 'epe_linhas_transmissao_pe'
+            ? ['match', ['get', 'situacao'], 'Planejada', '#94a3b8', layer.fillColor]
+            : layer.fillColor;
+
+          this.map.addLayer({
+            id: `${layer.id}_line`,
+            type: 'line',
+            source: layer.id,
+            'source-layer': layer.sourceLayer,
+            layout: {
+              'line-cap': 'round',
+              'line-join': 'round',
+              visibility: layer.visible ? 'visible' : 'none'
+            },
+            paint: {
+              'line-color': lineColor,
+              'line-width': layer.id === 'epe_linhas_transmissao_pe'
+                ? ['interpolate', ['linear'], ['zoom'], 6, ['case', ['>=', ['to-number', ['get', 'tensao'], 0], 500], 2.2, 1.4], 12, ['case', ['>=', ['to-number', ['get', 'tensao'], 0], 500], 4, 2.6]]
+                : ['interpolate', ['linear'], ['zoom'], 6, 1, 12, 2.2],
+              'line-opacity': 0.9
+            }
+          }, firstLabelId);
+        } else if (layer.geometry === 'circle') {
+          // Point infrastructure (plants, turbines, substations) below city labels
+          this.map.addLayer({
+            id: `${layer.id}_circle`,
+            type: 'circle',
+            source: layer.id,
+            'source-layer': layer.sourceLayer,
+            paint: {
+              'circle-color': layer.fillColor,
+              'circle-radius': layer.id === 'aneel_eol_aerogeradores_pe'
+                ? ['interpolate', ['linear'], ['zoom'], 7, 2, 12, 4.5]
+                : ['interpolate', ['linear'], ['zoom'], 6, 3.5, 12, 6],
+              'circle-stroke-width': layer.id === 'aneel_eol_aerogeradores_pe' ? 0.8 : 1.4,
+              'circle-stroke-color': layer.borderColor,
+              'circle-opacity': 0.92
+            },
+            layout: {
+              visibility: layer.visible ? 'visible' : 'none'
+            }
+          }, firstLabelId);
+        } else if (layer.id === 'land_overlaps_points') {
           // Add symbol layer for conflict points
           this.map.addLayer({
             id: `${layer.id}_symbol`,
@@ -756,8 +972,19 @@ export class App implements AfterViewInit {
           }, firstLabelId);
         } else {
           // Add fill layer (translucent) below city labels
-          const fillColor: any = layer.id === 'sigef_casos_analisados' ? ['get', 'cor_hex'] : layer.fillColor;
-          const fillOpacity = layer.id === 'land_overlaps' ? 0.75 : (layer.id === 'sigef_casos_analisados' ? 0.18 : 0.4);
+          const fillColor: any = layer.id === 'sigef_casos_analisados'
+            ? ['get', 'cor_hex']
+            : (layer.id === 'aneel_dup_pe'
+                ? ['match', ['get', 'modalidade'], 'Desapropriação', '#881337', layer.fillColor]
+                : layer.fillColor);
+          // Servitude strips (5–73 m wide) are sub-pixel at state scale: the fill fades in with zoom and
+          // the outline keeps a minimum width so corridors read as lines.
+          const isStripLayer = layer.id === 'aneel_dup_pe' || layer.id === 'aneel_sobreposicoes_territorios_pe';
+          const fillOpacity: any = layer.id === 'land_overlaps'
+            ? 0.75
+            : (layer.id === 'sigef_casos_analisados'
+                ? 0.18
+                : (isStripLayer ? ['interpolate', ['linear'], ['zoom'], 9, 0.15, 13, 0.45] : 0.4));
 
           this.map.addLayer({
             id: `${layer.id}_fill`,
@@ -774,8 +1001,16 @@ export class App implements AfterViewInit {
           }, firstLabelId);
 
           // Add line layer (borders) below city labels
-          const lineColor: any = layer.id === 'sigef_casos_analisados' ? ['get', 'cor_hex'] : layer.borderColor;
-          const lineWidth = layer.id === 'land_overlaps' ? 3.0 : (layer.id === 'sigef_casos_analisados' ? 2.5 : 1.5);
+          const lineColor: any = layer.id === 'sigef_casos_analisados'
+            ? ['get', 'cor_hex']
+            : (layer.id === 'aneel_dup_pe'
+                ? ['match', ['get', 'modalidade'], 'Desapropriação', '#881337', layer.fillColor]
+                : layer.borderColor);
+          const lineWidth: any = layer.id === 'land_overlaps'
+            ? 3.0
+            : (layer.id === 'sigef_casos_analisados'
+                ? 2.5
+                : (isStripLayer ? ['interpolate', ['linear'], ['zoom'], 6, 2.4, 10, 1.8, 13, 1.2] : 1.5));
 
           this.map.addLayer({
             id: `${layer.id}_line`,
@@ -2184,6 +2419,210 @@ export class App implements AfterViewInit {
         openCustomPopup(html, coordinates);
       };
 
+      // 20. ANEEL / SIGEL & EPE — energy infrastructure (generic key-value renderer)
+      const escapeHtml = (v: any) => String(v)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      const fmtNum = (v: any, digits = 2, unit = '') => {
+        if (v === null || v === undefined || v === '' || isNaN(Number(v))) return null;
+        return `${Number(v).toLocaleString('pt-BR', { maximumFractionDigits: digits })}${unit ? ' ' + unit : ''}`;
+      };
+      const fmtDate = (v: any) => {
+        if (!v) return null;
+        const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/);
+        return m ? `${m[3]}/${m[2]}/${m[1]}` : String(v);
+      };
+      const code = (v: any) => (v ? `<span class="popup-value-code">${escapeHtml(v)}</span>` : null);
+
+      const renderEnergyPopup = (
+        title: any, badge: any, rows: [string, string | null][], note: string, props: any, coordinates: any
+      ) => {
+        const rowsHtml = rows
+          .filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== '')
+          .map(([label, value]) => `
+            <div class="popup-section">
+              <span class="popup-label">${label}:</span>
+              <span class="popup-value">${value}</span>
+            </div>`)
+          .join('');
+        const municipios = props['municipios'] ? `
+            <div class="popup-section">
+              <span class="popup-label">Municípios (PE):</span>
+              <span class="popup-value">${escapeHtml(props['municipios'])}</span>
+            </div>` : '';
+        const source = [props['fonte_orgao'], props['fonte_camada']].filter(Boolean).map(escapeHtml).join(' — ');
+        const collected = fmtDate(props['data_coleta']);
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title">
+              <span>${escapeHtml(title || 'Empreendimento de energia')}</span>
+              <span class="popup-badge">${escapeHtml(badge || 'ANEEL')}</span>
+            </div>
+            ${rowsHtml}
+            ${municipios}
+            <div class="popup-detail-box">
+              <div class="popup-detail-box-title">Natureza do dado:</div>
+              <div class="popup-detail-box-content">${note}</div>
+              ${source ? `<div class="popup-detail-box-note">Fonte: ${source}${collected ? ` (coleta em ${collected})` : ''}</div>` : ''}
+            </div>
+          </div>
+        `;
+
+        openCustomPopup(html, coordinates);
+      };
+
+      const txt = (v: any) => (v === null || v === undefined || v === '' ? null : escapeHtml(v));
+      const renderAneelPopup = (baseId: string, p: any, coordinates: any) => {
+        switch (baseId) {
+          case 'aneel_dup_pe':
+            const isStrip = p['forma'] === 'faixa';
+            const dupNote = p['erro_origem']
+              ? `<strong>Erro na base da ANEEL:</strong> ${escapeHtml(p['erro_origem'])} Registro excluído do cruzamento com territórios.`
+              : (isStrip
+                  ? 'Declaração de Utilidade Pública emitida pela ANEEL (Resolução Autorizativa). Polígono oficial da faixa de servidão ao longo do traçado da linha.'
+                  : 'Declaração de Utilidade Pública emitida pela ANEEL (Resolução Autorizativa). Polígono oficial da área a desapropriar ou sob servidão.');
+            return renderEnergyPopup(p['empreem'] || p['ato_legal'], p['modalidade'] || 'DUP', [
+              ['Ato legal', code(p['ato_legal'])],
+              ['Mesma faixa em outros atos', p['atos_mesma_geometria'] ? code(p['atos_mesma_geometria']) : null],
+              ['Objeto', txt(p['objeto_text'])],
+              ['Situação', txt(p['status_text'])],
+              ['Ano da DUP', txt(p['ano_dup'])],
+              ['Tensão', fmtNum(p['tensao'], 1, 'kV')],
+              ['Forma', isStrip ? 'Faixa ao longo da linha' : 'Área'],
+              ['Largura da faixa', isStrip ? fmtNum(p['largura_m'], 1, 'm') : null],
+              ['Extensão da faixa', isStrip ? fmtNum(p['extensao_km'], 2, 'km') : null],
+              ['Área declarada', fmtNum(p['area_ha'], 2, 'ha')],
+              ['UF (cadastro)', txt(p['uf'])],
+              ['CEG', code(p['ceg'])],
+            ], dupNote, p, coordinates);
+          case 'aneel_sobreposicoes_territorios_pe':
+            const crossesStrip = p['forma'] === 'faixa';
+            const discarded = Number(p['partes_descartadas']) > 0
+              ? ` ${fmtNum(p['partes_descartadas'], 0)} fragmento(s) de borda (${fmtNum(p['area_descartada_ha'], 2, 'ha')}) descartados por diferença de base cartográfica.`
+              : '';
+            return renderEnergyPopup(p['territorio_nome'], p['territorio_tipo'], [
+              ['Empreendimento', txt(p['energia_nome'])],
+              ['Tipo de intervenção', txt(p['energia_tipo'])],
+              ['Ato legal', code(p['ato_legal'])],
+              ['Extensão da travessia', crossesStrip ? fmtNum(p['extensao_travessia_km'], 2, 'km') : null],
+              ['Largura da faixa', crossesStrip ? fmtNum(p['largura_faixa_m'], 1, 'm') : null],
+              ['Área sobreposta', fmtNum(p['area_sobreposicao_ha'], 2, 'ha')],
+              ['Parcela do território', fmtNum(p['pct_territorio'], 2, '%')],
+              ['Aerogeradores na área', Number(p['aerogeradores']) > 0 ? fmtNum(p['aerogeradores'], 0) : null],
+            ], (crossesStrip
+                ? 'Trecho da faixa de servidão oficial (DUP) dentro do território. A extensão da travessia é a área sobreposta dividida pela largura da faixa.'
+                : 'Interseção geométrica entre o polígono oficial da ANEEL e o território.') + discarded, p, coordinates);
+          case 'epe_linhas_transmissao_pe':
+            return renderEnergyPopup(p['nome'], p['situacao'], [
+              ['Tensão', fmtNum(p['tensao'], 0, 'kV')],
+              ['Concessionária', txt(p['concession'])],
+              ['Entrada em operação', txt(p['ano_opera'])],
+              ['Ano planejado', Number(p['ano_planej']) > 0 ? txt(p['ano_planej']) : null],
+              ['Extensão (EPE)', fmtNum(p['extensao'], 1, 'km')],
+              ['Extensão em PE', fmtNum(p['comprimento_km'], 1, 'km')],
+            ], 'Traçado da Rede Básica do SIN publicado pela EPE. Não representa a faixa de servidão; a área oficial afetada está na camada DUP.', p, coordinates);
+          case 'epe_subestacoes_pe':
+            return renderEnergyPopup(p['nome'], p['situacao'], [
+              ['Tensão', txt(p['tensao']) ? `${txt(p['tensao'])} kV` : null],
+              ['Concessionária', txt(p['concession'])],
+              ['Entrada em operação', p['ano_opera'] && p['ano_opera'] !== '-' ? txt(p['ano_opera']) : null],
+            ], 'Localização pontual de subestação da Rede Básica publicada pela EPE.', p, coordinates);
+          case 'aneel_lt_interesse_restrito_pe':
+            return renderEnergyPopup(p['nome_resp'], `Interesse Restrito (${p['fonte_geracao'] || 'N/D'})`, [
+              ['Uso', txt(p['uso'] || p['uso_lt_ld'])],
+              ['Tensão', fmtNum(p['tensao_kv'], 1, 'kV')],
+              ['Usinas atendidas', txt(p['compart'])],
+              ['Operação comercial', txt(p['operacao_comercial'])],
+              ['Fase', txt(p['fase'])],
+              ['Extensão em PE', fmtNum(p['comprimento_km'], 2, 'km')],
+              ['CEG', code(p['ceg'])],
+            ], 'Linha de conexão exclusiva de usina eólica ou solar à rede, declarada no projeto registrado na ANEEL.', p, coordinates);
+          case 'aneel_eol_parques_pe':
+            return renderEnergyPopup(p['nome_eol'], p['fase'] || 'Parque Eólico', [
+              ['Potência', fmtNum(p['pot_mw'], 2, 'MW')],
+              ['Área do parque', fmtNum(p['area_ha'], 2, 'ha')],
+              ['Origem do polígono', txt(p['origem'])],
+            ], 'Poligonal do parque eólico declarada à ANEEL no projeto do empreendimento.', p, coordinates);
+          case 'aneel_eol_interferencia_pe':
+            return renderEnergyPopup(p['nome_eol'], 'Região de Interferência', [
+              ['Nº de pétalas', txt(p['num_petalas'])],
+              ['Direção predominante do vento', txt(p['direcao_predo'])],
+              ['Área', fmtNum(p['area_ha'], 2, 'ha')],
+            ], 'Região em que novos parques interfeririam no recurso eólico (efeito esteira) do parque registrado. Critério regulatório da ANEEL, não é área de impacto sobre a população.', p, coordinates);
+          case 'aneel_eol_aerogeradores_pe':
+            return renderEnergyPopup(p['den_aeg'] || p['nome_eol'], p['nome_eol'] || 'Aerogerador', [
+              ['Em operação', txt(p['operacao'])],
+              ['Potência', fmtNum(p['pot_mw'], 2, 'MW')],
+              ['Altura total', fmtNum(p['alt_total'], 1, 'm')],
+              ['Altura da torre', fmtNum(p['alt_torre'], 1, 'm')],
+              ['Diâmetro do rotor', fmtNum(p['diam_rotor'], 1, 'm')],
+              ['Proprietário', txt(p['proprietario'])],
+              ['CEG', code(p['ceg'])],
+            ], 'Posição de aerogerador declarada no projeto do parque eólico registrado na ANEEL.', p, coordinates);
+          case 'aneel_eol_usinas_pe':
+            return renderEnergyPopup(p['nome'], p['fase'] || 'Usina Eólica', [
+              ['Potência outorgada', fmtNum(Number(p['p_out_kw']) / 1000, 2, 'MW')],
+              ['Aerogeradores', fmtNum(p['qtd_aeg'], 0)],
+              ['Proprietário', txt(p['proprietar'])],
+              ['Ato legal', code(p['ato_legal'])],
+              ['Processo ANEEL', code(p['proc_aneel'])],
+              ['Início de operação', fmtDate(p['inicio_oper'])],
+              ['CEG', code(p['ceg'])],
+            ], 'Central geradora eólica cadastrada na ANEEL (DRO, outorga ou operação).', p, coordinates);
+          case 'aneel_ufv_parques_pe':
+            return renderEnergyPopup(p['nome'], p['fase'] || 'Parque Solar', [
+              ['Complexo', txt(p['nome_comp'])],
+              ['Unidades geradoras', fmtNum(p['qtd_ug'], 0)],
+              ['Área do parque', fmtNum(p['area_ha'], 2, 'ha')],
+              ['CEG', code(p['ceg'])],
+            ], 'Poligonal do parque solar fotovoltaico declarada à ANEEL.', p, coordinates);
+          case 'aneel_ufv_paineis_pe':
+            return renderEnergyPopup(p['nome'], p['fase_usina'] || 'Painéis Solares', [
+              ['Complexo', txt(p['nome_comp'])],
+              ['Área dos arranjos', fmtNum(p['area_ha'], 2, 'ha')],
+              ['CEG', code(p['ceg'])],
+            ], 'Área ocupada pelos arranjos de painéis fotovoltaicos declarada à ANEEL.', p, coordinates);
+          case 'aneel_ufv_subestacoes_pe':
+            return renderEnergyPopup(p['nome_se'] || p['nome_resp'], p['tipo'] || 'Subestação', [
+              ['Responsável', txt(p['nome_resp'])],
+              ['Relação de tensão', txt(p['rel_tensao']) ? `${txt(p['rel_tensao'])} kV` : null],
+              ['Potência', fmtNum(p['pot_mva'], 1, 'MVA')],
+              ['Fase', txt(p['fase'])],
+              ['CEG', code(p['ceg'])],
+            ], 'Poligonal da subestação da usina solar declarada à ANEEL.', p, coordinates);
+          case 'aneel_ufv_usinas_pe':
+          case 'aneel_ute_usinas_pe':
+            return renderEnergyPopup(p['nome'], p['fase_usina'] || (baseId === 'aneel_ufv_usinas_pe' ? 'Usina Solar' : 'Termelétrica'), [
+              ['Combustível / fonte', baseId === 'aneel_ute_usinas_pe' ? txt(p['combustivel'] || p['fonte_combustivel']) : null],
+              ['Potência outorgada', fmtNum(Number(p['pot_kw']) / 1000, 2, 'MW')],
+              ['Proprietário', txt(p['proprietar'])],
+              ['Município (cadastro)', txt(p['munic'])],
+              ['Ato legal', code(p['ato_legal'])],
+              ['Processo ANEEL', code(p['proc_aneel'])],
+              ['Início de operação', fmtDate(p['inic_oper'])],
+              ['CEG', code(p['ceg'])],
+            ], 'Usina cadastrada na ANEEL (DRO, outorga ou operação), localizada pelo ponto declarado.', p, coordinates);
+          case 'aneel_hidro_aproveitamentos_pe':
+            return renderEnergyPopup(p['nome'], `${p['tipo_ahe'] || 'AHE'} — ${p['fase'] || 'N/D'}`, [
+              ['Rio', txt(p['rio'])],
+              ['Potência', fmtNum(Number(p['pot_kw']) / 1000, 2, 'MW')],
+              ['Proprietário', txt(p['proprietar'])],
+              ['Município (cadastro)', txt(p['munic_1'])],
+              ['Ato legal', code(p['ato_legal'])],
+              ['CEG', code(p['ceg'])],
+            ], 'Aproveitamento hidrelétrico cadastrado na ANEEL (usina ou eixo inventariado).', p, coordinates);
+          case 'aneel_hidro_reservatorios_pe':
+            return renderEnergyPopup(p['usina'], p['tipo_ahe'] ? `Reservatório ${p['tipo_ahe']}` : 'Reservatório', [
+              ['Rio', txt(p['rio'])],
+              ['Área do reservatório', fmtNum(p['area_ha'], 2, 'ha')],
+              ['Cota (NA máximo maximorum)', fmtNum(p['cota'], 2, 'm')],
+              ['UF', [p['uf'], p['uf_2']].filter(Boolean).map(escapeHtml).join(' / ') || null],
+              ['Origem do polígono', txt(p['origem_res'])],
+              ['CEG', code(p['ceg'])],
+            ], 'Poligonal do reservatório no nível d\'água máximo maximorum, cadastrada na ANEEL.', p, coordinates);
+        }
+      };
+
       // --- UNIFIED PRIORITY CLICK DISPATCHER ---
       // Setup hover cursor on all interactive layers
       this.priorityOrder.forEach(layerId => {
@@ -2282,6 +2721,8 @@ export class App implements AfterViewInit {
           renderSnciPopup(props, e.lngLat, false);
         } else if (layerId === 'imovel_certificado_snci_publico_pe_fill') {
           renderSnciPopup(props, e.lngLat, true);
+        } else if (layerId.startsWith('aneel_') || layerId.startsWith('epe_')) {
+          renderAneelPopup(layerInfo.id, props, e.lngLat);
         }
       });
     });

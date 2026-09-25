@@ -39,7 +39,8 @@ conflict-solver/
 │   │   ├── RESERVA_LEGAL_SICAR.zip
 │   │   ├── VEGETACAO_NATIVA_SICAR.zip
 │   │   ├── tis_poligonais.zip
-│   │   └── Áreas de Quilombolas_PE.zip
+│   │   ├── Áreas de Quilombolas_PE.zip
+│   │   └── aneel/           # API response cache written by src/etl_aneel.py (SIGEL/EPE GeoJSON + SIGA CSV)
 │   └── extracted/           # Extracted shapefiles used as ingestion input by the ETL
 │       ├── autos_infracao_icmbio/
 │       ├── embargos_icmbio/
@@ -65,10 +66,11 @@ conflict-solver/
     ├── config.py            # Environment configurations and path parameters
     ├── database.py          # SQLAlchemy engine setup and PostGIS extension helper
     ├── etl.py               # Main ETL pipeline with axis-swap & geometry correction
+    ├── etl_aneel.py         # ANEEL SIGEL + EPE energy infrastructure (DUP, wind, solar, hydro, transmission)
     ├── etl_datajud.py       # DataJud CNJ pipeline for TJPE and TRF5 land conflict lawsuits
     ├── export_datajud_sqlite.py # Exports the lawsuits table to the SQLite snapshot for datajud-gui
     ├── import_sigef_historico.py # Historical georeferencing evolution importer (Batateiras)
-    └── overlaps.py          # Spatial conflict detection engine & DBSCAN clustering
+    └── overlaps.py          # Spatial conflict detection engine & DBSCAN clustering (+ energy × territory overlaps)
 ```
 
 ---
@@ -104,7 +106,7 @@ This will automatically create a virtual environment (`.venv`) and install depen
 
 ### 3. Run the Ingestion & Analysis Pipelines
 
-You can run the entire end-to-end pipeline (unpacking, shapefile ingestion, spatial overlaps, jurisdictions, DataJud lawsuits, Batateiras historical analysis, Moradia Legal, and Despejo Zero) with **a single command**:
+You can run the entire end-to-end pipeline (unpacking, shapefile ingestion, spatial overlaps, jurisdictions, DataJud lawsuits, Batateiras historical analysis, Moradia Legal, Despejo Zero, and ANEEL/EPE energy infrastructure) with **a single command**:
 
 ```bash
 uv run python -m src.run_all_pipelines
@@ -113,7 +115,7 @@ uv run python -m src.run_all_pipelines
 > **Options**:
 > - `--skip-unpack`: Skip uncompressing archives from `data/raw/` if already extracted.
 > - `--force-unpack`: Re-extract all archives even if target directories already exist.
-> - `--step <name>`: Execute only an individual step (`unpack`, `etl`, `jurisdicoes`, `datajud`, `datajud_sqlite`, `sigef_historico`, `moradia_iterpe`, `despejo_zero`).
+> - `--step <name>`: Execute only an individual step (`unpack`, `etl`, `jurisdicoes`, `datajud`, `datajud_sqlite`, `sigef_historico`, `moradia_iterpe`, `despejo_zero`, `aneel`).
 > - `--no-restart-martin`: Skip restarting the Martin vector tile server container.
 
 Alternatively, individual pipeline steps can be executed separately:
@@ -160,7 +162,14 @@ Alternatively, individual pipeline steps can be executed separately:
    ```
    > Fetches 365 community conflicts under threat or execution of eviction in Pernambuco from the official Despejo Zero API, applies deterministic micro-jittering to coincident municipal coordinates, and loads `public.despejo_zero_pe`.
 
-7. **Reload Tile Server (Martin)**:
+7. **Ingest ANEEL / SIGEL & EPE Energy Infrastructure**:
+   ```bash
+   uv run python -m src.etl_aneel            # fetch from the public APIs (≈2–3 min) and load
+   uv run python -m src.etl_aneel --offline  # reload from the data/raw/aneel/ cache
+   ```
+   > Queries the public ArcGIS REST services of ANEEL SIGEL and the EPE WebMap plus the ANEEL SIGA CSV (no manual download or credentials). Loads 16 tables (`aneel_dup_pe` servitude/expropriation polygons, wind parks/turbines, solar parks, thermal and hydro plants, reservoirs, `epe_linhas_transmissao_pe`, `epe_subestacoes_pe`, `aneel_siga_empreendimentos_pe`) and computes `aneel_sobreposicoes_territorios_pe` (energy footprints × Indigenous Lands, quilombos, settlements, ITERPE lands and UCs). Details in [`docs/DATA_SOURCES.md` § m](docs/DATA_SOURCES.md).
+
+8. **Reload Tile Server (Martin)**:
    ```bash
    docker compose restart martin
    ```
@@ -195,7 +204,10 @@ uv run python -m src.etl_moradia_iterpe
 # 7. Ingest Campanha Nacional Despejo Zero
 uv run python -m src.etl_despejo_zero
 
-# 8. Restart Martin tile server
+# 8. Ingest ANEEL / SIGEL & EPE energy infrastructure (+ energy × territory overlaps)
+uv run python -m src.etl_aneel
+
+# 9. Restart Martin tile server
 docker compose restart martin
 ```
 
@@ -300,6 +312,23 @@ The ETL successfully manages and serves the following datasets:
 | `despejo_zero_pe` | Comunidades sob Risco ou Ordem de Despejo (Campanha Despejo Zero) | Point | GIST |
 | `car_casos_analisados` | Imóveis Rurais CAR com OCR e verificação analítica (Batateiras) | MultiPolygon | GIST |
 | `sigef_casos_analisados` | Evolução histórica do georreferenciamento SIGEF (Batateiras - AV-17, AV-19, AV-23, Atual) | MultiPolygon | GIST |
+| `aneel_dup_pe` | Declarações de Utilidade Pública — servidões administrativas e desapropriações (ANEEL SIGEL) | MultiPolygon | GIST |
+| `aneel_eol_usinas_pe` | Centrais geradoras eólicas (ANEEL SIGEL) | Point | GIST |
+| `aneel_eol_parques_pe` | Poligonais de parques eólicos (ANEEL SIGEL) | MultiPolygon | GIST |
+| `aneel_eol_aerogeradores_pe` | Aerogeradores (ANEEL SIGEL) | Point | GIST |
+| `aneel_eol_interferencia_pe` | Regiões de interferência eólica (ANEEL SIGEL) | MultiPolygon | GIST |
+| `aneel_lt_interesse_restrito_pe` | Linhas de interesse restrito de usinas eólicas e solares (ANEEL SIGEL) | MultiLineString | GIST |
+| `aneel_ufv_usinas_pe` | Usinas solares fotovoltaicas (ANEEL SIGEL) | Point | GIST |
+| `aneel_ufv_parques_pe` | Poligonais de parques solares (ANEEL SIGEL) | MultiPolygon | GIST |
+| `aneel_ufv_paineis_pe` | Arranjos de painéis solares (ANEEL SIGEL) | MultiPolygon | GIST |
+| `aneel_ufv_subestacoes_pe` | Subestações de usinas solares (ANEEL SIGEL) | MultiPolygon | GIST |
+| `aneel_ute_usinas_pe` | Usinas termelétricas (ANEEL SIGEL) | Point | GIST |
+| `aneel_hidro_aproveitamentos_pe` | Aproveitamentos hidrelétricos UHE/PCH/CGH (ANEEL SIGEL) | Point | GIST |
+| `aneel_hidro_reservatorios_pe` | Reservatórios hidrelétricos no NA máximo maximorum (ANEEL SIGEL) | MultiPolygon | GIST |
+| `epe_linhas_transmissao_pe` | Linhas de transmissão da Rede Básica, em operação e planejadas (EPE WebMap) | MultiLineString | GIST |
+| `epe_subestacoes_pe` | Subestações da Rede Básica, em operação e planejadas (EPE WebMap) | Point | GIST |
+| `aneel_siga_empreendimentos_pe` | Cadastro SIGA de empreendimentos de geração (ANEEL Dados Abertos) — tabular, join por `ceg_nucleo` | — | B-tree |
+| `aneel_sobreposicoes_territorios_pe` | Interseções entre áreas oficiais de energia e territórios (TIs, quilombos, assentamentos, ITERPE, UCs), com extensão das travessias de faixa | MultiPolygon | GIST |
 
 ---
 

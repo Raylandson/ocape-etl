@@ -91,3 +91,26 @@ Este documento reúne os links diretos e não truncados para download e replica�
   - `data/extracted/despejo_zero_pe/despejo_zero_pe.geojson` (365 comunidades em PE)
 * **Tabela PostGIS:** `public.despejo_zero_pe` (indexada com GIST)
 * **Visualização:** Servida via Martin Vector Tiles (`http://localhost:3000/despejo_zero_pe`) e renderizada na camada *Campanha Despejo Zero (Comunidades sob Risco)*.
+
+---
+
+## 6. Infraestrutura Energética & Servidões (ANEEL SIGEL / EPE / ANEEL Dados Abertos)
+* **Órgãos:** Agência Nacional de Energia Elétrica (ANEEL) e Empresa de Pesquisa Energética (EPE).
+* **Download manual:** **não é necessário.** As três fontes são APIs públicas, sem autenticação, consultadas pelo pipeline.
+* **Endpoints:**
+  ```text
+  https://sigel.aneel.gov.br/arcgis/rest/services                                    # ANEEL SIGEL (ArcGIS REST 11.5)
+  https://gisepeprd2.epe.gov.br/arcgis/rest/services/WMS_Webmap_EPE_Data/MapServer   # EPE WebMap (linhas e subestações da Rede Básica)
+  https://dadosabertos.aneel.gov.br/api/3/action/package_show?id=siga-sistema-de-informacoes-de-geracao-da-aneel   # SIGA (CSV)
+  ```
+* **Exemplo de consulta (DUPs que tocam PE, GeoJSON em EPSG:4326):**
+  ```text
+  https://sigel.aneel.gov.br/arcgis/rest/services/DadosAbertos/DUP/MapServer/0/query?where=1%3D1&geometry=-41.36,-9.49,-34.80,-7.15&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=*&outSR=4326&f=geojson
+  ```
+* **Comando de Download & Ingestão:**
+  ```bash
+  uv run python -m src.etl_aneel            # consulta as APIs (≈2–3 min), grava o cache e carrega no PostGIS
+  uv run python -m src.etl_aneel --offline  # recarrega só a partir do cache
+  ```
+* **Arquivos Gerados:** `data/raw/aneel/*.geojson` (uma resposta por camada, com bloco `metadata`) e `data/raw/aneel/siga-empreendimentos-geracao.csv` (~116 MB no total, 107 MB só dos reservatórios).
+* **Tabelas PostGIS:** `aneel_dup_pe`, `aneel_eol_*_pe`, `aneel_ufv_*_pe`, `aneel_lt_interesse_restrito_pe`, `aneel_ute_usinas_pe`, `aneel_hidro_*_pe`, `epe_linhas_transmissao_pe`, `epe_subestacoes_pe`, `aneel_siga_empreendimentos_pe` e a derivada `aneel_sobreposicoes_territorios_pe`. Inventário completo em [`DATA_SOURCES.md` § m](DATA_SOURCES.md).

@@ -73,7 +73,7 @@ def main():
     )
     parser.add_argument(
         "--step",
-        choices=["unpack", "etl", "jurisdicoes", "datajud", "datajud_sqlite", "sigef_historico", "moradia_iterpe", "despejo_zero"],
+        choices=["unpack", "etl", "jurisdicoes", "datajud", "datajud_sqlite", "sigef_historico", "moradia_iterpe", "despejo_zero", "aneel"],
         help="Run only a specific pipeline step."
     )
     parser.add_argument(
@@ -141,7 +141,12 @@ def main():
         from src.etl_despejo_zero import ingest_despejo_zero
         results.append(run_pipeline_step("6. Campanha Despejo Zero", ingest_despejo_zero))
 
-    # Step 7: Restart Martin Vector Tile Server
+    # Step 7: ANEEL / SIGEL & EPE Energy Infrastructure (+ energy × territory overlaps)
+    if not args.step or args.step == "aneel":
+        from src.etl_aneel import run as run_aneel
+        results.append(run_pipeline_step("7. ANEEL/SIGEL & EPE Energy Infrastructure", run_aneel))
+
+    # Step 8: Restart Martin Vector Tile Server
     if args.restart_martin and not args.step:
         restart_martin()
 

@@ -38,7 +38,12 @@ This document provides a comprehensive overview of the spatial data systems, ESR
 ### ANEEL — Agência Nacional de Energia Elétrica (SIGEL)
 * **Managing Body:** ANEEL / Ministry of Mines and Energy (MME).
 * **Legal Basis:** Federal Law 9.427/1996, Decree-Law 3.365/1941 (Expropriation for Public Utility), and ANEEL Normative Resolution 740/2016.
-* **Function:** Federal regulatory agency governing the Brazilian electric power sector. Operates SIGEL (Sistema de Informações Geográficas do Setor Elétrico), mapping transmission lines (LT), substations (SE), power generation plants (Wind, Solar Photovoltaic, Hydroelectric), and issuing Declarações de Utilidade Pública (DUP) which establish mandatory administrative servitude corridors and expropriation perimeters over private and public lands.
+* **Function:** Federal regulatory agency governing the Brazilian electric power sector. Operates SIGEL (Sistema de Informações Geográficas do Setor Elétrico), mapping power generation plants (wind, solar photovoltaic, thermal, hydroelectric), their parks, turbines, reservoirs and connection lines, and publishes the polygons of the Declarações de Utilidade Pública (DUP) it issues through Resoluções Autorizativas (REA). A DUP establishes a mandatory administrative servitude corridor (*servidão administrativa*) or an expropriation perimeter (*desapropriação*) over private and public lands. ANEEL also publishes the SIGA generation registry on its CKAN open-data portal.
+
+### EPE — Empresa de Pesquisa Energética
+* **Managing Body:** EPE, a federal public company linked to the Ministry of Mines and Energy (MME).
+* **Legal Basis:** Federal Law 10.847/2004.
+* **Function:** Responsible for power-sector expansion planning (transmission expansion programs and long-term plans). Its WebMap publishes the transmission lines and substations of the National Interconnected System (SIN), in operation and planned, with voltage, concessionaire and commissioning year. The project uses it instead of SIGEL's ONS-derived KML layers, which carry no structured attributes.
 
 ---
 
@@ -83,6 +88,12 @@ Every record in a dBase attribute table (`.dbf`) corresponds **1-to-1** with an 
 | **Favelas e Comunidades (IBGE 2022)** | 2,381 | Polygon | Setores censitários de aglomerados urbanos em PE | Classificação oficial `CD_FCU` / `NM_FCU` do Censo Demográfico 2022 |
 | **Setores Censitários Gerais (IBGE 2022)** | 19,578 | Polygon | Malha censitária intramunicipal de Pernambuco | Divisões territoriais e demográficas dos 185 municípios |
 | **Despejo Zero (Comunidades Ameaçadas)** | 365 | Point | 43,585 famílias sob ameaça ativa de despejo<br>8,397 famílias removidas | Monitoramento comunitário da sociedade civil (FNDR, LabCidade, MST, CPT, MTST) |
+| **DUP — Servidões e Desapropriações (ANEEL)** | 123 | MultiPolygon | 97 strips along lines (3,775 km; 20 m LD / 40 m LT median width)<br>26 areal (substations, APPs)<br>95 Servidão Administrativa · 28 Desapropriação | Resoluções Autorizativas (REA) 2012–2025 under REN 740/2016; 88 municipalities |
+| **Rede Básica de Transmissão (EPE)** | 133 lines / 45 substations | MultiLineString / Point | 113 lines in operation (8,662 km)<br>20 planned (3,891 km); 230–600 kV | SIN concessions (CHESF, private transmitters) |
+| **Eólicas (ANEEL SIGEL)** | 116 plants / 71 parks / 599 turbines | Point / MultiPolygon | 55 DRO, 46 in operation, 13 not started<br>Parks in operation: 26,118 ha | Generation grants (DRO, authorization) |
+| **Solares Fotovoltaicas (ANEEL SIGEL)** | 355 plants / 45 parks | Point / MultiPolygon | 258 DRO, 46 in operation, 44 not started | Only 45 plants have a park polygon |
+| **Termelétricas & Hidrelétricas (ANEEL SIGEL)** | 78 UTE / 27 AHE / 3 reservoirs | Point / MultiPolygon | Itaparica reservoir 86,356 ha; Moxotó 8,816 ha | Concessions and authorizations |
+| **Energia × Territórios (derived)** | 143 | MultiPolygon | 90 servitude-strip crossings (588 km)<br>53 areal overlaps (parks, reservoirs, substations) | 49 settlements, 46 ITERPE glebas, 44 UCs, 3 Indigenous Lands, 1 quilombo |
 
 
 
@@ -278,3 +289,30 @@ Every record in a dBase attribute table (`.dbf`) corresponds **1-to-1** with an 
 * **Judicial Representation:**
   * Defensoria Pública do Estado (DPPE) e Defensoria Pública da União (DPU) acompanham mais de 65% dos casos formalizados.
   * Assessorias jurídicas populares (CPT, FNDR, advogados voluntários) cobrem 25% dos casos rurais.
+
+### 11. Energy Infrastructure — ANEEL / SIGEL & EPE (`aneel_*_pe`, `epe_*_pe`)
+Full source, endpoint, methodology and limitation notes: [`docs/DATA_SOURCES.md` § m](DATA_SOURCES.md). Pipeline: [`src/etl_aneel.py`](../src/etl_aneel.py). Snapshot collected on 2026-09-25.
+
+* **Declarações de Utilidade Pública (`aneel_dup_pe`) — 123 polygons intersecting PE:**
+  * **Shape (`forma`):** **97 strips** (`faixa`) — the servitude corridor buffered around the line axis at a constant width — and **26 areas** (`area`: 19 substations, 7 APPs of PCH Manopla). Strips are sub-pixel at state scale and read as lines on the map.
+  * **Strip widths (`largura_m`, maximum inscribed circle):** Linhas de Distribuição median 20 m (3.5–58; 54 strips, 736 km); Linhas de Transmissão median 40 m (15–73; 39 strips, 2,998 km); Linhas de Interesse Restrito 20 m (4 strips, 41 km). Exact values dominate (20 m ×24, 40 m ×17, 15 m ×6, 60 m ×3 for 500 kV), confirming buffered centerlines. Narrowest: 69 kV urban lines in Recife (3.5–5 m).
+  * **By modality:** Servidão Administrativa **95** (17,003.6 ha) · Desapropriação **28** (181.4 ha).
+  * **By object:** Linhas de Distribuição 54 · Linhas de Transmissão 39 · Subestação 19 · Área de Preservação Permanente 7 (PCH Manopla) · Linhas de Interesse Restrito 4.
+  * **By registry UF:** PE 113 · PI 4 · CE 3 · AL 1 · PB 1 · RS 1 (cross-border records kept because they intersect PE).
+  * **Status:** Autorizado 117 · Registrado 6. DUP years range from 2012 to 2025 (peak: 2018).
+  * **Largest corridors:** LT 500 kV São João do Piauí – Milagres II C2 / Luiz Gonzaga – Milagres II C2 (REA 5418/2015, 3,696 ha ≈ 616 km × 60 m); LT 500 kV Bom Nome II – Campo Formoso II C1 (REA 1594/2025 and REA 15946/2025, 2,090 ha ≈ 376 km); LT 500 kV Milagres II – Queimada Nova II (1,817 ha).
+  * **Shared geometry:** 10 records in 5 groups share an identical polygon (`grupo_geometria`). Three groups are the same strip declared by two REAs. Two are **source errors** (`erro_origem`): the polygon of an out-of-state project (Pecém–Cumbuco/CE, REA 4797/2014; Santa Rosa–Três de Maio/RS, REA 5716/2016) is a copy of a PE line's polygon.
+  * **Excluded source errors:** OBJECTID 3857 (UF=PE, located in Teresina/PI) and OBJECTID 2566 (SE Pau Ferro, geometry displaced ~40 km into PI).
+* **Transmission (`epe_linhas_transmissao_pe`, `epe_subestacoes_pe`):** 133 lines (230 kV: 101 · 500 kV: 31 · 600 kV: 1), 113 in operation and 20 planned; 45 substations (42 in operation, 3 planned).
+* **Wind (`aneel_eol_*_pe`):** 116 plants (DRO 55 · Operação 46 · Construção não iniciada 13 · Revogada 1 · Desativada 1); 71 park polygons (Operação 54, 26,118 ha · Construção não iniciada 16, 3,496 ha · Construção 1); 599 turbines; 64 interference regions (112,201 ha, a regulatory wake-protection criterion, not an impact footprint); 17 restricted-interest lines (592 km).
+* **Solar (`aneel_ufv_*_pe`):** 355 plants (DRO 258 · Operação 46 · Construção não iniciada 44 · Revogada 6 · Anulado 1); 45 park polygons; 45 panel-array polygons (3,599 ha); 8 plant substations; 13 restricted-interest lines (82 km).
+* **Thermal & Hydro:** 78 thermal plants (65 in operation); 27 hydro sites (CGH 14 · PCH 10 · UHE 3, including inventoried axes); 3 reservoirs at maximum flood level — Luiz Gonzaga/Itaparica (86,356 ha), Apolônio Sales/Moxotó (8,816 ha), Amarají (8.6 ha).
+* **SIGA registry (`aneel_siga_empreendimentos_pe`):** 274 generation units (UFV 129 · UTE 69 · EOL 61 · CGH 10 · PCH 4 · UHE 1); joins SIGEL layers through `ceg_nucleo` (59 of the 116 wind plants match).
+* **Energy × territory overlaps (`aneel_sobreposicoes_territorios_pe`) — 143 intersections:**
+  * **Nature:** 90 are servitude-strip crossings (588 km of corridor inside territories, measured as `extensao_travessia_km` = overlap area / strip width); 53 are areal overlaps (wind/solar parks, reservoirs, substations, APPs). Shared DUP polygons are counted once (the earlier version double-counted 8 rows / 758 ha) and the two erroneous DUPs are excluded.
+  * **Rural settlements (INCRA SIPRA):** 49 over 37 settlements — 42 strip crossings (71.5 km, 321 ha) and 7 by the Itaparica reservoir (197 ha; 9.5% of PA Angicos, 8.5% of PA Lago Azul).
+  * **ITERPE state glebas:** 46 — 25 strip crossings (188.9 km, 706 ha) and 21 areal overlaps (2,441 ha: solar parks 1,008 ha, reservoirs 1,409 ha).
+  * **Conservation units:** 20 federal (APA Chapada do Araripe: 14 wind parks, 2,513 ha, 93 turbines, plus 268 km of transmission corridors, including 144.5 km of LT 230 kV Chapada III – Crato II; PARNA do Catimbau: 1 wind park, 21 ha) and 24 state (16 strip crossings, 54.5 km).
+  * **Indigenous Lands:** Fazenda Cristo Rei — 5.5 km of the 60 m LT 500 kV Paulo Afonso IV – Luiz Gonzaga C2 strip (33 ha) and 20 ha of the Moxotó reservoir; Entre Serras — Pedra do Gerônimo wind park (1.8 ha).
+  * **Quilombola territories:** Castainho — the LD 69 kV Mundaú – Brejão strip only touches the edge (10 m, 0.02 ha).
+  * **Sliver filtering:** 105 edge fragments (2.71 ha, 102 of them from reservoirs vs. river-margin boundaries) were discarded (areal footprints: parts < 0.1 ha or < 10 m wide; strips: parts < 100 m²). They are recorded per row in `partes_descartadas` / `area_descartada_ha`.
