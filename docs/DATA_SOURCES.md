@@ -25,6 +25,7 @@ Este documento centraliza o inventário de dados da **Plataforma de Mapeamento e
 | **l** | **Favelas e Comunidades Urbanas (2022)** | IBGE | Ocupações, núcleos e favelas do Censo 2022 (`ibge_favelas_comunidades_pe`) |  **Importado** |
 | **i** | **Moradia Legal** | TJPE | Núcleos urbanos/rurais em regularização fundiária (REURB) (`moradia_legal_pe`, `moradia_legal_processos_pe`) |  **Importado** |
 | **j** | **Acervo Fundiário ITERPE** | ITERPE (GERAF) | Glebas estaduais, terras devolutas e regularização rural (`iterpe_glebas_pe`, `iterpe_malha_posses_pe`) |  **Importado** |
+| **m** | **Infraestrutura Energética & Servidões (SIGEL)** | ANEEL / SIGEL | Polígonos de DUP (servidões e desapropriações), faixas de LT, parques eólicos e solares | ⏳ **A Importar** |
 
 ---
 
@@ -99,7 +100,7 @@ Todas as bases abaixo já passam pelo pipeline ETL automatizado (`src/etl.py` e 
 
 #### f. DataJud — Processos Judiciais de Conflitos Fundiários (CNJ / TJPE / TRF5)
 * **Status:** **Importado e Ativo**
-* **Tabela PostGIS:** `public.processos_conflitos_judiciais` (2.000 processos ativos georreferenciados em Pernambuco) e `public.processos_conflitos_municipios`.
+* **Tabela PostGIS:** `public.processos_conflitos_judiciais` (93.680 processos ativos e históricos georreferenciados em Pernambuco, cobrindo 84.545 números CNJ únicos de 1968 a 2026) e `public.processos_conflitos_municipios` (185 municípios agregados com métricas por tipologia e vínculo territorial de comarcas/subseções).
 * **Descrição:** Processos judiciais coletivos e individuais em tramitação classificados segundo as Tabelas Processuais Unificadas (TPU) do CNJ e Resolução CNJ 510/2023.
 * **Taxonomia dos Conflitos:**
   1. *Reintegração e Conflito de Posse* (TPU 10100, 10434, 10444, 10445, 10446; Classe 1707, 1709).
@@ -135,6 +136,7 @@ Todas as bases abaixo já passam pelo pipeline ETL automatizado (`src/etl.py` e 
 | Código | Fonte | Órgão / Responsável | Formato Esperado | Requisitos de Acesso | Prioridade |
 | :---: | :--- | :--- | :--- | :--- | :---: |
 | **c** | **MapBiomas Cobertura Raster** | MapBiomas / Obs. Clima | GeoTIFF / Imagens Anuais 1985–2024 | Processamento Google Earth Engine | Média |
+| **m** | **Infraestrutura Energética & Servidões (SIGEL)** | ANEEL / SIGEL | ArcGIS REST FeatureServer / GeoJSON / Shapefile | Acesso público aberto via SIGEL REST Server | **Alta** |
 
 ---
 
@@ -155,19 +157,52 @@ Todas as bases abaixo já passam pelo pipeline ETL automatizado (`src/etl.py` e 
   * A camada raster anual de **Uso e Cobertura do Solo (Coleção MapBiomas 1985–presente)** está planejada para análise temporal de posse mansa e pacífica.
 * **Pipeline Proposto:** Processamento zonal no PostGIS / Google Earth Engine para geração de perfis temporais de cobertura por imóvel.
 
-### h. SIPRA — Sistema de Informações de Projetos de Reforma Agrária (INCRA)
-* **Objetivo:** Ingestão dos perímetros de Projetos de Assentamento Federais (PA, PDS, PAF, etc.) em Pernambuco.
-* **Importância:** Identificação imediata de invasões, fracionamentos ilegais de lotes e pressões fundiárias externas sobre os assentamentos da reforma agrária.
-* **Origem dos Dados:** Base cartográfica do INCRA (camada `assentamentos_brasil` filtrada para Pernambuco).
+### m. ANEEL / SIGEL — Infraestrutura Energética, Servidões Administrativas e Concessões Renováveis
+* **Órgão Gestor:** Agência Nacional de Energia Elétrica (ANEEL) / Ministério de Minas e Energia (MME).
+* **Marco Legal e Regulatório:**
+  - **Lei Federal nº 9.427/1996:** Criação da ANEEL e disciplina do regime de concessões de serviços públicos de energia elétrica.
+  - **Decreto-Lei nº 3.365/1941:** Desapropriação por utilidade pública para fins de implantação de instalações de energia elétrica.
+  - **Resolução Normativa ANEEL nº 740/2016 (e alterações posteriores):** Procedimentos e critérios para emissão de Declaração de Utilidade Pública (DUP) para fins de desapropriação e instituição de servidão administrativa.
+* **Dinâmica de Conflito Fundiário em Pernambuco:**
+  1. **Servidões Administrativas e Desapropriações (DUP):**
+     - Emissão de Resoluções Autorizativas (REA) declarando áreas de utilidade pública para implantação de Linhas de Transmissão (LT), Linhas de Distribuição (LD) e Subestações (SE).
+     - Fixação compulsória de faixas de servidão (*non aedificandi*), impondo severas restrições ao uso da terra (proibição de edificações, corte de plantações de porte médio/alto e restrição ao uso de maquinário agrícola) sobre imóveis de posseiros, agricultores familiares, assentamentos da reforma agrária (INCRA SIPRA) e territórios quilombolas.
+     - Contestações de valores indenizatórios ofertados pelas concessionárias transmissoras, desaguando em ações judiciais de desapropriação forçada ou interditos proibitórios (TPU 10124 e 10100 no DataJud).
+  2. **Complexos Eólicos (EOL) e Solares Fotovoltaicos (UFV) no Semiárido:**
+     - Expansão acelerada de grandes parques eólicos e solares no Agreste e Sertão de Pernambuco (ex.: Caetés, Venturosa, Pedra, Tacaratu, Araripina, Petrolina e São José do Belmonte).
+     - Cerceamento de terras comunais e áreas de solta de gado (fundos de pasto), gerando contratos de arrendamento de longo prazo (20 a 40 anos) com cláusulas leoninas que bloqueiam o uso da terra pelas famílias camponesas.
+     - Interferências espaciais e ambientais diretas: Regiões de interferência de aerogeradores (ruído contínuo, sombreamento intermitente, poeira e restrição de acesso a mananciais hídricos e cisternas) sobrepostas a comunidades tradicionais.
+  3. **Aproveitamentos Hidrelétricos (UHE / PCH):**
+     - Polígonos de reservatórios e áreas de proteção permanente hídrica ao longo da calha do Rio São Francisco e bacias hidrográficas interiores, com histórico de desapropriações compulsórias e litígios indenizatórios persistentes com comunidades ribeirinhas e povos indígenas.
+* **Catálogo de Serviços Geoespaciais (SIGEL / ArcGIS REST):**
+  - **URL Base:** `https://sigel.aneel.gov.br/arcgis/rest/services`
+  - **DUP (Declarações de Utilidade Pública):** `DadosAbertos/DUP/MapServer/0` (Polígonos — 115 polígonos ativos em PE com ato legal `ATO_LEGAL`, modalidade `MODALIDADE` [Desapropriação / Servidão Administrativa], e objeto `OBJETO_TEXT`).
+  - **Linhas de Transmissão do Sistema Interligado:** `PORTAL/Transmissão/MapServer/1` (Polyline ONS) e `PORTAL/Camadas_Downloads/MapServer/5` (Linhas de Transmissão EOL).
+  - **Subestações de Energia:** `PORTAL/Transmissão/MapServer/3` (Pontos ONS) e `BDIT/Feature_ADS_Area_Desenvolvimento_Subestacao/FeatureServer/0` (Polígonos de implantação).
+  - **Parques Eólicos (EOL):** `PORTAL/Camadas_Downloads/MapServer/7` (Polígonos de Parques Eólicos), `PORTAL/Parques_Eólicos/MapServer/1` (Regiões de Interferência) e `PORTAL/Camadas_Downloads/MapServer/8` (Aerogeradores individuais).
+  - **Parques Solares Fotovoltaicos (UFV):** `PORTAL/UFV/MapServer/2` (Polígonos de Parques Solares), `PORTAL/UFV/MapServer/3` (Painéis Solares) e `PORTAL/Camadas_Downloads/MapServer/21` (Pontos de Usinas UFV).
+  - **Reservatórios Hidrelétricos (UHE / PCH):** `PORTAL/Camadas_Downloads/MapServer/27` (Polígonos de Reservatórios por Bacia).
+* **Estrutura de Atributos Chave:**
+  - `CODDUP` / `OBJECTID`: Identificador unívoco do processo de DUP.
+  - `ATO_LEGAL`: Número da Resolução Autorizativa expedida pela ANEEL (ex.: `REA 5030/2015`).
+  - `MODALIDADE`: Classificação jurídica (`Desapropriação` ou `Servidão Administrativa`).
+  - `OBJETO_TEXT`: Finalidade da afetação (`Linhas de Transmissão`, `Subestação`, `Área de Preservação Permanente`, `Linhas de Interesse Restrito`).
+  - `STATUS_TEXT`: Situação da outorga (`Autorizado`, `Registrado`).
+  - `EMPREEM`: Razão social da concessionária de transmissão ou geradora de energia titular da concessão.
+  - `CEG`: Código Único de Empreendimentos de Geração (rastreia o empreendimento no SIGA/ANEEL).
+  - `AreaCalculada` / `AREA_DUP`: Extensão territorial afetada (em hectares).
+* **Mapeamento de Tabelas PostGIS Propostas:**
+  - `public.aneel_dup_pe`: Polígonos oficiais de DUP com atributos jurídicos e atos autorizativos.
+  - `public.aneel_linhas_transmissao_pe`: Malha linear das LTs ativas e planejadas com buffer automatizado de faixa de servidão.
+  - `public.aneel_geracao_poligonos_pe`: Poligonais territoriais de parques eólicos, solares e reservatórios hidrelétricos.
+  - `public.aneel_geracao_pontos_pe`: Posição exata de aerogeradores, usinas solares e casas de força.
+* **Pipeline de Ingestão ETL Planejado (`src/etl_aneel.py`):**
+  - **Extração Automatizada:** Paginação via ArcGIS REST FeatureServer (`resultOffset` e `resultRecordCount=1000`) filtrando pelo atributo `UF='PE'` ou bounding box geográfica de Pernambuco (`[-41.35, -9.48, -34.79, -7.15]`).
+  - **Tratamento Geométrico:** Conversão para `EPSG:4326`, redução para geometrias bidimensionais (`shapely.force_2d`), correção de auto-interseções com `shapely.make_valid` e indexação espacial via GIST (`idx_aneel_*_geometry`).
+  - **Cruzamento no Motor de Conflitos (`src/overlaps.py`):**
+    - Intersecção topológica automática contra Terras Indígenas (FUNAI), Quilombolas (INCRA), Assentamentos Rurais (SIPRA), Glebas e Posses Estaduais (ITERPE), Imóveis Privados e Públicos (SIGEF) e Cadastros Ambientais (CAR).
+    - Cruzamento com o acervo do DataJud (CNJ) correlacionando processos judiciais das classes de desapropriação (Classe 90) e ações possessórias (Classe 1707) situadas no mesmo município ou coordenadas da intervenção energética.
 
-### i. Programa Moradia Legal (TJPE)
-* **Objetivo:** Mapeamento dos núcleos urbanos e rurais informais consolidados em processo de Regularização Fundiária (REURB-S e REURB-E) sob a chancela da Corregedoria Geral da Justiça de Pernambuco.
-* **Importância:** Evita ordens de desocupação e reintegração de posse sobre núcleos consolidados em regularização social, fornecendo aos magistrados e à comissão fundiária a comprovação imediata de procedimento de REURB em andamento.
-* **Origem dos Dados:** Geometrias dos núcleos fornecidas pelos municípios conveniados ao programa Moradia Legal e cadastradas no TJPE.
-
-### j. Acervo Fundiário ITERPE (Glebas e Terras Devolutas Estaduais)
-* **Objetivo:** Integração das glebas públicas estaduais discriminadas, arrecadadas ou sob regularização fundiária pelo Instituto de Terras e Reforma Agrária de Pernambuco (ITERPE).
-* **Importância:** Fecha a lacuna entre a base federal (SIGEF/INCRA) e as terras estaduais/devolutas de Pernambuco, permitindo verificar conflitos de competência dominial entre Estado e particulares.
 ### h. ONR — Operador Nacional do Registro de Imóveis Eletrônico
 * **Objetivo:** Cruzamento com o Sistema de Registro Eletrônico de Imóveis (SREI/SAEC).
 * **Importância:** Verificação da cadeia dominial, identificação de duplicidade de matrículas sobre a mesma poligonal (grilagem cartorial) e consulta da situação de ônus reais e penhoras em cartórios de registro de imóveis de Pernambuco.
@@ -194,6 +229,7 @@ flowchart TD
         C1 --> ITERPE[Glebas e Posses ITERPE]
         C1 --> MORADIA[Moradia Legal TJPE REURB]
         C1 --> MAPBIO[Alertas de Desmatamento MapBiomas]
+        C1 --> ANEEL[ANEEL: DUP, Linhas Transmissão e Renováveis]
     end
 
     subgraph "Camada 2: Contexto Sociojurídico e Processual"

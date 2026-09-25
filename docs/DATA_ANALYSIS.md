@@ -35,6 +35,11 @@ This document provides a comprehensive overview of the spatial data systems, ESR
 * **Legal Basis:** Federal Law 11.516/2007, SNUC (Federal Law 9.985/2000), and Federal Decree 6.514/2008.
 * **Function:** Federal autarchy responsible for creating, managing, protecting, and monitoring Federal Conservation Units (UCs), enforcing biodiversity protection laws, enacting administrative embargoes on degraded lands, and issuing official infraction notices (Autos de Infração) against environmental crimes.
 
+### ANEEL — Agência Nacional de Energia Elétrica (SIGEL)
+* **Managing Body:** ANEEL / Ministry of Mines and Energy (MME).
+* **Legal Basis:** Federal Law 9.427/1996, Decree-Law 3.365/1941 (Expropriation for Public Utility), and ANEEL Normative Resolution 740/2016.
+* **Function:** Federal regulatory agency governing the Brazilian electric power sector. Operates SIGEL (Sistema de Informações Geográficas do Setor Elétrico), mapping transmission lines (LT), substations (SE), power generation plants (Wind, Solar Photovoltaic, Hydroelectric), and issuing Declarações de Utilidade Pública (DUP) which establish mandatory administrative servitude corridors and expropriation perimeters over private and public lands.
+
 ---
 
 ## 2. Spatial File Architecture & `.dbf` Metadata Role
@@ -204,15 +209,15 @@ Every record in a dBase attribute table (`.dbf`) corresponds **1-to-1** with an 
 ### 9. Processos Judiciais de Conflitos Fundiários — DataJud CNJ (`processos_conflitos_judiciais`)
 * **Managing Body:** Conselho Nacional de Justiça (CNJ), Tribunal de Justiça de Pernambuco (TJPE) e Tribunal Regional Federal da 5ª Região (TRF5).
 * **Legal Basis:** Resolução CNJ nº 510/2023 (Comissões de Soluções Fundiárias), Código de Processo Civil (CPC/2015), Lei da Reforma Agrária (Lei 8.629/1993), e Lei da Usucapião Especial Rural (Lei 6.969/1981).
-* **Total Records Ingested:** 2,000 processos ativos georreferenciados em Pernambuco.
+* **Total Records Ingested:** 93,680 processos judiciais georreferenciados em Pernambuco (84.545 números de processo CNJ únicos), abrangendo o acervo completo do TJPE (88.834 processos, 1968–2026) e TRF5 (4.846 processos, 1989–2026).
 * **Conflict Categorization Breakdown:**
-  * **Reintegração e Conflito de Posse:** 1,079 processos (TJPE: 663 | TRF5: 416)
-  * **Usucapião e Regularização de Posse:** 414 processos (TJPE: 242 | TRF5: 172)
-  * **Reforma Agrária & Desapropriação:** 145 processos (TJPE: 16 | TRF5: 129)
-  * **Povos Indígenas & Territórios Quilombolas:** 30 processos (TJPE: 1 | TRF5: 29)
-  * **Terras Devolutas & Ações Discriminatórias:** 28 processos (TJPE: 15 | TRF5: 13)
-  * **Conflito Coletivo Rural & Agrário:** 3 processos (TRF5: 3)
-  * **Outros Conflitos Fundiários:** 301 processos (TJPE: 63 | TRF5: 238)
+  * **Reintegração e Conflito de Posse:** 50.286 processos (TJPE: 47.772 | TRF5: 2.514)
+  * **Usucapião e Regularização de Posse:** 29.475 processos (TJPE: 28.735 | TRF5: 740)
+  * **Outros Conflitos Fundiários:** 8.205 processos (TJPE: 7.328 | TRF5: 877)
+  * **Reforma Agrária & Desapropriação:** 3.744 processos (TJPE: 3.215 | TRF5: 529)
+  * **Terras Devolutas & Ações Discriminatórias:** 1.782 processos (TJPE: 1.749 | TRF5: 33)
+  * **Povos Indígenas & Territórios Quilombolas:** 113 processos (TJPE: 6 | TRF5: 107)
+  * **Conflito Coletivo Rural & Agrário:** 75 processos (TJPE: 29 | TRF5: 46)
 * **Key Attributes:** `numero_processo`, `tribunal`, `grau`, `data_ajuizamento`, `categoria_conflito`, `classe_nome`, `assuntos_str`, `orgao_julgador_nome`, `municipio_nome`, `municipio_ibge`, `ultimo_movimento`, `data_ultimo_movimento`, `total_movimentos`, `url_consulta_publica`.
 
 ---

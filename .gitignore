@@ -13,15 +13,21 @@ wheels/
 data/raw/
 data/extracted/
 data/exports/
+data/backups/
+backups/
 
-# Local backup archives
+# Local backup archives and database dumps
 *.tar.gz
 *.tar.zst
 *.zip
+*.dump
+*.sql
+*.sql.gz
 
 # Rust build artifacts
 target/
 **/target/
+
 
 
 

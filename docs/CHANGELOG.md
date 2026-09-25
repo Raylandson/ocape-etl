@@ -6,6 +6,32 @@ This document chronicles the architectural evolutions, dataset ingestions, and m
 
 ## Chronological Change Log
 
+### September 2026: Roadmap Specification for ANEEL / SIGEL Energy Infrastructure & Servitude Layers
+- **ANEEL Geospatial Research & Catalog Mapping**: Researched and documented the federal geospatial data infrastructure of the Agência Nacional de Energia Elétrica (ANEEL), specifically SIGEL (`https://sigel.aneel.gov.br/arcgis/rest/services`).
+- **Data Sources Documentation Update ([`docs/DATA_SOURCES.md`](DATA_SOURCES.md))**:
+  - Integrated layer code **`m`** (*Infraestrutura Energética & Servidões - SIGEL*) into Camada 1 (Cruzamentos Topológicos Espaciais) as high priority.
+  - Specified key endpoints and layers: DUP (*Declarações de Utilidade Pública* — 115 polygons verified in Pernambuco under `DadosAbertos/DUP/MapServer/0`), Transmission Lines & Substations (ONS / `PORTAL/Transmissão/MapServer`), Wind Farm polygons & interference zones (`PORTAL/Camadas_Downloads/MapServer/7` & `PORTAL/Parques_Eólicos/MapServer/1`), and Photovoltaic Solar complexes (`PORTAL/UFV/MapServer/2`).
+  - Documented specific land conflict dynamics in Pernambuco: forced administrative servitudes (*non aedificandi*), judicial expropriations (Decreto-Lei nº 3.365/1941) intersecting family agriculture and INCRA agrarian settlements, asymmetric long-term wind/solar land leases in Agreste and Sertão (Caetés, Venturosa, Pedra, Araripina, etc.), and historical hydroelectric displacements along the São Francisco basin.
+  - Formulated the target PostGIS table schema (`aneel_dup_pe`, `aneel_linhas_transmissao_pe`, `aneel_geracao_poligonos_pe`, `aneel_geracao_pontos_pe`) and planned ETL pipeline (`src/etl_aneel.py`).
+  - Updated multi-layer crossing architecture diagram to include ANEEL.
+- **Conceptual Framework Update ([`docs/DATA_ANALYSIS.md`](DATA_ANALYSIS.md))**:
+  - Added ANEEL regulatory overview and legal framework (Federal Law 9.427/1996, Decree-Law 3.365/1941, and Normative Resolution 740/2016).
+
+### September 2026: DataJud Full Streaming Ingestion & Interleaved Round-Robin Concurrency
+- **Interleaved Round-Robin Multi-Tribunal Engine**: Refactored [`src/etl_datajud.py`](../src/etl_datajud.py) to ingest lawsuits across courts in an alternating round-robin pattern (1 page TJPE $\rightarrow$ 1 page TRF5 $\rightarrow$ 1 page TJPE...). Because each court queries a separate Elasticsearch index and cluster node on Elastic Cloud, the active request time on one court (~20–30s) acts as a natural cooldown period for the other, preventing threadpool saturation (`es_rejected_execution_exception`) without requiring lengthy artificial idle sleeps.
+- **Per-Attempt Round-Robin Yielding**: Decoupled HTTP retry loops from individual courts. If a court encounters a 429 (`es_rejected_execution_exception`) or 504 timeout due to peak-hour CNJ cluster load, it logs a brief warning, sets an individual cooldown timer, and **immediately yields its turn** to the alternate court. This completely eliminates previous stalls where a single failing court trapped the execution in a 20-minute synchronous retry loop.
+- **Adaptive Batch Sizing**: Dynamically throttles request batch sizes from 100 down to 50 (or 25) when CNJ's Elasticsearch threadpool queue reaches full capacity (1000/1000 tasks queued). Reducing batch size relieves deserialization overhead during Elasticsearch's `fetch` phase, allowing queries to slip through congested queues. Batch sizes automatically restore to 100 after 3 consecutive successful pages.
+- **Coordinated Cluster Cooldown**: When both courts are concurrently waiting out threadpool saturation spikes during national peak hours (11:30–13:30 BRT), the scheduler calculates the minimum remaining wait time across all active courts and performs a single unified pause before initiating the next round-robin cycle.
+- **Deep Cursor Pagination (`search_after`)**: Paginates through Elasticsearch clusters using document cursors, eliminating artificial page limits and enabling full ingestion of ~90,000+ matching lawsuits.
+- **`_source` Field Projection**: Optimized queries to fetch only the 12 essential fields needed for geolocation and categorization, slashing payload sizes by ~98% (from ~5 MB down to ~86 KB) and reducing serialization overhead on CNJ's shared clusters.
+- **Resumable State Checkpoints (`datajud_checkpoints.json`)**:
+  - Persists extraction cursor (`search_after`), pages completed, and record tallies to [`data/extracted/datajud_checkpoints.json`](../data/extracted/datajud_checkpoints.json) immediately upon completing each page.
+  - Full support for graceful interrupts (<kbd>Ctrl</kbd> + <kbd>C</kbd>): progress is safe, and running the script resumes instantly from the exact next page.
+- **Streamed Database Ingestion**:
+  - Replaced in-memory accumulation with streamed batch upserts (`ON CONFLICT (id) DO UPDATE`) into `public.processos_conflitos_judiciais`, keeping memory footprint negligible regardless of dataset size.
+- **Automated Territorial Enrichment**: Automatically triggers comarca jurisdiction mapping and municipal summary table refresh (`public.processos_conflitos_municipios`) upon completion or interrupt.
+- **Full Ingestion Milestone (93,680 Lawsuits)**: Concluded 100% extraction of historical and active land conflict lawsuits for Pernambuco across both state and federal jurisdictions (1968–2026). Ingested **88,834 processos** from TJPE (1,036 pages) and **4,846 processos** from TRF5 (78 pages), yielding 93,680 georeferenced records (84,545 unique CNJ process numbers) with 100% valid geometries in EPSG:4326. Comarca jurisdiction mapping and municipal summaries were rebuilt across all 185 municipalities of Pernambuco. Martin vector tile catalog was refreshed.
+
 ### September 2026: DataJud Standalone Desktop GUI (`datajud-gui`)
 - **Standalone Rust Desktop Application**: Built `datajud-gui` using `eframe` (0.33) and `egui`, allowing researchers and legal analysts to search, filter, preview, and export judicial lawsuits directly from the CNJ DataJud Public API without requiring the main PostgreSQL/PostGIS database or web stack.
 - **Institutional UI/UX Alignment**: Designed the interface following the Land Conflict Mapping Platform's Angular frontend design language:
