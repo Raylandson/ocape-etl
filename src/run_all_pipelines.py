@@ -73,7 +73,7 @@ def main():
     )
     parser.add_argument(
         "--step",
-        choices=["unpack", "etl", "jurisdicoes", "datajud", "sigef_historico", "moradia_iterpe", "despejo_zero"],
+        choices=["unpack", "etl", "jurisdicoes", "datajud", "datajud_sqlite", "sigef_historico", "moradia_iterpe", "despejo_zero"],
         help="Run only a specific pipeline step."
     )
     parser.add_argument(
@@ -117,6 +117,11 @@ def main():
     if not args.step or args.step == "datajud":
         from src.etl_datajud import run as run_datajud
         results.append(run_pipeline_step("3. Judicial Conflicts (DataJud CNJ)", run_datajud))
+
+    # Step 3b: DataJud SQLite snapshot for the offline desktop explorer (datajud-gui)
+    if not args.step or args.step == "datajud_sqlite":
+        from src.export_datajud_sqlite import export_snapshot
+        results.append(run_pipeline_step("3b. DataJud SQLite Snapshot (GUI)", export_snapshot))
 
     # Step 4: SIGEF Historical Retifications & CAR Analyzed Cases (Batateiras)
     if not args.step or args.step == "sigef_historico":

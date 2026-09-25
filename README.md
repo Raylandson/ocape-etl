@@ -53,7 +53,9 @@ conflict-solver/
 │       ├── vegetacao_nativa_sicar/
 │       └── tis_poligonais/
 │   └── exports/             # Exported application data, analysis deliverables, and reports (KML, GeoJSON, CSV)
-│       └── kml/
+│       ├── kml/
+│       └── datajud/datajud_pe.sqlite # Offline lawsuit snapshot consumed by datajud-gui
+├── datajud-gui/             # Rust (egui) offline desktop explorer for the DataJud lawsuits
 ├── frontend/                # Angular Web Front-end with MapLibre GL JS
 │   ├── src/                 # Angular source code (Map component integration)
 │   ├── package.json         # Node package configuration
@@ -64,6 +66,7 @@ conflict-solver/
     ├── database.py          # SQLAlchemy engine setup and PostGIS extension helper
     ├── etl.py               # Main ETL pipeline with axis-swap & geometry correction
     ├── etl_datajud.py       # DataJud CNJ pipeline for TJPE and TRF5 land conflict lawsuits
+    ├── export_datajud_sqlite.py # Exports the lawsuits table to the SQLite snapshot for datajud-gui
     ├── import_sigef_historico.py # Historical georeferencing evolution importer (Batateiras)
     └── overlaps.py          # Spatial conflict detection engine & DBSCAN clustering
 ```
@@ -76,6 +79,7 @@ Ensure you have the following installed on your machine:
 - **Docker** and **Docker Compose**
 - **uv** (Fast Python package installer and resolver by Astral)
 - **Python 3.12+**
+- **Rust stable** (optional, only to build the `datajud-gui` desktop explorer)
 
 ---
 
@@ -109,7 +113,7 @@ uv run python -m src.run_all_pipelines
 > **Options**:
 > - `--skip-unpack`: Skip uncompressing archives from `data/raw/` if already extracted.
 > - `--force-unpack`: Re-extract all archives even if target directories already exist.
-> - `--step <name>`: Execute only an individual step (`unpack`, `etl`, `jurisdicoes`, `datajud`, `sigef_historico`, `moradia_iterpe`, `despejo_zero`).
+> - `--step <name>`: Execute only an individual step (`unpack`, `etl`, `jurisdicoes`, `datajud`, `datajud_sqlite`, `sigef_historico`, `moradia_iterpe`, `despejo_zero`).
 > - `--no-restart-martin`: Skip restarting the Martin vector tile server container.
 
 Alternatively, individual pipeline steps can be executed separately:
@@ -131,6 +135,12 @@ Alternatively, individual pipeline steps can be executed separately:
    uv run python -m src.etl_datajud
    ```
    > Fetches land conflict lawsuits from the official CNJ DataJud API, categorizes them according to CNJ TPUs, formats lawsuit numbers with standard CNJ punctuation (`NNNNNNN-DD.YYYY.J.TR.OOOO`), geolocates comarcas across Pernambuco, links them to territorial jurisdictions (including daughter municipalities/termos), and updates `processos_conflitos_judiciais` and `processos_conflitos_municipios`.
+
+   Then refresh the offline snapshot used by the desktop explorer (also run automatically by the unified runner as step `datajud_sqlite`):
+   ```bash
+   uv run python src/export_datajud_sqlite.py
+   ```
+   > Writes `data/exports/datajud/datajud_pe.sqlite` (~50 MB, all 93,680 lawsuits; geometry exported as `lat`/`lon`).
 
 4. **Import SIGEF Historical Georeferencing Retifications (Batateiras Case Analysis)**:
    ```bash
@@ -199,6 +209,22 @@ pnpm install
 pnpm start
 ```
 Open `http://localhost:4200` in your web browser. You will see an interactive map with a glassmorphic layer control panel (right) and a dedicated DataJud Judicial Categories Legend (left), serving vector tiles for all key datasets (Indigenous Lands, Quilombola Territories, SIGEF Private/Public, SNCI, CAR, ICMBio Conservation Units, Embargoes, Infraction Notices, MapBiomas Deforestation Alerts/CAR, and DataJud Lawsuits) with custom color themes, circle/symbol markers, and rich popup inspection cards.
+
+### 5. DataJud Desktop Explorer (`datajud-gui`)
+
+A standalone Rust/egui desktop app for browsing the full lawsuit dataset offline (no database, network or API access at runtime). Requires a Rust toolchain (`rustup default stable`).
+
+```bash
+uv run python src/export_datajud_sqlite.py   # generate the snapshot (once per ingestion)
+cd datajud-gui
+cargo run --release                          # finds ../data/exports/datajud/datajud_pe.sqlite
+cargo run --release -- --db /path/to/datajud_pe.sqlite
+cargo build --release --features embedded-snapshot   # bakes the snapshot into the binary (standalone .exe)
+```
+
+> Snapshot lookup order: `--db <path>` → `DATAJUD_DB` env var → `datajud_pe.sqlite` next to the executable → `data/exports/datajud/` in the repo → embedded copy (when built with `embedded-snapshot`). The whole dataset is loaded into memory (~45 MB, ~0.2 s) and every filter runs locally in a few milliseconds.
+>
+> Layout: faceted filters with live counts (tribunal, categoria, grau, ano with histogram, município, classe), a virtualized sortable table, and a detail pane (assuntos, órgão, comarca, other instances of the same CNJ number, copy/JSON/PJe actions). Shortcuts: <kbd>Ctrl</kbd>+<kbd>F</kbd> search, <kbd>↑</kbd>/<kbd>↓</kbd> move selection, <kbd>Esc</kbd> close detail/clear search. Filtered rows export to CSV or JSON.
 
 ---
 

@@ -110,6 +110,10 @@ Todas as bases abaixo já passam pelo pipeline ETL automatizado (`src/etl.py` e 
   5. *Usucapião e Regularização de Posse* (TPU 10500 - Lei 6.969/81; Classe 49).
   6. *Conflito Coletivo Rural & Agrário* (TPU 11412, 11413).
 * **Interface:** Camada vetorial interativa no mapa com popup de detalhes do processo, link direto para consulta no PJe e painel dedicado de legendas e fundamentos jurídicos (`DatajudLegendComponent`).
+* **Snapshot offline (SQLite):** `data/exports/datajud/datajud_pe.sqlite`, gerado por `src/export_datajud_sqlite.py` (etapa `datajud_sqlite` do runner unificado) e consumido pelo explorador desktop `datajud-gui/`.
+  * Tabela `lawsuits`: mesmas colunas de `processos_conflitos_judiciais`; `geometry` substituída por `lat`/`lon` (EPSG:4326); `assuntos_codigos`/`assuntos_nomes` como texto JSON; datas em ISO (`AAAA-MM-DD[ HH:MM:SS]`).
+  * Tabela `meta` (chave/valor): `schema_version` (atual: `1`), `generated_at` (UTC), `source_table`, `row_count`.
+  * Recuperação sem PostgreSQL populado: restaurar `data/backups/datajud_pe_93k_backup_20260925.dump` com `pg_restore` em um banco com PostGIS e executar o exportador.
 
 #### g. Jurisdições Territoriais & Comarcas / Termos Judiciários (TJPE e JFPE)
 * **Status:** **Importado e Ativo**

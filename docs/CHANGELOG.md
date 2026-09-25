@@ -6,6 +6,20 @@ This document chronicles the architectural evolutions, dataset ingestions, and m
 
 ## Chronological Change Log
 
+### September 2026: `datajud-gui` Redesign — Offline Explorer over the Full Lawsuit Snapshot
+- **Offline Data Access (API client removed)**: The desktop app no longer queries the CNJ DataJud API. It loads the complete dataset (93,680 lawsuits) from a SQLite snapshot into memory at startup (~0.2 s, ~45 MB with string interning — 2,172 distinct strings across classes, órgãos, municípios and assuntos). Removed `src/api.rs`, `reqwest` and the in-GUI TPU/limit query panel; ingestion stays in `src/etl_datajud.py`.
+- **SQLite Snapshot Exporter ([`src/export_datajud_sqlite.py`](../src/export_datajud_sqlite.py))**: Dumps `public.processos_conflitos_judiciais` to `data/exports/datajud/datajud_pe.sqlite` (tables `lawsuits` + `meta`, schema version 1, atomic write). Registered as step `datajud_sqlite` in `src/run_all_pipelines.py`.
+- **Snapshot Resolution & Embedding**: `--db <path>` → `DATAJUD_DB` → next to the executable → repo `data/exports/datajud/` → optional embedded copy (`cargo build --features embedded-snapshot`; `build.rs` zlib-compresses the snapshot into the binary, ~9 MB, opened via `rusqlite` `deserialize`). "Base ▸ Abrir outra base…" switches files at runtime.
+- **In-Memory Query Engine (`src/data/query.rs`)**: Single-pass filtering with disjunctive facet counts (each facet counted with every other filter applied), accent-insensitive multi-token search over classe/assuntos/órgão/município/comarca, and CNJ number matching in masked or digits-only form. Recomputed only on change (150 ms search debounce): 2–16 ms per query and 11–26 ms per sort over 93k rows. Covered by unit tests plus an opt-in benchmark against the real snapshot.
+- **New Layout (facets · table · detail)**:
+  - Left facet panel: Tribunal, Categoria (all 7, including the previously unreachable *Outros* — 8,205 lawsuits), Grau/instância, Ano de ajuizamento (clickable per-year histogram + range + presets), Município and Classe (top 8 with "Mostrar todos" and inline search). An empty selection means "no filter"; zero-count options are dimmed; per-section "limpar".
+  - Center: result count with removable filter chips and "Limpar filtros", followed by a virtualized `egui_extras` table (no pagination) with resizable, click-to-sort columns and keyboard navigation (<kbd>↑</kbd>/<kbd>↓</kbd>, <kbd>Esc</kbd>).
+  - Right detail pane: key-value box, assuntos with TPU codes, "Outras instâncias do mesmo número" navigation, and actions (Copiar número, Copiar JSON, Consulta pública PJe).
+  - Top bar: single search field (<kbd>Ctrl</kbd>+<kbd>F</kbd>), one "Exportar" menu (CSV/JSON of the filtered rows) and a "Base" menu (open, reload, about). Dismissible notice bar for confirmations and errors, and dedicated loading/missing/failed/no-results states.
+- **Redundancy Removed**: duplicated category selectors, header count badges, the no-op "Filtrar" button, the per-row "Ver" button, pagination controls and differently styled export buttons.
+- **Model Alignment**: Category labels now map exactly to the database strings (`ConflictCategory::from_db`), with short labels for compact UI; the GUI no longer re-classifies lawsuits or re-masks CNJ numbers.
+- **Persistence**: Filters, sort, panel sizes and column widths persist across restarts (eframe `persistence`).
+
 ### September 2026: Roadmap Specification for ANEEL / SIGEL Energy Infrastructure & Servitude Layers
 - **ANEEL Geospatial Research & Catalog Mapping**: Researched and documented the federal geospatial data infrastructure of the Agência Nacional de Energia Elétrica (ANEEL), specifically SIGEL (`https://sigel.aneel.gov.br/arcgis/rest/services`).
 - **Data Sources Documentation Update ([`docs/DATA_SOURCES.md`](DATA_SOURCES.md))**:
