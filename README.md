@@ -71,7 +71,7 @@ conflict-solver/
     ├── export_datajud_sqlite.py # Exports the lawsuits table to the SQLite snapshot for datajud-gui
     ├── import_sigef_historico.py # Historical georeferencing evolution importer (Batateiras)
     ├── build_search_index.py # Builds the unified `search_index` table (codes, names, CPF/CNPJ of every layer)
-    ├── search_api.py        # FastAPI search endpoint used by the map's search bar (port 8000)
+    ├── search_api.py        # FastAPI search endpoint used by the map's search bar (port 7055)
     └── overlaps.py          # Spatial conflict detection engine & DBSCAN clustering (+ energy × territory overlaps)
 ```
 
@@ -98,7 +98,7 @@ docker compose up -d
 - *The database runs on host port `5433` by default.*
 - *The Martin Tile Server runs on host port `3000`.*
 - *You can verify Martin is running by accessing its catalog at `http://localhost:3000/catalog`.*
-- *The search API (`src/search_api.py`) runs on host port `8000`. `src/` is mounted read-only, so run `docker compose restart search` after editing it. Results stay empty until the search index has been built (step 8 below).*
+- *The search API (`src/search_api.py`) runs on host port `7055`. `src/` is mounted read-only, so run `docker compose restart search` after editing it. Results stay empty until the search index has been built (step 8 below).*
 
 ### 2. Set Up Python Environment
 Install the dependencies using `uv`:
@@ -235,9 +235,9 @@ pnpm start
 Open `http://localhost:4200` in your web browser. You will see an interactive map with a glassmorphic layer control panel (right) and a dedicated DataJud Judicial Categories Legend (left), serving vector tiles for all key datasets (Indigenous Lands, Quilombola Territories, SIGEF Private/Public, SNCI, CAR, ICMBio Conservation Units, Embargoes, Infraction Notices, MapBiomas Deforestation Alerts/CAR, and DataJud Lawsuits) with custom color themes, circle/symbol markers, and rich popup inspection cards.
 
 #### Search Bar (Search API)
-The search bar at the top left searches every layer at once. It accepts SIGEF/SNCI/CAR codes, CNJ case numbers, CPF/CNPJ, ANEEL CEG codes, area, community, UC and holder names, and municipalities. Accents and case are ignored, and codes match with or without punctuation. Selecting a result turns its layer on, zooms to the feature, highlights it, and opens its regular popup. It calls the search API (`GET http://localhost:8000/search?q=<text>&limit=20&layers=<id,id>`), which `docker compose up -d` starts as the `search` service. To run it outside Docker instead:
+The search bar at the top left searches every layer at once. It accepts SIGEF/SNCI/CAR codes, CNJ case numbers, CPF/CNPJ, ANEEL CEG codes, area, community, UC and holder names, and municipalities. Accents and case are ignored, and codes match with or without punctuation. Selecting a result turns its layer on, zooms to the feature, highlights it, and opens its regular popup. It calls the search API (`GET http://localhost:7055/search?q=<text>&limit=20&layers=<id,id>`), which `docker compose up -d` starts as the `search` service. To run it outside Docker instead:
 ```bash
-uv run uvicorn src.search_api:app --port 8000
+uv run uvicorn src.search_api:app --port 7055
 ```
 
 ### 5. DataJud Desktop Explorer (`datajud-gui`)

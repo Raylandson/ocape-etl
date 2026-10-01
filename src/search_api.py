@@ -3,7 +3,7 @@ Unified Search API: Free-text and code search over every displayed map layer, ba
 the `search_index` table built by `src/build_search_index.py`.
 
 Started by `docker compose up -d` (service `search`), or locally with:
-    uv run uvicorn src.search_api:app --port 8000
+    uv run uvicorn src.search_api:app --port 7055
 """
 
 import sys
