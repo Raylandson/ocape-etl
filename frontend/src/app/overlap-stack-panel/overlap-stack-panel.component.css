@@ -1,0 +1,399 @@
+/* Floating Open Button on the left */
+.panel-toggle-badge.left-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.85);
+  border-radius: 10px;
+  padding: 8px 14px;
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 0.84rem;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.12), 0 2px 6px -2px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  pointer-events: auto;
+  width: fit-content;
+}
+
+.panel-toggle-badge.left-toggle:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px -2px rgba(0, 0, 0, 0.15);
+}
+
+.toggle-badge-icon {
+  width: 17px;
+  height: 17px;
+  color: #0f172a;
+}
+
+.toggle-badge-text {
+  user-select: none;
+}
+
+.toggle-badge-count {
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* Main Panel on the left - identical width & style to DataJud */
+.legend-panel.left-panel {
+  position: relative;
+  /* app.css `.legend-panel` sets `top: 20px; right: 20px` for the right-hand panel. On a
+     relatively-positioned element those are still offsets, and `right` shifts the box LEFT,
+     which pushed this panel 20px out of alignment with the search bar above it. */
+  top: auto;
+  right: auto;
+  left: auto;
+  z-index: 10;
+  width: 320px;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.85);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.12), 0 2px 6px -2px rgba(0, 0, 0, 0.06);
+  padding: 16px;
+  color: #1f2937;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+.legend-panel.left-panel.panel-hidden {
+  display: none;
+}
+
+.legend-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(229, 231, 235, 0.85);
+  padding-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.legend-header-text h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.25;
+}
+
+.legend-header-text p {
+  margin: 3px 0 0 0;
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.close-panel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(229, 231, 235, 0.85);
+  border-radius: 7px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.close-panel-btn:hover {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+}
+
+.legend-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  padding-right: 4px;
+  max-height: calc(100vh - 120px);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.legend-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.legend-body::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.4);
+  border-radius: 6px;
+}
+
+/* ---------- overlap stack specific ---------- */
+
+/* This is the 4th panel in the left column, so it caps its own height and scrolls
+   internally rather than making the column itself a scroll container (which would
+   clip the fixed-width panels horizontally). */
+.legend-panel.left-panel.stack-panel {
+  max-height: 44vh;
+}
+
+.stack-panel .legend-body {
+  max-height: none;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.stack-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+  padding-bottom: 4px;
+}
+
+.stack-section-header.hidden-header {
+  margin-top: 10px;
+  border-top: 1px solid rgba(229, 231, 235, 0.85);
+  padding-top: 10px;
+}
+
+.stack-section-title {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+}
+
+.stack-section-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #475569;
+  outline: none;
+}
+
+.stack-section-toggle svg {
+  transition: transform 0.15s ease;
+}
+
+.stack-text-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  outline: none;
+  transition: color 0.15s ease;
+}
+
+.stack-text-btn:hover {
+  color: #0f172a;
+  text-decoration: underline;
+}
+
+.stack-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 7px 8px;
+  border-radius: 7px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.stack-row:hover {
+  background: #f1f5f9;
+}
+
+/* The popup follows PRIORITY_ORDER while rows follow draw order, so the open feature
+   is not necessarily row 1. This marks which row the popup belongs to. */
+.stack-row.is-active {
+  border-color: #0f172a;
+  background: #ffffff;
+}
+
+.stack-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.stack-row-layer {
+  font-size: 0.65rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stack-row-title {
+  font-size: 0.75rem;
+  color: #1e293b;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stack-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.stack-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.stack-icon-btn:hover:not(:disabled) {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #ffffff;
+}
+
+.stack-icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.hidden-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 6px;
+}
+
+.hidden-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 2px 0;
+}
+
+.hidden-group-name {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #475569;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.hidden-group-count {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+}
+
+.hidden-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.hidden-row:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+/* Amber matches the hover preview drawn on the map, so the row and the outlined
+   area read as the same object. */
+.stack-row:hover,
+.hidden-row:hover {
+  border-color: #f59e0b;
+}
+
+.hidden-row-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.72rem;
+  color: #64748b;
+  text-decoration: line-through;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stack-note {
+  margin-top: 6px;
+  font-size: 0.65rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.color-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+}
+
+/* A hidden row stays in the list so the same control can bring it back. */
+.stack-row.is-hidden .stack-row-title {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+
+.stack-row.is-hidden {
+  background: #f8fafc;
+  opacity: 0.75;
+}
+
+.stack-icon-btn.is-restore {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #ffffff;
+}

@@ -632,3 +632,58 @@
   flex-shrink: 0;
 }
 
+
+/* ---------- layer draw-order controls (legend panel) ---------- */
+
+/* Let the name take the free space and keep wrapping as before (several ANEEL names
+   need two lines); the order controls stay right-aligned beside it. */
+.layer-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.layer-depth {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+  min-width: 14px;
+  text-align: right;
+}
+
+.layer-order-controls {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/* Revealed on hover/focus so 43 rows stay readable at rest. */
+.legend-item:hover .layer-order-controls,
+.legend-item:focus-within .layer-order-controls {
+  display: flex;
+}
+
+.layer-order-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.layer-order-btn:hover {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #ffffff;
+}

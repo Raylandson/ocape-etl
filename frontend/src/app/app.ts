@@ -5,18 +5,9 @@ import { SigefBatateirasFilterComponent } from './sigef-batateiras-filter/sigef-
 import { KmlExportService, KmlExportItem } from './services/kml-export.service';
 import { SearchBarComponent, SearchLayerMeta } from './search-bar/search-bar.component';
 import { SearchResult } from './services/search.service';
-
-interface LayerConfig {
-  id: string;
-  name: string;
-  sourceUrl: string;
-  sourceLayer: string;
-  fillColor: string;
-  borderColor: string;
-  visible: boolean;
-  // Rendering mode; layers without it keep the default fill + outline (or their id-specific style)
-  geometry?: 'fill' | 'line' | 'circle';
-}
+import { OverlapStackPanelComponent } from './overlap-stack-panel/overlap-stack-panel.component';
+import { LAYERS, PRIORITY_ORDER, LayerConfig, renderedLayerIds } from './layers.config';
+import { FeatureVisibilityService, StackEntry } from './services/feature-visibility.service';
 
 export interface EnrichedCarInfo {
   nome_imovel: string;
@@ -104,13 +95,14 @@ export const ENRICHED_CAR_DATA: Record<string, EnrichedCarInfo> = {
 
 @Component({
   selector: 'app-root',
-  imports: [DatajudLegendComponent, SigefBatateirasFilterComponent, SearchBarComponent],
+  imports: [DatajudLegendComponent, SigefBatateirasFilterComponent, SearchBarComponent, OverlapStackPanelComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
   encapsulation: ViewEncapsulation.None
 })
 export class App implements AfterViewInit {
   private kmlExportService = inject(KmlExportService);
+  private visibility = inject(FeatureVisibilityService);
 
   map!: Map;
   isPanelOpen: boolean = true;
@@ -119,57 +111,17 @@ export class App implements AfterViewInit {
 
   // Active clicked feature state
   activeSelectedFeatureItem: KmlExportItem | null = null;
+
+  /** Features under the last click, topmost first. Drives the overlap stack panel. */
+  overlapStack: StackEntry[] = [];
+  /** The stack row whose popup is currently open; may not be row 1 (see dedupeAndSort). */
+  activeStackEntry: StackEntry | null = null;
   private activePopup: Popup | null = null;
 
   // Layer-specific popup dispatcher, assigned once the map and popup renderers are ready
   private renderPopupForLayer?: (layerId: string, props: any, lngLat: any, underlyingSigefProps?: any) => void;
 
-  readonly priorityOrder: string[] = [
-    'land_overlaps_points_symbol',
-    'processos_conflitos_judiciais_circle',
-    'despejo_zero_pe_circle',
-    'moradia_legal_processos_pe_circle',
-    'autos_infracao_icmbio_circle',
-    'aneel_eol_aerogeradores_pe_circle',
-    'aneel_eol_usinas_pe_circle',
-    'aneel_ufv_usinas_pe_circle',
-    'aneel_ute_usinas_pe_circle',
-    'aneel_hidro_aproveitamentos_pe_circle',
-    'epe_subestacoes_pe_circle',
-    'epe_linhas_transmissao_pe_line',
-    'aneel_lt_interesse_restrito_pe_line',
-    'car_casos_analisados_fill',
-    'sigef_casos_analisados_fill',
-    'aneel_sobreposicoes_territorios_pe_line',
-    'aneel_sobreposicoes_territorios_pe_fill',
-    'aneel_dup_pe_line',
-    'aneel_dup_pe_fill',
-    'aneel_ufv_subestacoes_pe_fill',
-    'aneel_ufv_paineis_pe_fill',
-    'aneel_ufv_parques_pe_fill',
-    'aneel_eol_parques_pe_fill',
-    'moradia_legal_pe_fill',
-    'iterpe_glebas_pe_fill',
-    'iterpe_malha_posses_pe_fill',
-    'land_overlaps_fill',
-    'alerts_with_intersections_fill',
-    'car_with_alerts_and_intersections_fill',
-    'assentamentos_incra_pe_fill',
-    'ucs_estaduais_cprh_pe_fill',
-    'processos_minerarios_pe_fill',
-    'ibge_favelas_comunidades_pe_fill',
-    'tis_poligonais_fill',
-    'areas_de_quilombolas_pe_fill',
-    'embargos_icmbio_fill',
-    'limiteucsfederais_a_fill',
-    'sigef_privado_pe_fill',
-    'sigef_publico_pe_fill',
-    'imovel_certificado_snci_privado_pe_fill',
-    'imovel_certificado_snci_publico_pe_fill',
-    'aneel_eol_interferencia_pe_fill',
-    'aneel_hidro_reservatorios_pe_fill',
-    'area_imovel_1_fill'
-  ];
+  readonly priorityOrder: readonly string[] = PRIORITY_ORDER;
 
   togglePanel() {
     this.isPanelOpen = !this.isPanelOpen;
@@ -215,6 +167,7 @@ export class App implements AfterViewInit {
 
     let filterExpr: any;
     if (this.selectedSigefPhases.length === 0) {
+      // ['any'] with no operands is invalid, so an impossible match stands in for "hide all"
       filterExpr = ['==', ['get', 'fase'], '__none__'];
     } else if (this.selectedSigefPhases.length === 4) {
       filterExpr = null;
@@ -222,429 +175,13 @@ export class App implements AfterViewInit {
       filterExpr = ['any', ...this.selectedSigefPhases.map(f => ['==', ['get', 'fase'], f])];
     }
 
-    if (this.map.getLayer('sigef_casos_analisados_fill')) {
-      this.map.setFilter('sigef_casos_analisados_fill', filterExpr);
-    }
-    if (this.map.getLayer('sigef_casos_analisados_line')) {
-      this.map.setFilter('sigef_casos_analisados_line', filterExpr);
-    }
+    // Registered as a domain filter rather than applied directly: the service ANDs it with any
+    // hidden-feature filter on the same layer, so the two no longer overwrite each other.
+    this.visibility.setDomainFilter('sigef_casos_analisados', filterExpr);
   }
 
-  layers: LayerConfig[] = [
-    {
-      id: 'tis_poligonais',
-      name: 'Terras Indígenas (FUNAI)',
-      sourceUrl: 'http://localhost:3000/tis_poligonais',
-      sourceLayer: 'tis_poligonais',
-      fillColor: '#ef4444',
-      borderColor: '#b91c1c',
-      visible: false
-    },
-    {
-      id: 'areas_de_quilombolas_pe',
-      name: 'Terras Quilombolas',
-      sourceUrl: 'http://localhost:3000/areas_de_quilombolas_pe',
-      sourceLayer: 'areas_de_quilombolas_pe',
-      fillColor: '#a855f7',
-      borderColor: '#7e22ce',
-      visible: false
-    },
-    {
-      id: 'sigef_privado_pe',
-      name: 'SIGEF Privado',
-      sourceUrl: 'http://localhost:3000/sigef_privado_pe',
-      sourceLayer: 'sigef_privado_pe',
-      fillColor: '#f59e0b',
-      borderColor: '#b45309',
-      visible: false
-    },
-    {
-      id: 'sigef_publico_pe',
-      name: 'SIGEF Público',
-      sourceUrl: 'http://localhost:3000/sigef_publico_pe',
-      sourceLayer: 'sigef_publico_pe',
-      fillColor: '#6366f1',
-      borderColor: '#4338ca',
-      visible: false
-    },
-    {
-      id: 'imovel_certificado_snci_privado_pe',
-      name: 'SNCI Privado',
-      sourceUrl: 'http://localhost:3000/imovel_certificado_snci_privado_pe',
-      sourceLayer: 'imovel_certificado_snci_privado_pe',
-      fillColor: '#10b981',
-      borderColor: '#047857',
-      visible: false
-    },
-    {
-      id: 'imovel_certificado_snci_publico_pe',
-      name: 'SNCI Público',
-      sourceUrl: 'http://localhost:3000/imovel_certificado_snci_publico_pe',
-      sourceLayer: 'imovel_certificado_snci_publico_pe',
-      fillColor: '#14b8a6',
-      borderColor: '#0f766e',
-      visible: false
-    },
-    {
-      id: 'car_casos_analisados',
-      name: 'CAR - Casos Analisados (Batateiras)',
-      sourceUrl: 'http://localhost:3000/car_casos_analisados',
-      sourceLayer: 'car_casos_analisados',
-      fillColor: '#0284c7',
-      borderColor: '#0369a1',
-      visible: false
-    },
-    {
-      id: 'sigef_casos_analisados',
-      name: 'SIGEF - Casos Analisados (Batateiras)',
-      sourceUrl: 'http://localhost:3000/sigef_casos_analisados',
-      sourceLayer: 'sigef_casos_analisados',
-      fillColor: '#8b5cf6',
-      borderColor: '#6d28d9',
-      visible: false
-    },
-    {
-      id: 'area_imovel_1',
-      name: 'CAR - Imóveis Cadastrados',
-      sourceUrl: 'http://localhost:3000/area_imovel_1',
-      sourceLayer: 'area_imovel_1',
-      fillColor: '#84cc16',
-      borderColor: '#4d7c0f',
-      visible: false
-    },
-    {
-      id: 'apps_1',
-      name: 'CAR - APPs Declaradas',
-      sourceUrl: 'http://localhost:3000/apps_1',
-      sourceLayer: 'apps_1',
-      fillColor: '#06b6d4',
-      borderColor: '#0891b2',
-      visible: false
-    },
-    {
-      id: 'reserva_legal_1',
-      name: 'CAR - Reserva Legal',
-      sourceUrl: 'http://localhost:3000/reserva_legal_1',
-      sourceLayer: 'reserva_legal_1',
-      fillColor: '#15803d',
-      borderColor: '#14532d',
-      visible: false
-    },
-    {
-      id: 'vegetacao_nativa_1',
-      name: 'CAR - Vegetação Nativa',
-      sourceUrl: 'http://localhost:3000/vegetacao_nativa_1',
-      sourceLayer: 'vegetacao_nativa_1',
-      fillColor: '#22c55e',
-      borderColor: '#16a34a',
-      visible: false
-    },
-    {
-      id: 'limiteucsfederais_a',
-      name: 'ICMBio - Unidades de Conservação',
-      sourceUrl: 'http://localhost:3000/limiteucsfederais_a',
-      sourceLayer: 'limiteucsfederais_a',
-      fillColor: '#059669',
-      borderColor: '#065f46',
-      visible: false
-    },
-    {
-      id: 'embargos_icmbio',
-      name: 'ICMBio - Áreas Embargadas',
-      sourceUrl: 'http://localhost:3000/embargos_icmbio',
-      sourceLayer: 'embargos_icmbio',
-      fillColor: '#f97316',
-      borderColor: '#c2410c',
-      visible: false
-    },
-    {
-      id: 'autos_infracao_icmbio',
-      name: 'ICMBio - Autos de Infração (Pontos)',
-      sourceUrl: 'http://localhost:3000/autos_infracao_icmbio',
-      sourceLayer: 'autos_infracao_icmbio',
-      fillColor: '#eab308',
-      borderColor: '#78350f',
-      visible: false
-    },
-    {
-      id: 'processos_conflitos_judiciais',
-      name: 'DataJud TJPE/TRF5',
-      sourceUrl: 'http://localhost:3000/processos_conflitos_judiciais',
-      sourceLayer: 'processos_conflitos_judiciais',
-      fillColor: '#8b5cf6',
-      borderColor: '#4c1d95',
-      visible: false
-    },
-    {
-      id: 'despejo_zero_pe',
-      name: 'Campanha Despejo Zero (Comunidades sob Risco)',
-      sourceUrl: 'http://localhost:3000/despejo_zero_pe',
-      sourceLayer: 'despejo_zero_pe',
-      fillColor: '#dc2626',
-      borderColor: '#7f1d1d',
-      visible: false
-    },
-    {
-      id: 'alerts_with_intersections',
-      name: 'MapBiomas - Alertas de Desmatamento',
-      sourceUrl: 'http://localhost:3000/alerts_with_intersections',
-      sourceLayer: 'alerts_with_intersections',
-      fillColor: '#ea580c',
-      borderColor: '#9a3412',
-      visible: false
-    },
-    {
-      id: 'car_with_alerts_and_intersections',
-      name: 'MapBiomas - Imóveis CAR com Alertas',
-      sourceUrl: 'http://localhost:3000/car_with_alerts_and_intersections',
-      sourceLayer: 'car_with_alerts_and_intersections',
-      fillColor: '#f59e0b',
-      borderColor: '#b45309',
-      visible: false
-    },
-    {
-      id: 'assentamentos_incra_pe',
-      name: 'INCRA - Assentamentos (SIPRA)',
-      sourceUrl: 'http://localhost:3000/assentamentos_incra_pe',
-      sourceLayer: 'assentamentos_incra_pe',
-      fillColor: '#ea580c',
-      borderColor: '#c2410c',
-      visible: false
-    },
-    {
-      id: 'ucs_estaduais_cprh_pe',
-      name: 'CPRH - UCs Estaduais',
-      sourceUrl: 'http://localhost:3000/ucs_estaduais_cprh_pe',
-      sourceLayer: 'ucs_estaduais_cprh_pe',
-      fillColor: '#10b981',
-      borderColor: '#047857',
-      visible: false
-    },
-    {
-      id: 'processos_minerarios_pe',
-      name: 'ANM - Processos Minerários',
-      sourceUrl: 'http://localhost:3000/processos_minerarios_pe',
-      sourceLayer: 'processos_minerarios_pe',
-      fillColor: '#eab308',
-      borderColor: '#a16207',
-      visible: false
-    },
-    {
-      id: 'ibge_favelas_comunidades_pe',
-      name: 'IBGE - Favelas e Comunidades (2022)',
-      sourceUrl: 'http://localhost:3000/ibge_favelas_comunidades_pe',
-      sourceLayer: 'ibge_favelas_comunidades_pe',
-      fillColor: '#ec4899',
-      borderColor: '#be185d',
-      visible: false
-    },
-    {
-      id: 'moradia_legal_pe',
-      name: 'TJPE - Moradia Legal (REURB)',
-      sourceUrl: 'http://localhost:3000/moradia_legal_pe',
-      sourceLayer: 'moradia_legal_pe',
-      fillColor: '#10b981',
-      borderColor: '#047857',
-      visible: false
-    },
-    {
-      id: 'moradia_legal_processos_pe',
-      name: 'TJPE - Usucapião (Moradia Legal)',
-      sourceUrl: 'http://localhost:3000/moradia_legal_processos_pe',
-      sourceLayer: 'moradia_legal_processos_pe',
-      fillColor: '#059669',
-      borderColor: '#064e3b',
-      visible: false
-    },
-    {
-      id: 'iterpe_glebas_pe',
-      name: 'ITERPE - Glebas Públicas Estaduais',
-      sourceUrl: 'http://localhost:3000/iterpe_glebas_pe',
-      sourceLayer: 'iterpe_glebas_pe',
-      fillColor: '#d97706',
-      borderColor: '#b45309',
-      visible: false
-    },
-    {
-      id: 'iterpe_malha_posses_pe',
-      name: 'ITERPE - Malha de Posses Rurais',
-      sourceUrl: 'http://localhost:3000/iterpe_malha_posses_pe',
-      sourceLayer: 'iterpe_malha_posses_pe',
-      fillColor: '#a16207',
-      borderColor: '#713f12',
-      visible: false
-    },
-    {
-      id: 'aneel_sobreposicoes_territorios_pe',
-      name: 'ANEEL - Sobreposições Energia × Territórios',
-      sourceUrl: 'http://localhost:3000/aneel_sobreposicoes_territorios_pe',
-      sourceLayer: 'aneel_sobreposicoes_territorios_pe',
-      fillColor: '#c026d3',
-      borderColor: '#86198f',
-      visible: false
-    },
-    {
-      id: 'aneel_dup_pe',
-      name: 'ANEEL - DUP (Servidões e Desapropriações)',
-      sourceUrl: 'http://localhost:3000/aneel_dup_pe',
-      sourceLayer: 'aneel_dup_pe',
-      fillColor: '#be123c',
-      borderColor: '#881337',
-      visible: false
-    },
-    {
-      id: 'epe_linhas_transmissao_pe',
-      name: 'EPE - Linhas de Transmissão (Rede Básica)',
-      sourceUrl: 'http://localhost:3000/epe_linhas_transmissao_pe',
-      sourceLayer: 'epe_linhas_transmissao_pe',
-      fillColor: '#334155',
-      borderColor: '#1e293b',
-      visible: false,
-      geometry: 'line'
-    },
-    {
-      id: 'epe_subestacoes_pe',
-      name: 'EPE - Subestações',
-      sourceUrl: 'http://localhost:3000/epe_subestacoes_pe',
-      sourceLayer: 'epe_subestacoes_pe',
-      fillColor: '#1e293b',
-      borderColor: '#ffffff',
-      visible: false,
-      geometry: 'circle'
-    },
-    {
-      id: 'aneel_lt_interesse_restrito_pe',
-      name: 'ANEEL - Linhas de Interesse Restrito (Usinas)',
-      sourceUrl: 'http://localhost:3000/aneel_lt_interesse_restrito_pe',
-      sourceLayer: 'aneel_lt_interesse_restrito_pe',
-      fillColor: '#0f766e',
-      borderColor: '#115e59',
-      visible: false,
-      geometry: 'line'
-    },
-    {
-      id: 'aneel_eol_parques_pe',
-      name: 'ANEEL - Parques Eólicos (Polígonos)',
-      sourceUrl: 'http://localhost:3000/aneel_eol_parques_pe',
-      sourceLayer: 'aneel_eol_parques_pe',
-      fillColor: '#0e7490',
-      borderColor: '#164e63',
-      visible: false
-    },
-    {
-      id: 'aneel_eol_aerogeradores_pe',
-      name: 'ANEEL - Aerogeradores',
-      sourceUrl: 'http://localhost:3000/aneel_eol_aerogeradores_pe',
-      sourceLayer: 'aneel_eol_aerogeradores_pe',
-      fillColor: '#155e75',
-      borderColor: '#ffffff',
-      visible: false,
-      geometry: 'circle'
-    },
-    {
-      id: 'aneel_eol_usinas_pe',
-      name: 'ANEEL - Usinas Eólicas (EOL)',
-      sourceUrl: 'http://localhost:3000/aneel_eol_usinas_pe',
-      sourceLayer: 'aneel_eol_usinas_pe',
-      fillColor: '#0891b2',
-      borderColor: '#ffffff',
-      visible: false,
-      geometry: 'circle'
-    },
-    {
-      id: 'aneel_eol_interferencia_pe',
-      name: 'ANEEL - Regiões de Interferência Eólica',
-      sourceUrl: 'http://localhost:3000/aneel_eol_interferencia_pe',
-      sourceLayer: 'aneel_eol_interferencia_pe',
-      fillColor: '#67e8f9',
-      borderColor: '#0e7490',
-      visible: false
-    },
-    {
-      id: 'aneel_ufv_parques_pe',
-      name: 'ANEEL - Parques Solares (Polígonos)',
-      sourceUrl: 'http://localhost:3000/aneel_ufv_parques_pe',
-      sourceLayer: 'aneel_ufv_parques_pe',
-      fillColor: '#ca8a04',
-      borderColor: '#854d0e',
-      visible: false
-    },
-    {
-      id: 'aneel_ufv_paineis_pe',
-      name: 'ANEEL - Arranjos de Painéis Solares',
-      sourceUrl: 'http://localhost:3000/aneel_ufv_paineis_pe',
-      sourceLayer: 'aneel_ufv_paineis_pe',
-      fillColor: '#facc15',
-      borderColor: '#a16207',
-      visible: false
-    },
-    {
-      id: 'aneel_ufv_subestacoes_pe',
-      name: 'ANEEL - Subestações de Usinas Solares',
-      sourceUrl: 'http://localhost:3000/aneel_ufv_subestacoes_pe',
-      sourceLayer: 'aneel_ufv_subestacoes_pe',
-      fillColor: '#713f12',
-      borderColor: '#422006',
-      visible: false
-    },
-    {
-      id: 'aneel_ufv_usinas_pe',
-      name: 'ANEEL - Usinas Solares (UFV)',
-      sourceUrl: 'http://localhost:3000/aneel_ufv_usinas_pe',
-      sourceLayer: 'aneel_ufv_usinas_pe',
-      fillColor: '#eab308',
-      borderColor: '#ffffff',
-      visible: false,
-      geometry: 'circle'
-    },
-    {
-      id: 'aneel_ute_usinas_pe',
-      name: 'ANEEL - Usinas Termelétricas (UTE)',
-      sourceUrl: 'http://localhost:3000/aneel_ute_usinas_pe',
-      sourceLayer: 'aneel_ute_usinas_pe',
-      fillColor: '#78716c',
-      borderColor: '#ffffff',
-      visible: false,
-      geometry: 'circle'
-    },
-    {
-      id: 'aneel_hidro_reservatorios_pe',
-      name: 'ANEEL - Reservatórios Hidrelétricos',
-      sourceUrl: 'http://localhost:3000/aneel_hidro_reservatorios_pe',
-      sourceLayer: 'aneel_hidro_reservatorios_pe',
-      fillColor: '#3b82f6',
-      borderColor: '#1d4ed8',
-      visible: false
-    },
-    {
-      id: 'aneel_hidro_aproveitamentos_pe',
-      name: 'ANEEL - Aproveitamentos Hidrelétricos (UHE/PCH/CGH)',
-      sourceUrl: 'http://localhost:3000/aneel_hidro_aproveitamentos_pe',
-      sourceLayer: 'aneel_hidro_aproveitamentos_pe',
-      fillColor: '#1d4ed8',
-      borderColor: '#ffffff',
-      visible: false,
-      geometry: 'circle'
-    },
-    // {
-    //   id: 'land_overlaps',
-    //   name: '⚠️ Áreas de Conflito (Sobreposições)',
-    //   sourceUrl: 'http://localhost:3000/land_overlaps',
-    //   sourceLayer: 'land_overlaps',
-    //   fillColor: '#ec4899', // neon hot pink
-    //   borderColor: '#be185d',
-    //   visible: false
-    // },
-    // {
-    //   id: 'land_overlaps_points',
-    //   name: '📍 Centros de Conflito (Pontos)',
-    //   sourceUrl: 'http://localhost:3000/land_overlaps_points',
-    //   sourceLayer: 'land_overlaps_points',
-    //   fillColor: '#ef4444', // Red
-    //   borderColor: '#ffffff',
-    //   visible: false
-    // }
-  ];
+  /** Live copy of the registry: `toggleLayer` mutates `.visible`, so entries are copied. */
+  layers: LayerConfig[] = LAYERS.map(l => ({ ...l }));
 
   // Display names and colors for grouping search results by layer
   readonly searchLayerMeta: Record<string, SearchLayerMeta> = Object.fromEntries(
@@ -1042,6 +579,49 @@ export class App implements AfterViewInit {
       this.applySigefFilter();
 
       // Add Sources and Layers for Selection & KML Export Features
+      // Hover preview for the overlap panel: shows which area a row refers to before the
+      // user commits to hiding or restoring it. Registered BEFORE the selection layers so
+      // the blue selection outline always stays on top of this amber preview.
+      this.map.addSource('hover-feature-source', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] }
+      });
+
+      this.map.addLayer({
+        id: 'hover-feature-fill',
+        type: 'fill',
+        source: 'hover-feature-source',
+        filter: ['==', '$type', 'Polygon'],
+        paint: {
+          'fill-color': '#f59e0b',
+          'fill-opacity': 0.25
+        }
+      }, firstLabelId);
+
+      this.map.addLayer({
+        id: 'hover-feature-line',
+        type: 'line',
+        source: 'hover-feature-source',
+        filter: ['==', '$type', 'LineString'],
+        paint: {
+          'line-color': '#b45309',
+          'line-width': 3
+        }
+      }, firstLabelId);
+
+      this.map.addLayer({
+        id: 'hover-feature-circle',
+        type: 'circle',
+        source: 'hover-feature-source',
+        filter: ['==', '$type', 'Point'],
+        paint: {
+          'circle-radius': 13,
+          'circle-color': 'transparent',
+          'circle-stroke-color': '#b45309',
+          'circle-stroke-width': 3
+        }
+      }, firstLabelId);
+
       this.map.addSource('selected-feature-source', {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] }
@@ -1083,6 +663,9 @@ export class App implements AfterViewInit {
           'circle-stroke-width': 2.8
         }
       }, firstLabelId);
+
+      // The highlight layers are now registered, so the reorder anchor exists.
+      this.visibility.attach(this.map, firstLabelId);
 
       // --- POPUP RENDERERS ---
       const openCustomPopup = (html: string, coordinates: any) => {
@@ -2707,17 +2290,19 @@ export class App implements AfterViewInit {
         }
       });
 
-      // Single click listener: queries visible layers and selects the top-priority feature
-      this.map.on('click', (e) => {
-
+      /**
+       * Shared hit-test. Returns the features under the pointer in priority order and
+       * refreshes the overlap panel, or null when nothing was hit.
+       */
+      const queryStackAt = (e: any) => {
         const activeLayers = this.priorityOrder.filter(id => {
           return this.map.getLayer(id) && this.map.getLayoutProperty(id, 'visibility') !== 'none';
         });
 
-        if (activeLayers.length === 0) return;
+        if (activeLayers.length === 0) return null;
 
         const rendered = this.map.queryRenderedFeatures(e.point, { layers: activeLayers });
-        if (!rendered || rendered.length === 0) return;
+        if (!rendered || rendered.length === 0) return null;
 
         // Sort rendered features by priority order
         const sorted = rendered.sort((a, b) => {
@@ -2726,10 +2311,37 @@ export class App implements AfterViewInit {
           return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
         });
 
+        this.overlapStack = this.visibility.dedupeAndSort(
+          sorted
+            .map(f => this.toStackEntry(f, e.lngLat, sorted))
+            .filter((x): x is StackEntry => x !== null)
+        );
+
+        return sorted;
+      };
+
+      // Left click SELECTS: it fills the overlap panel and leaves the map unobstructed.
+      // The detail popup covers a large part of the viewport, so it is no longer opened here.
+      this.map.on('click', (e) => {
+        if (!queryStackAt(e)) return;
+        // No popup is open, so no row is the active one.
+        this.activeStackEntry = null;
+      });
+
+      // Right click INSPECTS: opens the detail popup for the top-priority feature.
+      this.map.on('contextmenu', (e) => {
+        // Suppress the browser menu so the popup is the only thing that appears.
+        e.originalEvent?.preventDefault();
+
+        const sorted = queryStackAt(e);
+        if (!sorted) return;
+
         const topFeature = sorted[0];
         const layerId = topFeature.layer.id;
         const props = topFeature.properties;
         if (!props) return;
+
+        this.activeStackEntry = this.overlapStack.find(x => x.feature === topFeature) ?? null;
 
         // Track selected feature for KML export & highlight on map
         const layerInfo = this.getLayerInfoForFeature(layerId);
@@ -2740,7 +2352,10 @@ export class App implements AfterViewInit {
           fillColor: layerInfo.fillColor,
           borderColor: layerInfo.borderColor
         };
-        this.highlightFeature(topFeature);
+        this.highlightFeature({
+          geometry: this.activeStackEntry?.geometry ?? topFeature.geometry,
+          properties: props
+        });
 
         // If clicking on CAR, also check if there is an underlying SIGEF parcel to reference in the detail box
         const sigefFeature = sorted.find(f => f.layer.id === 'sigef_privado_pe_fill' || f.layer.id === 'sigef_publico_pe_fill' || f.layer.id === 'sigef_casos_analisados_fill');
@@ -2801,6 +2416,22 @@ export class App implements AfterViewInit {
     }
   }
 
+  /**
+   * Outlines the area a panel row refers to, without disturbing the click selection.
+   *
+   * Geometry comes from the rendered tile, so it is simplified and may be clipped at a tile
+   * seam. That is fine for a transient "this is the one" cue; exports use exact geometry.
+   */
+  highlightHoverGeometry(geometry: any | null) {
+    if (!this.map) return;
+    const source = this.map.getSource('hover-feature-source') as any;
+    if (!source) return;
+    source.setData({
+      type: 'FeatureCollection',
+      features: geometry ? [{ type: 'Feature', geometry, properties: {} }] : []
+    });
+  }
+
   clearFeatureHighlight() {
     if (!this.map) return;
     this.activeSelectedFeatureItem = null;
@@ -2811,6 +2442,110 @@ export class App implements AfterViewInit {
         features: []
       });
     }
+  }
+
+  // ----------------------------------------------------------- overlap stack & hiding
+
+  private toStackEntry(f: any, lngLat: any, stack: any[]): StackEntry | null {
+    const props = f.properties;
+    if (!props) return null;
+    const info = this.getLayerInfoForFeature(f.layer.id);
+    const key = this.visibility.featureKey(info.id, props);
+    const sigefFeature = stack.find(x =>
+      x.layer.id === 'sigef_privado_pe_fill' ||
+      x.layer.id === 'sigef_publico_pe_fill' ||
+      x.layer.id === 'sigef_casos_analisados_fill');
+
+    return {
+      baseLayerId: info.id,
+      renderedLayerId: f.layer.id,
+      layerName: info.name,
+      fillColor: info.fillColor,
+      borderColor: info.borderColor,
+      key,
+      title: this.kmlExportService.getFeatureTitle(props, info.name),
+      canHide: key !== null && this.visibility.canHide(info.id),
+      shared: this.visibility.keyStability(info.id) === 'shared',
+      // Starts as this tile's fragment; dedupeAndSort merges in the rest.
+      geometry: f.geometry,
+      feature: f,
+      lngLat,
+      underlyingSigefProps: sigefFeature?.properties
+    };
+  }
+
+  /** Opens the popup for a row the click dispatcher did not pick as top priority. */
+  onStackFeatureSelected(entry: StackEntry) {
+    if (!this.map || !this.renderPopupForLayer) return;
+
+    // Closing first clears the previous highlight via the popup close handler.
+    this.activePopup?.remove();
+
+    this.activeSelectedFeatureItem = {
+      feature: entry.feature,
+      layerId: entry.baseLayerId,
+      layerName: entry.layerName,
+      fillColor: entry.fillColor,
+      borderColor: entry.borderColor
+    };
+    this.activeStackEntry = entry;
+    // Highlight the merged geometry, not the single tile fragment on `entry.feature`.
+    this.highlightFeature({ geometry: entry.geometry, properties: entry.feature.properties });
+    this.renderPopupForLayer(entry.renderedLayerId, entry.feature.properties, entry.lngLat, entry.underlyingSigefProps);
+  }
+
+  onStackFeatureHidden(entry: StackEntry) {
+    if (!entry.canHide || entry.key === null) return;
+    this.visibility.hide(entry.baseLayerId, entry.key, entry.title, entry.geometry);
+
+    // The row deliberately stays in the stack so the same control can unhide it. Removing it
+    // here meant a hidden-then-restored feature vanished from the panel entirely.
+    if (this.activeStackEntry === entry) {
+      this.activeStackEntry = null;
+      this.activePopup?.remove();
+    }
+  }
+
+  onStackFeatureRestored(entry: StackEntry) {
+    if (entry.key === null) return;
+    this.visibility.restore(entry.baseLayerId, entry.key);
+  }
+
+  clearOverlapStack() {
+    this.overlapStack = [];
+    this.activeStackEntry = null;
+    this.highlightHoverGeometry(null);
+  }
+
+  /** Previews on the map whichever panel row the pointer is over; null clears it. */
+  onStackFeatureHovered(geometry: any | null) {
+    this.highlightHoverGeometry(geometry);
+  }
+
+  // ----------------------------------------------------------- layer draw order
+
+  layerDepth(layer: LayerConfig): number {
+    return this.visibility.depthOf(layer.id);
+  }
+
+  moveLayerToFront(layer: LayerConfig, event: Event) {
+    event.stopPropagation();
+    this.visibility.moveToFront(layer.id);
+  }
+
+  moveLayerUp(layer: LayerConfig, event: Event) {
+    event.stopPropagation();
+    this.visibility.moveUp(layer.id);
+  }
+
+  moveLayerDown(layer: LayerConfig, event: Event) {
+    event.stopPropagation();
+    this.visibility.moveDown(layer.id);
+  }
+
+  moveLayerToBack(layer: LayerConfig, event: Event) {
+    event.stopPropagation();
+    this.visibility.moveToBack(layer.id);
   }
 
   getLayerInfoForFeature(renderedLayerId: string): { id: string; name: string; fillColor: string; borderColor: string } {
@@ -2864,17 +2599,8 @@ export class App implements AfterViewInit {
     layer.visible = !layer.visible;
     const visibility = layer.visible ? 'visible' : 'none';
     if (this.map) {
-      if (this.map.getLayer(`${layer.id}_fill`)) {
-        this.map.setLayoutProperty(`${layer.id}_fill`, 'visibility', visibility);
-      }
-      if (this.map.getLayer(`${layer.id}_line`)) {
-        this.map.setLayoutProperty(`${layer.id}_line`, 'visibility', visibility);
-      }
-      if (this.map.getLayer(`${layer.id}_symbol`)) {
-        this.map.setLayoutProperty(`${layer.id}_symbol`, 'visibility', visibility);
-      }
-      if (this.map.getLayer(`${layer.id}_circle`)) {
-        this.map.setLayoutProperty(`${layer.id}_circle`, 'visibility', visibility);
+      for (const rid of renderedLayerIds(this.map, layer.id)) {
+        this.map.setLayoutProperty(rid, 'visibility', visibility);
       }
 
       if (layer.id === 'sigef_casos_analisados' && layer.visible) {

@@ -9,6 +9,15 @@
     (filterChanged)="onSigefFilterChanged($event)"
     (focusRequested)="focusBatateiras()">
   </app-sigef-batateiras-filter>
+  <app-overlap-stack-panel
+    [stack]="overlapStack"
+    [activeEntry]="activeStackEntry"
+    (featureSelected)="onStackFeatureSelected($event)"
+    (featureHidden)="onStackFeatureHidden($event)"
+    (featureRestored)="onStackFeatureRestored($event)"
+    (stackCleared)="clearOverlapStack()"
+    (featureHovered)="onStackFeatureHovered($event)">
+  </app-overlap-stack-panel>
 </div>
 
 <!-- Floating Basemap Switcher (Bottom Left) -->
@@ -94,6 +103,29 @@
             Focar
           </button>
         }
+        <span class="layer-depth" title="Posição na ordem de desenho (1 = mais ao fundo)">{{ layerDepth(layer) }}</span>
+        <div class="layer-order-controls">
+          <button class="layer-order-btn" (click)="moveLayerToFront(layer, $event)" title="Trazer para a frente">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 11l7-7 7 7M5 19l7-7 7 7" />
+            </svg>
+          </button>
+          <button class="layer-order-btn" (click)="moveLayerUp(layer, $event)" title="Avançar um nível">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+            </svg>
+          </button>
+          <button class="layer-order-btn" (click)="moveLayerDown(layer, $event)" title="Recuar um nível">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <button class="layer-order-btn" (click)="moveLayerToBack(layer, $event)" title="Enviar para o fundo">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 5l-7 7-7-7M19 13l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
       </div>
     }
   </div>

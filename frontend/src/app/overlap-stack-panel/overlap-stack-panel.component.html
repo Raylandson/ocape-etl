@@ -1,0 +1,131 @@
+@if (isVisible) {
+  @if (!isOpen) {
+    <button class="panel-toggle-badge left-toggle" (click)="toggleOpen()" title="Abrir feições sobrepostas">
+      <svg class="toggle-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 2l9 5-9 5-9-5 9-5z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9 5 9-5" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 17l9 5 9-5" />
+      </svg>
+      <span class="toggle-badge-text">Sobreposições</span>
+      <span class="toggle-badge-count">
+        @if (stack.length && hiddenTotal) { {{ stack.length }}/{{ hiddenTotal }} }
+        @else if (stack.length) { {{ stack.length }} }
+        @else { {{ hiddenTotal }} }
+      </span>
+    </button>
+  }
+
+  <div class="legend-panel left-panel stack-panel" [class.panel-hidden]="!isOpen">
+    <div class="legend-header">
+      <div class="legend-header-text">
+        <h3>Sobreposições</h3>
+        <p>Clique esquerdo seleciona · clique direito abre os detalhes</p>
+      </div>
+      <button class="close-panel-btn" (click)="toggleOpen()" title="Ocultar painel">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="legend-body" (mouseleave)="onHoverLeave()">
+      <!-- Features under the cursor, topmost first -->
+      @if (stack.length) {
+        <div class="stack-section-header">
+          <span class="stack-section-title">Feições neste ponto ({{ stack.length }})</span>
+          <button class="stack-text-btn" (click)="onClearStack($event)" title="Limpar lista">Limpar</button>
+        </div>
+
+        @for (entry of stack; track $index) {
+          <div class="stack-row" [class.is-active]="entry === activeEntry"
+               [class.is-hidden]="isEntryHidden(entry)"
+               [attr.aria-current]="entry === activeEntry ? 'true' : null"
+               (mouseenter)="onHoverEnter(entry.geometry)"
+               (mouseleave)="onHoverLeave()">
+            <span class="color-indicator"
+                  [style.background-color]="entry.fillColor"
+                  [style.border-color]="entry.borderColor"></span>
+            <div class="stack-row-text">
+              <span class="stack-row-layer">{{ entry.layerName }}</span>
+              <span class="stack-row-title">{{ entry.title }}</span>
+            </div>
+            <div class="stack-row-actions">
+              <button class="stack-icon-btn" [disabled]="isEntryHidden(entry)"
+                      (click)="onSelect(entry, $event)"
+                      [title]="isEntryHidden(entry) ? 'Restaure a feição para ver os detalhes' : 'Abrir os detalhes desta feição (igual ao clique direito no mapa)'">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4" />
+                  <circle cx="12" cy="12" r="9" />
+                </svg>
+              </button>
+              <button class="stack-icon-btn" [class.is-restore]="isEntryHidden(entry)"
+                      [disabled]="!entry.canHide"
+                      (click)="onToggleHide(entry, $event)" [title]="hideTooltip(entry)">
+                @if (isEntryHidden(entry)) {
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                } @else {
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+                    <line x1="1" y1="1" x2="23" y2="23" stroke-linecap="round" />
+                  </svg>
+                }
+              </button>
+            </div>
+          </div>
+        }
+      }
+
+      <!-- Currently hidden features, grouped by layer -->
+      @if (hiddenTotal) {
+        <div class="stack-section-header hidden-header">
+          <button class="stack-section-toggle" (click)="toggleHidden($event)">
+            <span class="stack-section-title">Ocultas ({{ hiddenTotal }})</span>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"
+                 [style.transform]="showHidden ? 'rotate(180deg)' : 'none'">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <button class="stack-text-btn" (click)="restoreAll($event)" title="Restaurar todas as feições ocultas">
+            Restaurar tudo
+          </button>
+        </div>
+
+        @if (showHidden) {
+          @for (layerId of hiddenLayerIds(); track layerId) {
+            <div class="hidden-group">
+              <div class="hidden-group-header">
+                <span class="color-indicator" [style.background-color]="layerColor(layerId)"></span>
+                <span class="hidden-group-name">{{ layerName(layerId) }}</span>
+                <span class="hidden-group-count">{{ hiddenFor(layerId).length }}</span>
+                <button class="stack-text-btn" (click)="restoreLayer(layerId, $event)"
+                        title="Restaurar as feições ocultas desta camada">Restaurar</button>
+              </div>
+              @for (item of hiddenFor(layerId); track item.key) {
+                <div class="hidden-row"
+                     (mouseenter)="onHoverEnter(item.geometry)"
+                     (mouseleave)="onHoverLeave()">
+                  <span class="hidden-row-title">{{ item.label }}</span>
+                  <button class="stack-icon-btn" (click)="restore(layerId, item.key, $event)"
+                          title="Restaurar esta feição">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+
+          <div class="popup-detail-box-note stack-note">
+            A ocultação é por código de identificação da feição; feições que compartilham o mesmo
+            código são ocultadas em conjunto.
+          </div>
+        }
+      }
+    </div>
+  </div>
+}

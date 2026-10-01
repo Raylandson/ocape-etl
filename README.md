@@ -234,6 +234,15 @@ pnpm start
 ```
 Open `http://localhost:4200` in your web browser. You will see an interactive map with a glassmorphic layer control panel (right) and a dedicated DataJud Judicial Categories Legend (left), serving vector tiles for all key datasets (Indigenous Lands, Quilombola Territories, SIGEF Private/Public, SNCI, CAR, ICMBio Conservation Units, Embargoes, Infraction Notices, MapBiomas Deforestation Alerts/CAR, and DataJud Lawsuits) with custom color themes, circle/symbol markers, and rich popup inspection cards.
 
+#### Map Interaction: Select vs. Inspect
+**Left click selects**, filling the **Sobreposições** panel (top left) with every feature stacked under the pointer, topmost first. **Right click inspects**, opening the detail popup for the top-priority feature. The split keeps the 310 px popup card from covering the overlap you are looking at.
+
+In the Sobreposições panel each row can be opened (same as right-clicking it) or hidden. Hiding filters that single feature off the map so you can see what it covers — CAR (`area_imovel_1`, 433k polygons) routinely buries the territories beneath it. Hidden features are listed under **Ocultas** and restored individually, per layer, or all at once. Hovering any row outlines that feature on the map in amber, so it is clear which area a hide or restore will affect. All of this is session-only: a reload returns the map to its defaults.
+
+Hiding is keyed on per-layer identifying columns declared in [`frontend/src/app/layers.config.ts`](frontend/src/app/layers.config.ts). Two layers (`area_imovel_1`, `processos_minerarios_pe`) have duplicate codes in the source data, so features sharing a code are hidden together; the panel states this.
+
+The layer panel (right) also controls **draw order**. Hovering a layer row reveals controls to bring it to the front, move it one level, or send it to the back, with a badge showing its depth (1 = backmost). Sending CAR to the back is the quickest way to read the territories underneath. Draw order is independent of click precedence, which stays fixed so small point targets remain clickable.
+
 #### Search Bar (Search API)
 The search bar at the top left searches every layer at once. It accepts SIGEF/SNCI/CAR codes, CNJ case numbers, CPF/CNPJ, ANEEL CEG codes, area, community, UC and holder names, and municipalities. Accents and case are ignored, and codes match with or without punctuation. Selecting a result turns its layer on, zooms to the feature, highlights it, and opens its regular popup. It calls the search API (`GET http://localhost:7055/search?q=<text>&limit=20&layers=<id,id>`), which `docker compose up -d` starts as the `search` service. To run it outside Docker instead:
 ```bash
