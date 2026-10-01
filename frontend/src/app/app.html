@@ -1,7 +1,8 @@
 <div id="map" class="map-container"></div>
 
-<!-- Left Side Floating Panels (DataJud Legend & SIGEF Casos Analisados Filter) -->
+<!-- Left Side Floating Panels (Search, DataJud Legend & SIGEF Casos Analisados Filter) -->
 <div class="left-panels-stack">
+  <app-search-bar [layerMeta]="searchLayerMeta" (resultSelected)="selectSearchResult($event)"></app-search-bar>
   <app-datajud-legend [isVisible]="isDataJudVisible()"></app-datajud-legend>
   <app-sigef-batateiras-filter 
     [isVisible]="isSigefCasosAnalisadosVisible()"

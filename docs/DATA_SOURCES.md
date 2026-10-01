@@ -287,6 +287,14 @@ Calculado por `calculate_energy_overlaps()` em [`src/overlaps.py`](../src/overla
 * **Atributos Chave:** `conflito_id`, `nome_comunidade`, `municipio`, `familias_ameacadas`, `familias_despejadas`, `familias_suspensas`, `total_familias`, `status_conflito`, `causa_conflito`, `acompanhamento_juridico`, `agente_promotor`, `descricao`.
 * **Aplicação em Conflitos:** Fornece o contraponto empírico e humanitário às ações do DataJud, alertando magistrados e órgãos de conciliação agrária sobre o impacto social de reintegrações de posse.
 
+### 2.3. Tabela Derivada: Índice de Busca Unificado (`search_index`)
+
+* **Tabela PostGIS:** `public.search_index` (~624 mil linhas, 40 camadas), gerada por [`src/build_search_index.py`](../src/build_search_index.py) e consumida pela API de busca ([`src/search_api.py`](../src/search_api.py)).
+* **Conteúdo:** Uma linha por feição de cada camada exibida no mapa (`layer_id` = nome da tabela de origem), com `label` (título), `code` (identificador principal), `place` (município), `search_text` (todos os campos identificadores, em minúsculas e sem acento), `codes` (identificadores sem pontuação), `props` (atributos completos da feição, `jsonb`) e `geometry`.
+* **Campos indexados:** Códigos SIGEF/SNCI/CAR, parcelas, matrículas, ART, números CNJ (DataJud e Moradia Legal), CPF/CNPJ e autuados (ICMBio), declarantes e proprietários (casos analisados), CEG/atos legais/proprietários (ANEEL), processos e titulares minerários (ANM), nomes de TIs, quilombos, UCs, assentamentos, comunidades e glebas. O município dos lotes SIGEF (código IBGE) é resolvido por `jurisdicoes_pe_municipios`. As camadas CAR de APP, Reserva Legal e Vegetação Nativa ficam de fora, porque repetem o `cod_imovel` do imóvel e não têm popup próprio.
+* **Índices:** GIN `gin_trgm_ops` em `search_text` e `codes` (busca por substring), B-tree em `layer_id` e GIST em `geometry`. Requer as extensões `pg_trgm` e `unaccent`.
+* **Observação:** Como a tabela tem coluna de geometria, o Martin a publica automaticamente no catálogo, mas ela não é usada como camada no frontend. A tabela é reconstruída a cada execução (`DROP`/`CREATE`) e precisa ser regerada depois de qualquer ingestão.
+
 ---
 
 ### 3.1. Futuras Fontes — Camada 1: Cruzamentos Topológicos Espaciais

@@ -1,0 +1,72 @@
+<div class="search-bar">
+  <div class="search-input-wrap">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="7"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Buscar código, nome, processo, CPF/CNPJ..."
+      aria-label="Buscar feições em todas as camadas"
+      autocomplete="off"
+      spellcheck="false"
+      [value]="query"
+      (input)="onInput($any($event.target).value)"
+      (focus)="onFocus()"
+      (keydown)="onKeyDown($event)" />
+    @if (query) {
+      <button type="button" class="search-clear-btn" (click)="clear()" title="Limpar busca" aria-label="Limpar busca">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    }
+  </div>
+
+  @if (isOpen && query.trim()) {
+    <div class="search-results" role="listbox">
+      @if (!isSearchable(query)) {
+        <div class="search-status">Digite ao menos 3 caracteres.</div>
+      } @else if (isLoading) {
+        <div class="search-status">Buscando...</div>
+      } @else if (hasError) {
+        <div class="search-status search-status-error">
+          API de busca indisponível. Execute <code>docker compose up -d search</code>.
+        </div>
+      } @else if (results.length === 0) {
+        <div class="search-status">Nenhum resultado encontrado.</div>
+      } @else {
+        @for (group of groups; track group.layerId) {
+          <div class="search-group">
+            <div class="search-group-header">
+              <span class="search-group-swatch" [style.background]="group.color"></span>
+              <span class="search-group-name">{{ group.layerName }}</span>
+              <span class="search-group-count">{{ group.items.length }}</span>
+            </div>
+            @for (item of group.items; track item.result.id) {
+              <button
+                type="button"
+                role="option"
+                class="search-result-item"
+                [class.active]="item.index === activeIndex"
+                [attr.aria-selected]="item.index === activeIndex"
+                (mouseenter)="activeIndex = item.index"
+                (click)="select(item.result)">
+                <span class="search-result-label">{{ item.result.label }}</span>
+                <span class="search-result-meta">
+                  @if (item.result.code && item.result.code !== item.result.label) {
+                    <code class="search-result-code">{{ item.result.code }}</code>
+                  }
+                  @if (item.result.place) {
+                    <span class="search-result-place">{{ item.result.place }}</span>
+                  }
+                </span>
+              </button>
+            }
+          </div>
+        }
+      }
+    </div>
+  }
+</div>

@@ -5,8 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "fastapi>=0.142.2",
     "geoalchemy2>=0.20.0",
     "geopandas>=1.1.4",
     "psycopg2-binary>=2.9.12",
     "sqlalchemy>=2.0.51",
+    "uvicorn>=0.54.0",
 ]

@@ -73,7 +73,7 @@ def main():
     )
     parser.add_argument(
         "--step",
-        choices=["unpack", "etl", "jurisdicoes", "datajud", "datajud_sqlite", "sigef_historico", "moradia_iterpe", "despejo_zero", "aneel"],
+        choices=["unpack", "etl", "jurisdicoes", "datajud", "datajud_sqlite", "sigef_historico", "moradia_iterpe", "despejo_zero", "aneel", "search_index"],
         help="Run only a specific pipeline step."
     )
     parser.add_argument(
@@ -146,7 +146,12 @@ def main():
         from src.etl_aneel import run as run_aneel
         results.append(run_pipeline_step("7. ANEEL/SIGEL & EPE Energy Infrastructure", run_aneel))
 
-    # Step 8: Restart Martin Vector Tile Server
+    # Step 8: Unified search index (must run after every layer is loaded)
+    if not args.step or args.step == "search_index":
+        from src.build_search_index import build_search_index
+        results.append(run_pipeline_step("8. Unified Search Index", build_search_index))
+
+    # Step 9: Restart Martin Vector Tile Server
     if args.restart_martin and not args.step:
         restart_martin()
 

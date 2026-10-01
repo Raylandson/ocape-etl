@@ -29,6 +29,28 @@ services:
       db:
         condition: service_healthy
 
+  # Unified search API (src/search_api.py) backing the map's search bar
+  search:
+    image: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+    container_name: conflitos_agrarios_search
+    restart: always
+    working_dir: /app
+    command: >
+      uv run --no-project
+      --with fastapi --with uvicorn --with sqlalchemy --with psycopg2-binary
+      uvicorn src.search_api:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432/conflitos_agrarios
+    volumes:
+      - ./src:/app/src:ro
+      - uvcache:/root/.cache/uv
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   pgdata:
+  uvcache:
 

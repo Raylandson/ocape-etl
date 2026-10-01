@@ -70,6 +70,8 @@ conflict-solver/
     ├── etl_datajud.py       # DataJud CNJ pipeline for TJPE and TRF5 land conflict lawsuits
     ├── export_datajud_sqlite.py # Exports the lawsuits table to the SQLite snapshot for datajud-gui
     ├── import_sigef_historico.py # Historical georeferencing evolution importer (Batateiras)
+    ├── build_search_index.py # Builds the unified `search_index` table (codes, names, CPF/CNPJ of every layer)
+    ├── search_api.py        # FastAPI search endpoint used by the map's search bar (port 8000)
     └── overlaps.py          # Spatial conflict detection engine & DBSCAN clustering (+ energy × territory overlaps)
 ```
 
@@ -87,8 +89,8 @@ Ensure you have the following installed on your machine:
 
 ## Getting Started
 
-### 1. Run the Database & Tile Server
-Initialize the Docker services (PostGIS and Martin Vector Tile Server):
+### 1. Run the Database, Tile Server & Search API
+Initialize the Docker services (PostGIS, Martin Vector Tile Server and the search API):
 ```bash
 docker compose up -d
 ```
@@ -96,6 +98,7 @@ docker compose up -d
 - *The database runs on host port `5433` by default.*
 - *The Martin Tile Server runs on host port `3000`.*
 - *You can verify Martin is running by accessing its catalog at `http://localhost:3000/catalog`.*
+- *The search API (`src/search_api.py`) runs on host port `8000`. `src/` is mounted read-only, so run `docker compose restart search` after editing it. Results stay empty until the search index has been built (step 8 below).*
 
 ### 2. Set Up Python Environment
 Install the dependencies using `uv`:
@@ -169,7 +172,13 @@ Alternatively, individual pipeline steps can be executed separately:
    ```
    > Queries the public ArcGIS REST services of ANEEL SIGEL and the EPE WebMap plus the ANEEL SIGA CSV (no manual download or credentials). Loads 16 tables (`aneel_dup_pe` servitude/expropriation polygons, wind parks/turbines, solar parks, thermal and hydro plants, reservoirs, `epe_linhas_transmissao_pe`, `epe_subestacoes_pe`, `aneel_siga_empreendimentos_pe`) and computes `aneel_sobreposicoes_territorios_pe` (energy footprints × Indigenous Lands, quilombos, settlements, ITERPE lands and UCs). Details in [`docs/DATA_SOURCES.md` § m](docs/DATA_SOURCES.md).
 
-8. **Reload Tile Server (Martin)**:
+8. **Build the Unified Search Index**:
+   ```bash
+   uv run python -m src.build_search_index
+   ```
+   > Denormalizes the identifying fields of every map layer (SIGEF/SNCI/CAR codes, CNJ numbers, CPF/CNPJ, holder and area names, municipalities) into `public.search_index` with trigram (`pg_trgm`) and accent-insensitive (`unaccent`) indexes. Run it again after any ingestion step so search results match the map (~1 min, ~1 GB including indexes, since each row keeps its feature's attributes and geometry).
+
+9. **Reload Tile Server (Martin)**:
    ```bash
    docker compose restart martin
    ```
@@ -207,7 +216,10 @@ uv run python -m src.etl_despejo_zero
 # 8. Ingest ANEEL / SIGEL & EPE energy infrastructure (+ energy × territory overlaps)
 uv run python -m src.etl_aneel
 
-# 9. Restart Martin tile server
+# 9. Build the unified search index
+uv run python -m src.build_search_index
+
+# 10. Restart Martin tile server
 docker compose restart martin
 ```
 
@@ -221,6 +233,12 @@ pnpm install
 pnpm start
 ```
 Open `http://localhost:4200` in your web browser. You will see an interactive map with a glassmorphic layer control panel (right) and a dedicated DataJud Judicial Categories Legend (left), serving vector tiles for all key datasets (Indigenous Lands, Quilombola Territories, SIGEF Private/Public, SNCI, CAR, ICMBio Conservation Units, Embargoes, Infraction Notices, MapBiomas Deforestation Alerts/CAR, and DataJud Lawsuits) with custom color themes, circle/symbol markers, and rich popup inspection cards.
+
+#### Search Bar (Search API)
+The search bar at the top left searches every layer at once. It accepts SIGEF/SNCI/CAR codes, CNJ case numbers, CPF/CNPJ, ANEEL CEG codes, area, community, UC and holder names, and municipalities. Accents and case are ignored, and codes match with or without punctuation. Selecting a result turns its layer on, zooms to the feature, highlights it, and opens its regular popup. It calls the search API (`GET http://localhost:8000/search?q=<text>&limit=20&layers=<id,id>`), which `docker compose up -d` starts as the `search` service. To run it outside Docker instead:
+```bash
+uv run uvicorn src.search_api:app --port 8000
+```
 
 ### 5. DataJud Desktop Explorer (`datajud-gui`)
 

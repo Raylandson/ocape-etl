@@ -3,6 +3,8 @@ import { Map, Popup, AttributionControl } from 'maplibre-gl';
 import { DatajudLegendComponent } from './datajud-legend/datajud-legend.component';
 import { SigefBatateirasFilterComponent } from './sigef-batateiras-filter/sigef-batateiras-filter.component';
 import { KmlExportService, KmlExportItem } from './services/kml-export.service';
+import { SearchBarComponent, SearchLayerMeta } from './search-bar/search-bar.component';
+import { SearchResult } from './services/search.service';
 
 interface LayerConfig {
   id: string;
@@ -102,7 +104,7 @@ export const ENRICHED_CAR_DATA: Record<string, EnrichedCarInfo> = {
 
 @Component({
   selector: 'app-root',
-  imports: [DatajudLegendComponent, SigefBatateirasFilterComponent],
+  imports: [DatajudLegendComponent, SigefBatateirasFilterComponent, SearchBarComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
   encapsulation: ViewEncapsulation.None
@@ -117,6 +119,10 @@ export class App implements AfterViewInit {
 
   // Active clicked feature state
   activeSelectedFeatureItem: KmlExportItem | null = null;
+  private activePopup: Popup | null = null;
+
+  // Layer-specific popup dispatcher, assigned once the map and popup renderers are ready
+  private renderPopupForLayer?: (layerId: string, props: any, lngLat: any, underlyingSigefProps?: any) => void;
 
   readonly priorityOrder: string[] = [
     'land_overlaps_points_symbol',
@@ -640,6 +646,11 @@ export class App implements AfterViewInit {
     // }
   ];
 
+  // Display names and colors for grouping search results by layer
+  readonly searchLayerMeta: Record<string, SearchLayerMeta> = Object.fromEntries(
+    this.layers.map(l => [l.id, { name: l.name, color: l.fillColor }])
+  );
+
   ngAfterViewInit() {
     // Global handler for copy and KML export buttons inside map popups
     document.addEventListener('click', (e: MouseEvent) => {
@@ -1040,7 +1051,8 @@ export class App implements AfterViewInit {
         id: 'selected-feature-fill',
         type: 'fill',
         source: 'selected-feature-source',
-        filter: ['any', ['==', '$type', 'Polygon'], ['==', '$type', 'MultiPolygon']],
+        // Legacy `$type` filters match both single and multi geometries ('MultiPolygon' is not a valid value)
+        filter: ['==', '$type', 'Polygon'],
         paint: {
           'fill-color': '#2563eb',
           'fill-opacity': 0.18
@@ -1051,7 +1063,7 @@ export class App implements AfterViewInit {
         id: 'selected-feature-line',
         type: 'line',
         source: 'selected-feature-source',
-        filter: ['any', ['==', '$type', 'Polygon'], ['==', '$type', 'MultiPolygon'], ['==', '$type', 'LineString']],
+        filter: ['any', ['==', '$type', 'Polygon'], ['==', '$type', 'LineString']],
         paint: {
           'line-color': '#2563eb',
           'line-width': 2.8,
@@ -1093,7 +1105,9 @@ export class App implements AfterViewInit {
           .setHTML(enhancedHtml)
           .addTo(this.map);
 
+        this.activePopup = popup;
         popup.on('close', () => {
+          if (this.activePopup === popup) this.activePopup = null;
           this.clearFeatureHighlight();
         });
 
@@ -2623,6 +2637,63 @@ export class App implements AfterViewInit {
         }
       };
 
+      // Opens the layer-specific popup for a feature (shared by map clicks and search results)
+      const renderPopupForLayer = (layerId: string, props: any, lngLat: any, underlyingSigefProps?: any) => {
+        const layerInfo = this.getLayerInfoForFeature(layerId);
+        if (layerId === 'land_overlaps_points_symbol' || layerId === 'land_overlaps_fill') {
+          renderConflictPopup(props, lngLat);
+        } else if (layerId === 'processos_conflitos_judiciais_circle') {
+          renderDataJudPopup(props, lngLat);
+        } else if (layerId === 'despejo_zero_pe_circle') {
+          renderDespejoZeroPopup(props, lngLat);
+        } else if (layerId === 'moradia_legal_processos_pe_circle') {
+          renderMoradiaProcessoPopup(props, lngLat);
+        } else if (layerId === 'autos_infracao_icmbio_circle') {
+          renderAutosPopup(props, lngLat);
+        } else if (layerId === 'moradia_legal_pe_fill') {
+          renderMoradiaLegalPopup(props, lngLat);
+        } else if (layerId === 'iterpe_glebas_pe_fill') {
+          renderIterpeGlebaPopup(props, lngLat);
+        } else if (layerId === 'iterpe_malha_posses_pe_fill') {
+          renderIterpePossePopup(props, lngLat);
+        } else if (layerId === 'car_casos_analisados_fill' || layerId === 'area_imovel_1_fill') {
+          renderCarPopup(props, lngLat, underlyingSigefProps);
+        } else if (layerId === 'sigef_casos_analisados_fill') {
+          renderSigefHistoricoPopup(props, lngLat);
+        } else if (layerId === 'alerts_with_intersections_fill') {
+          renderAlertPopup(props, lngLat);
+        } else if (layerId === 'car_with_alerts_and_intersections_fill') {
+          renderCarAlertPopup(props, lngLat);
+        } else if (layerId === 'assentamentos_incra_pe_fill') {
+          renderAssentamentoPopup(props, lngLat);
+        } else if (layerId === 'ucs_estaduais_cprh_pe_fill') {
+          renderUcsEstadualPopup(props, lngLat);
+        } else if (layerId === 'processos_minerarios_pe_fill') {
+          renderMineracaoPopup(props, lngLat);
+        } else if (layerId === 'ibge_favelas_comunidades_pe_fill') {
+          renderFavelasPopup(props, lngLat);
+        } else if (layerId === 'tis_poligonais_fill') {
+          renderTiPopup(props, lngLat);
+        } else if (layerId === 'areas_de_quilombolas_pe_fill') {
+          renderQuilomboPopup(props, lngLat);
+        } else if (layerId === 'embargos_icmbio_fill') {
+          renderEmbargosPopup(props, lngLat);
+        } else if (layerId === 'limiteucsfederais_a_fill') {
+          renderUcsPopup(props, lngLat);
+        } else if (layerId === 'sigef_privado_pe_fill') {
+          renderSigefPopup(props, lngLat, false);
+        } else if (layerId === 'sigef_publico_pe_fill') {
+          renderSigefPopup(props, lngLat, true);
+        } else if (layerId === 'imovel_certificado_snci_privado_pe_fill') {
+          renderSnciPopup(props, lngLat, false);
+        } else if (layerId === 'imovel_certificado_snci_publico_pe_fill') {
+          renderSnciPopup(props, lngLat, true);
+        } else if (layerId.startsWith('aneel_') || layerId.startsWith('epe_')) {
+          renderAneelPopup(layerInfo.id, props, lngLat);
+        }
+      };
+      this.renderPopupForLayer = renderPopupForLayer;
+
       // --- UNIFIED PRIORITY CLICK DISPATCHER ---
       // Setup hover cursor on all interactive layers
       this.priorityOrder.forEach(layerId => {
@@ -2671,72 +2742,61 @@ export class App implements AfterViewInit {
         };
         this.highlightFeature(topFeature);
 
-        if (layerId === 'land_overlaps_points_symbol' || layerId === 'land_overlaps_fill') {
-          renderConflictPopup(props, e.lngLat);
-        } else if (layerId === 'processos_conflitos_judiciais_circle') {
-          renderDataJudPopup(props, e.lngLat);
-        } else if (layerId === 'despejo_zero_pe_circle') {
-          renderDespejoZeroPopup(props, e.lngLat);
-        } else if (layerId === 'moradia_legal_processos_pe_circle') {
-          renderMoradiaProcessoPopup(props, e.lngLat);
-        } else if (layerId === 'autos_infracao_icmbio_circle') {
-          renderAutosPopup(props, e.lngLat);
-        } else if (layerId === 'moradia_legal_pe_fill') {
-          renderMoradiaLegalPopup(props, e.lngLat);
-        } else if (layerId === 'iterpe_glebas_pe_fill') {
-          renderIterpeGlebaPopup(props, e.lngLat);
-        } else if (layerId === 'iterpe_malha_posses_pe_fill') {
-          renderIterpePossePopup(props, e.lngLat);
-        } else if (layerId === 'car_casos_analisados_fill' || layerId === 'area_imovel_1_fill') {
-          // If clicking on CAR, also check if there is an underlying SIGEF parcel to reference in the detail box
-          const sigefFeature = sorted.find(f => f.layer.id === 'sigef_privado_pe_fill' || f.layer.id === 'sigef_publico_pe_fill' || f.layer.id === 'sigef_casos_analisados_fill');
-          renderCarPopup(props, e.lngLat, sigefFeature?.properties);
-        } else if (layerId === 'sigef_casos_analisados_fill') {
-          renderSigefHistoricoPopup(props, e.lngLat);
-        } else if (layerId === 'alerts_with_intersections_fill') {
-          renderAlertPopup(props, e.lngLat);
-        } else if (layerId === 'car_with_alerts_and_intersections_fill') {
-          renderCarAlertPopup(props, e.lngLat);
-        } else if (layerId === 'assentamentos_incra_pe_fill') {
-          renderAssentamentoPopup(props, e.lngLat);
-        } else if (layerId === 'ucs_estaduais_cprh_pe_fill') {
-          renderUcsEstadualPopup(props, e.lngLat);
-        } else if (layerId === 'processos_minerarios_pe_fill') {
-          renderMineracaoPopup(props, e.lngLat);
-        } else if (layerId === 'ibge_favelas_comunidades_pe_fill') {
-          renderFavelasPopup(props, e.lngLat);
-        } else if (layerId === 'tis_poligonais_fill') {
-          renderTiPopup(props, e.lngLat);
-        } else if (layerId === 'areas_de_quilombolas_pe_fill') {
-          renderQuilomboPopup(props, e.lngLat);
-        } else if (layerId === 'embargos_icmbio_fill') {
-          renderEmbargosPopup(props, e.lngLat);
-        } else if (layerId === 'limiteucsfederais_a_fill') {
-          renderUcsPopup(props, e.lngLat);
-        } else if (layerId === 'sigef_privado_pe_fill') {
-          renderSigefPopup(props, e.lngLat, false);
-        } else if (layerId === 'sigef_publico_pe_fill') {
-          renderSigefPopup(props, e.lngLat, true);
-        } else if (layerId === 'imovel_certificado_snci_privado_pe_fill') {
-          renderSnciPopup(props, e.lngLat, false);
-        } else if (layerId === 'imovel_certificado_snci_publico_pe_fill') {
-          renderSnciPopup(props, e.lngLat, true);
-        } else if (layerId.startsWith('aneel_') || layerId.startsWith('epe_')) {
-          renderAneelPopup(layerInfo.id, props, e.lngLat);
-        }
+        // If clicking on CAR, also check if there is an underlying SIGEF parcel to reference in the detail box
+        const sigefFeature = sorted.find(f => f.layer.id === 'sigef_privado_pe_fill' || f.layer.id === 'sigef_publico_pe_fill' || f.layer.id === 'sigef_casos_analisados_fill');
+        renderPopupForLayer(layerId, props, e.lngLat, sigefFeature?.properties);
       });
     });
   }
 
 
 
+  selectSearchResult(result: SearchResult) {
+    if (!this.map || !this.renderPopupForLayer) return;
+    const layer = this.layers.find(l => l.id === result.layer_id);
+    if (!layer) return;
+
+    if (!layer.visible) this.toggleLayer(layer);
+
+    const [minX, minY, maxX, maxY] = result.bbox;
+    if (minX === maxX && minY === maxY) {
+      this.map.flyTo({ center: result.anchor, zoom: Math.max(this.map.getZoom(), 14), essential: true });
+    } else {
+      this.map.fitBounds([[minX, minY], [maxX, maxY]], { padding: 80, maxZoom: 16, essential: true });
+    }
+
+    // Closing the previous popup clears the highlight, so it must happen before the new selection
+    this.activePopup?.remove();
+
+    // Vector tiles omit null attributes; mirror that so popup renderers see the same shape
+    const properties = Object.fromEntries(
+      Object.entries(result.props).filter(([, value]) => value !== null && value !== undefined)
+    );
+    const feature = { type: 'Feature', geometry: result.geometry, properties };
+    const renderedLayerId = ['_circle', '_fill', '_line', '_symbol']
+      .map(suffix => `${layer.id}${suffix}`)
+      .find(id => this.map.getLayer(id)) ?? layer.id;
+    const layerInfo = this.getLayerInfoForFeature(renderedLayerId);
+
+    this.activeSelectedFeatureItem = {
+      feature,
+      layerId: layerInfo.id,
+      layerName: layerInfo.name,
+      fillColor: layerInfo.fillColor,
+      borderColor: layerInfo.borderColor
+    };
+    this.highlightFeature(feature);
+    this.renderPopupForLayer(renderedLayerId, properties, result.anchor);
+  }
+
   highlightFeature(feature: any) {
     if (!this.map) return;
     const source = this.map.getSource('selected-feature-source') as any;
     if (source) {
+      // Rendered features are MapLibre class instances that the worker can't serialize; send plain GeoJSON
       source.setData({
         type: 'FeatureCollection',
-        features: [feature]
+        features: [{ type: 'Feature', geometry: feature.geometry, properties: { ...feature.properties } }]
       });
     }
   }
