@@ -15,11 +15,12 @@
     [activeEntry]="activeStackEntry"
     (featureSelected)="onStackFeatureSelected($event)"
     (featureHidden)="onStackFeatureHidden($event)"
+    (featureAddRequested)="onStackFeatureAdd($event)"
     (featureRestored)="onStackFeatureRestored($event)"
     (stackCleared)="clearOverlapStack()"
     (featureHovered)="onStackFeatureHovered($event)">
   </app-overlap-stack-panel>
-  <app-filter-builder [layers]="layers"></app-filter-builder>
+  <app-selections-panel [layers]="layers"></app-selections-panel>
   </div>
 </div>
 
@@ -85,6 +86,13 @@
       </svg>
     </button>
   </div>
+  @if (isolation.active()) {
+    <div class="isolation-note">
+      <span>Isolamento ativo — {{ isolation.count() }} área(s)</span>
+      <button type="button" class="isolation-exit" (click)="isolation.exit()">Sair</button>
+    </div>
+  }
+
   <div class="legend-body">
     @for (layer of layers; track layer.id) {
       <div class="legend-item" (click)="toggleLayer(layer)">

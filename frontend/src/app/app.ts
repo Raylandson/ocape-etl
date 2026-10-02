@@ -7,7 +7,9 @@ import { getFeatureTitle } from './feature-title';
 import { SearchBarComponent, SearchLayerMeta } from './search-bar/search-bar.component';
 import { SearchResult } from './services/search.service';
 import { OverlapStackPanelComponent } from './overlap-stack-panel/overlap-stack-panel.component';
-import { FilterBuilderComponent } from './filter-builder/filter-builder.component';
+import { SelectionService } from './services/selection.service';
+import { SelectionIsolationService } from './services/selection-isolation.service';
+import { SelectionsPanelComponent } from './selections-panel/selections-panel.component';
 import { LAYERS, PRIORITY_ORDER, LayerConfig, renderedLayerIds } from './layers.config';
 import { FeatureVisibilityService, StackEntry } from './services/feature-visibility.service';
 
@@ -97,7 +99,7 @@ export const ENRICHED_CAR_DATA: Record<string, EnrichedCarInfo> = {
 
 @Component({
   selector: 'app-root',
-  imports: [DatajudLegendComponent, SigefBatateirasFilterComponent, SearchBarComponent, OverlapStackPanelComponent, FilterBuilderComponent],
+  imports: [DatajudLegendComponent, SigefBatateirasFilterComponent, SearchBarComponent, OverlapStackPanelComponent, SelectionsPanelComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
   encapsulation: ViewEncapsulation.None
@@ -105,6 +107,8 @@ export const ENRICHED_CAR_DATA: Record<string, EnrichedCarInfo> = {
 export class App implements AfterViewInit {
   private exportService = inject(ExportService);
   private visibility = inject(FeatureVisibilityService);
+  readonly selection = inject(SelectionService);
+  readonly isolation = inject(SelectionIsolationService);
 
   map!: Map;
   // On phones the layer panel is a full-width sheet, so start with it closed.
@@ -199,6 +203,14 @@ export class App implements AfterViewInit {
         e.preventDefault();
         e.stopPropagation();
         this.exportFeatureToKml(kmlBtn, this.activeFeatureRef);
+        return;
+      }
+
+      const addBtn = (e.target as HTMLElement).closest('[data-action="add-to-selection"]');
+      if (addBtn && this.activeFeatureRef) {
+        e.preventDefault();
+        e.stopPropagation();
+        void this.selection.add(this.activeFeatureRef);
         return;
       }
 
@@ -669,6 +681,13 @@ export class App implements AfterViewInit {
 
       // The highlight layers are now registered, so the reorder anchor exists.
       this.visibility.attach(this.map, firstLabelId);
+      this.isolation.attach(this.map, {
+        layers: this.layers,
+        setLayerVisible: (id, visible) => {
+          const layer = this.layers.find(l => l.id === id);
+          if (layer && layer.visible !== visible) this.toggleLayer(layer);
+        },
+      });
 
       // --- POPUP RENDERERS ---
       const openCustomPopup = (html: string, coordinates: any) => {
@@ -682,9 +701,14 @@ export class App implements AfterViewInit {
             <span>Baixar KML</span>
           </button>
         `;
+        const addBtnHtml = `
+          <button type="button" class="popup-btn popup-btn-add" data-action="add-to-selection" title="Adicionar esta feição ao conjunto ativo (Filtros)">
+            Adicionar ao conjunto
+          </button>
+        `;
         const enhancedHtml = html.includes('</div>')
-          ? html.replace(/(<\/div>\s*)$/, `${kmlBtnHtml}$1`)
-          : `${html}${kmlBtnHtml}`;
+          ? html.replace(/(<\/div>\s*)$/, `${addBtnHtml}${kmlBtnHtml}$1`)
+          : `${html}${addBtnHtml}${kmlBtnHtml}`;
 
         const popup = new Popup({ closeButton: true, className: 'custom-popup' })
           .setLngLat(coordinates)
@@ -1195,6 +1219,56 @@ export class App implements AfterViewInit {
                 <div class="popup-detail-box-content">${conflitoJudicial}</div>
               </div>
             ` : ''}
+          </div>
+        `;
+
+        openCustomPopup(html, coordinates);
+      };
+
+      // CAR sub-layers (APP, Reserva Legal, Vegetação Nativa) share one schema and belong to a
+      // parent property identified by `cod_imovel`.
+      const renderCarSubLayerPopup = (layerId: string, props: any, coordinates: any) => {
+        const titles: Record<string, string> = {
+          apps_1_fill: 'APP Declarada (CAR)',
+          reserva_legal_1_fill: 'Reserva Legal (CAR)',
+          vegetacao_nativa_1_fill: 'Vegetação Nativa (CAR)',
+        };
+        const codImovel = props['cod_imovel'] || 'N/A';
+        const areaHa = (props['num_area'] !== undefined && props['num_area'] !== null && props['num_area'] !== '')
+          ? Number(props['num_area']).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) + ' ha'
+          : 'N/A';
+        const status = props['ind_status'] || 'N/A';
+        const condic = props['des_condic'] || '';
+        const tema = props['nom_tema'] || '';
+
+        const html = `
+          <div class="popup-card">
+            <div class="popup-title">
+              <span>${titles[layerId] ?? 'Camada CAR'}</span>
+              <span class="popup-badge">SICAR</span>
+            </div>
+
+            ${tema ? `
+              <div class="popup-section">
+                <span class="popup-label">Tema:</span>
+                <span class="popup-value">${tema}</span>
+              </div>
+            ` : ''}
+
+            <div class="popup-section">
+              <span class="popup-label">Imóvel de origem (CAR):</span>
+              <span class="popup-value-code" style="word-break: break-all;">${codImovel}</span>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Área:</span>
+              <span class="popup-value" style="font-weight: 600;">${areaHa}</span>
+            </div>
+
+            <div class="popup-section">
+              <span class="popup-label">Situação Cadastral:</span>
+              <span class="popup-value">${status}${condic ? ` (${condic})` : ''}</span>
+            </div>
           </div>
         `;
 
@@ -2244,6 +2318,8 @@ export class App implements AfterViewInit {
           renderIterpePossePopup(props, lngLat);
         } else if (layerId === 'car_casos_analisados_fill' || layerId === 'area_imovel_1_fill') {
           renderCarPopup(props, lngLat, underlyingSigefProps);
+        } else if (layerId === 'apps_1_fill' || layerId === 'reserva_legal_1_fill' || layerId === 'vegetacao_nativa_1_fill') {
+          renderCarSubLayerPopup(layerId, props, lngLat);
         } else if (layerId === 'sigef_casos_analisados_fill') {
           renderSigefHistoricoPopup(props, lngLat);
         } else if (layerId === 'alerts_with_intersections_fill') {
@@ -2302,10 +2378,12 @@ export class App implements AfterViewInit {
           return this.map.getLayer(id) && this.map.getLayoutProperty(id, 'visibility') !== 'none';
         });
 
-        if (activeLayers.length === 0) return null;
+        const overlayLayers = this.isolation.active() ? this.isolation.layerIds : [];
+        if (activeLayers.length === 0 && overlayLayers.length === 0) return null;
 
-        const rendered = this.map.queryRenderedFeatures(e.point, { layers: activeLayers });
-        if (!rendered || rendered.length === 0) return null;
+        const hits = this.map.queryRenderedFeatures(e.point, { layers: [...activeLayers, ...overlayLayers] });
+        if (!hits || hits.length === 0) return null;
+        const rendered = hits.map(f => this.fromSelectionOverlay(f));
 
         // Sort rendered features by priority order
         const sorted = rendered.sort((a, b) => {
@@ -2441,6 +2519,20 @@ export class App implements AfterViewInit {
 
   // ----------------------------------------------------------- overlap stack & hiding
 
+  /**
+   * Overlay features carry the original properties plus `__layer`; rebuild the shape a tile
+   * feature has so popups, the overlap stack and highlighting need no special case.
+   */
+  private fromSelectionOverlay(feature: any): any {
+    if (!this.isolation.layerIds.includes(feature.layer.id)) return feature;
+    const props = feature.properties ?? {};
+    const baseId: string = props['__layer'];
+    const renderedId = this.priorityOrder.find(id =>
+      ['_fill', '_circle', '_line', '_symbol'].some(suffix => id === baseId + suffix)) ?? `${baseId}_fill`;
+    const clean = Object.fromEntries(Object.entries(props).filter(([k]) => !k.startsWith('__')));
+    return { layer: { id: renderedId }, properties: clean, geometry: feature.geometry };
+  }
+
   private toStackEntry(f: any, lngLat: any, stack: any[]): StackEntry | null {
     const props = f.properties;
     if (!props) return null;
@@ -2515,6 +2607,14 @@ export class App implements AfterViewInit {
     // Highlight the merged geometry, not the single tile fragment on `entry.feature`.
     this.highlightFeature({ geometry: entry.geometry, properties: entry.feature.properties });
     this.renderPopupForLayer(entry.renderedLayerId, entry.feature.properties, entry.lngLat, entry.underlyingSigefProps);
+  }
+
+  onStackFeatureAdd(entry: StackEntry) {
+    const ref = this.buildFeatureRef(
+      { id: entry.baseLayerId, name: entry.layerName,
+        fillColor: entry.fillColor, borderColor: entry.borderColor },
+      entry.renderedLayerId, entry.feature.properties, entry.lngLat);
+    void this.selection.add(ref);
   }
 
   onStackFeatureHidden(entry: StackEntry) {

@@ -1,18 +1,15 @@
 """
-KML export: bulk (from a filter) and single feature (from a map click).
-
-Everything streams. The `search` container mounts only `./src` read-only and has no writable
-data directory, so writing a temp archive is not an option — and streaming is what keeps a
-50,000-feature export from materialising in memory anyway.
+Single-feature endpoints shared by the map popup and saved selections: locate a clicked
+feature in `search_index` (`_locate_feature`), return its full boundary for the highlight
+(`/feature/geometry`) and export it as KML (`/export/kml/feature`). Set/ZIP exports live in
+`selections_api.py`.
 """
 
 from __future__ import annotations
 
 import json
 import logging
-from datetime import date, datetime
-from itertools import groupby
-from typing import Any, Literal
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
@@ -20,36 +17,18 @@ from pydantic import BaseModel, Field
 from sqlalchemy import text
 
 from src.database import get_engine
-from src.filters_api import compile_or_400, resolve_definition
-from src.kml_writer import KmlItem, LayerGroup, build_document, sanitize_filename, stream_archive
+from src.kml_writer import KmlItem, build_document, sanitize_filename
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["export"])
 engine = get_engine()
 
-#: ~3 kB per placemark, so 50k is roughly 150 MB raw / 15 MB deflated.
-CAP_BY_LAYER = 50_000
-#: Each entry repeats the document envelope and costs a central-directory record.
-CAP_BY_FEATURE = 2_000
-#: Google Earth becomes unusable well before this many placemarks in one file.
-SPLIT_AT = 25_000
-
 
 class LayerStyle(BaseModel):
     name: str | None = None
     fill: str | None = None
     border: str | None = None
-
-
-class ExportRequest(BaseModel):
-    definition: dict[str, Any] | None = None
-    saved_filter_id: str | None = None
-    grouping: Literal["layer", "feature"] = "layer"
-    #: Layer colours and pt-BR names live only in the frontend registry; mirroring 43 entries
-    #: server-side would drift the first time a layer is recoloured.
-    style: dict[str, LayerStyle] = Field(default_factory=dict)
-    filename: str | None = None
 
 
 class FeatureExportRequest(BaseModel):
@@ -61,95 +40,6 @@ class FeatureExportRequest(BaseModel):
     props: dict[str, Any] = Field(default_factory=dict)
     search_index_id: int | None = None
     style: LayerStyle = Field(default_factory=LayerStyle)
-
-
-def _style_for(styles: dict[str, LayerStyle], layer_id: str) -> LayerStyle:
-    return styles.get(layer_id) or LayerStyle()
-
-
-def _counts(definition: dict[str, Any]) -> dict[str, int]:
-    compiled = compile_or_400(definition, select="count_by_layer")
-    with engine.connect() as conn:
-        conn.execute(text("SET LOCAL statement_timeout = '60s'"))
-        rows = conn.execute(text(compiled.sql), compiled.params).mappings().all()
-    return {r["layer_id"]: r["total"] for r in rows}
-
-
-def _readme(definition: dict[str, Any], counts: dict[str, int], grouping: str) -> str:
-    lines = [
-        "Exportação KML — Plataforma de Mapeamento de Conflitos Agrários de Pernambuco",
-        f"Gerado em: {datetime.now().isoformat(timespec='seconds')}",
-        f"Agrupamento: {'um arquivo por camada' if grouping == 'layer' else 'um arquivo por feição'}",
-        f"Total de feições: {sum(counts.values())}",
-        "",
-        "Feições por camada:",
-    ]
-    lines += [f"  {layer}: {total}" for layer, total in sorted(counts.items())]
-    lines += ["", "Definição do filtro:", json.dumps(definition, ensure_ascii=False, indent=2)]
-    return "\n".join(lines)
-
-
-def _to_item(row, styles: dict[str, LayerStyle]) -> KmlItem:
-    style = _style_for(styles, row["layer_id"])
-    return KmlItem(
-        geometry_kml=row["geom_kml"] or "",
-        properties=dict(row["props"] or {}),
-        title=row["label"],
-        layer_id=row["layer_id"],
-        layer_name=style.name or row["layer_id"],
-        fill_color=style.fill,
-        border_color=style.border,
-    )
-
-
-def _groups(definition: dict[str, Any], counts: dict[str, int],
-            styles: dict[str, LayerStyle], limit: int):
-    """Streams rows ordered by layer and hands `stream_archive` one group per layer."""
-    compiled = compile_or_400(definition, select="features", limit=limit)
-    connection = engine.connect().execution_options(stream_results=True, yield_per=1000)
-    try:
-        result = connection.execute(text(compiled.sql), compiled.params).mappings()
-        for layer_id, rows in groupby(result, key=lambda r: r["layer_id"]):
-            style = _style_for(styles, layer_id)
-            yield LayerGroup(
-                layer_id=layer_id,
-                layer_name=style.name or layer_id,
-                count=counts.get(layer_id, 0),
-                items=(_to_item(r, styles) for r in rows),
-                fill_color=style.fill,
-                border_color=style.border,
-            )
-    finally:
-        connection.close()
-
-
-@router.post("/export/kml")
-def export_kml(payload: ExportRequest):
-    definition = resolve_definition(payload.definition, payload.saved_filter_id)
-    counts = _counts(definition)
-    total = sum(counts.values())
-
-    cap = CAP_BY_LAYER if payload.grouping == "layer" else CAP_BY_FEATURE
-    if total > cap:
-        raise HTTPException(status_code=413, detail={
-            "total": total, "cap": cap, "grouping": payload.grouping,
-            "message": (f"{total:,} feições excedem o limite de {cap:,} para este agrupamento. "
-                        "Use o agrupamento por camada ou refine o filtro.").replace(",", "."),
-        })
-    if total == 0:
-        raise HTTPException(status_code=404, detail="Nenhuma feição corresponde ao filtro.")
-
-    slug = sanitize_filename(payload.filename or "filtro")
-    name = f"conflitos_pe_{slug}_{date.today():%Y%m%d}.zip"
-
-    stream = stream_archive(
-        _groups(definition, counts, payload.style, cap),
-        grouping=payload.grouping,
-        readme_text=_readme(definition, counts, payload.grouping),
-        max_per_file=SPLIT_AT,
-    )
-    return StreamingResponse(stream, media_type="application/zip",
-                             headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
 
 def _locate_feature(payload: FeatureExportRequest, geometry_sql: str) -> Any:

@@ -550,8 +550,6 @@ export const LAYERS: readonly LayerConfig[] = [
  * user-controlled layer depth would make "send a point layer to the back" render that layer
  * unclickable. Depth lives in FeatureVisibilityService.drawOrder instead.
  *
- * Note `apps_1`, `reserva_legal_1` and `vegetacao_nativa_1` are absent: they render but are
- * not hit-tested, so they never reach the popup or the overlap stack.
  */
 export const PRIORITY_ORDER: readonly string[] = [
   'land_overlaps_points_symbol',
@@ -597,6 +595,9 @@ export const PRIORITY_ORDER: readonly string[] = [
   'imovel_certificado_snci_publico_pe_fill',
   'aneel_eol_interferencia_pe_fill',
   'aneel_hidro_reservatorios_pe_fill',
+  'apps_1_fill',
+  'reserva_legal_1_fill',
+  'vegetacao_nativa_1_fill',
   'area_imovel_1_fill'
 ];
 

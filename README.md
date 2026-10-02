@@ -184,6 +184,15 @@ Alternatively, individual pipeline steps can be executed separately:
    ```
    > Restarting Martin ensures it instantly detects all newly generated tables and refreshes its MVT vector tile endpoints at `http://localhost:3000/catalog`.
 
+#### Saved Selections & KML Export
+The **Filtros** panel (top left) keeps named **sets of areas you pick by hand**. Create a set, make it active, then add features from the **Sobreposições** panel (the **+** button on each row) or from a feature's detail popup (**Adicionar ao conjunto**). The same feature is never added twice. Each area can carry a note.
+
+**Isolar no mapa** hides every data layer and draws only the set's areas with their full boundaries; leaving isolation restores your layer visibility exactly. **Baixar** exports the set as one KML (folder per layer) or as a ZIP with one KML per area; notes appear in the balloons. An area whose source feature no longer exists is shown as *não encontrada*, keeps its note and is skipped on export.
+
+Areas are remembered by layer, attribute fingerprint and a point inside them, so they survive a search-index rebuild. The CAR sub-layers (`apps_1`, `reserva_legal_1`, `vegetacao_nativa_1`) can be added like any other layer but are excluded from the search bar.
+
+> **Backup warning:** `saved_selections` and `saved_selection_members` are the only tables the pipelines cannot regenerate, and `docker compose down -v` destroys them. Use **Exportar JSON** / **Importar JSON** in the panel, or `docker exec conflitos_agrarios_db pg_dump -U postgres -t saved_selections -t saved_selection_members conflitos_agrarios > selections.sql` (`*.sql` is git-ignored). `uv run python -m src.saved_selections` recreates empty tables. The old `saved_filters` table is no longer used and can be dropped manually.
+
 ---
 
 ### Resetting the Database / Full Re-import
@@ -192,7 +201,7 @@ To completely wipe the database and re-import everything from scratch:
 
 ```bash
 # 1. Wipe database volume and recreate containers
-docker compose down -v
+docker compose down -v   # also destroys the saved selections: export them first
 docker compose up -d
 
 # 2. Re-run spatial shapefiles ingestion & overlaps calculation

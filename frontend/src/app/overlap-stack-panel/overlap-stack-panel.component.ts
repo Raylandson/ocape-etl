@@ -23,6 +23,7 @@ export class OverlapStackPanelComponent {
 
   @Output() featureSelected = new EventEmitter<StackEntry>();
   @Output() featureHidden = new EventEmitter<StackEntry>();
+  @Output() featureAddRequested = new EventEmitter<StackEntry>();
   @Output() featureRestored = new EventEmitter<StackEntry>();
   @Output() stackCleared = new EventEmitter<void>();
   /** GeoJSON geometry of the row under the pointer, or null when the pointer leaves. */
@@ -72,6 +73,11 @@ export class OverlapStackPanelComponent {
   toggleHidden(event: Event) {
     event.stopPropagation();
     this.showHidden = !this.showHidden;
+  }
+
+  onAdd(entry: StackEntry, event: Event) {
+    event.stopPropagation();
+    this.featureAddRequested.emit(entry);
   }
 
   onSelect(entry: StackEntry, event: Event) {

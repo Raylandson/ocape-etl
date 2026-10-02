@@ -38,6 +38,10 @@ This document outlines the operational rules, core architecture, and reference p
     - `src/etl_datajud.py`: CNJ DataJud judicial lawsuits extraction (TJPE & TRF5).
     - `src/overlaps.py`: Spatial conflict detection engine & DBSCAN clustering (`land_overlaps`, `land_overlaps_points`).
     - `src/etl_moradia_iterpe.py`: Programa Moradia Legal (TJPE) and Acervo Fundiário (ITERPE) ingestion.
+    - `src/build_search_index.py`: Unified `search_index` (every layer in `SEARCH_SOURCES`, 1.27M rows). Rerun it after adding a layer; `"searchable": False` keeps a layer filterable but out of the search bar.
+    - `src/search_api.py` (port `7055`, Docker service `search`, **no auto-reload**: `docker compose restart search` after backend edits): search, saved selections (`selections_api.py`, `saved_selections.py`), KML export and feature geometry (`export_api.py`, `kml_writer.py`).
+  - **`saved_selections` / `saved_selection_members` are user data**: the only tables the pipelines cannot regenerate. Never drop them, and warn before `docker compose down -v`.
+  - Tests: `uv run pytest` (pure modules, plus DB-backed tests that skip without a database: `kml_writer`, `saved_selections`).
 - **Frontend**: Angular 20 Standalone + MapLibre GL JS
   - Directory: `frontend/` | Port: `4200`
   - MapLibre style: Carto Positron. City and municipal place labels are dynamically styled to sit with proper contrast above spatial polygons and point circles.

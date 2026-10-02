@@ -1,5 +1,7 @@
 # Feature Specification — Feature Visibility Control & Saved Filters with Bulk KML Export
 
+> **Feature B (§5, saved filters) was superseded by [`2026-10-02-saved-selections.md`](2026-10-02-saved-selections.md).** Feature A is unchanged.
+
 * **Status:** Approved — pending implementation.
 * **Date:** 2026-10-01
 * **Scope:** Two independent features, A and B. Feature A is frontend-only; Feature B spans

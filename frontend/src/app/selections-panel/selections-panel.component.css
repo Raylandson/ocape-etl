@@ -317,7 +317,8 @@
 
 .builder-block-actions {
   display: flex;
-  gap: 10px;
+  gap: 6px 12px;
+  flex-wrap: wrap;
   padding-top: 2px;
 }
 
@@ -447,3 +448,100 @@
   color: #94a3b8;
   font-variant-numeric: tabular-nums;
 }
+
+.saved-row.active {
+  border-color: #0f172a;
+  background: #f1f5f9;
+}
+
+.builder-text-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* ---------- selections panel ---------- */
+.legend-panel.left-panel.selections-panel {
+  position: relative;
+  top: auto;
+  right: auto;
+  left: auto;
+  max-height: 62vh;
+}
+
+.selections-panel .legend-body {
+  max-height: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 8px;
+}
+
+.set-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.set-row:hover { background: #f1f5f9; border-color: #cbd5e1; }
+.set-row.active { border-color: #0f172a; background: #f1f5f9; }
+
+.set-row-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.set-row-name { font-size: 0.78rem; font-weight: 500; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.set-row-meta { font-size: 0.65rem; color: #94a3b8; }
+
+.member-row {
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  background: #f8fafc;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.member-head { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.member-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.member-layer { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; }
+.member-label { font-size: 0.74rem; font-weight: 500; color: #1e293b; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.member-badge {
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #fef3c7;
+  color: #92400e;
+}
+.member-badge.missing { background: #fee2e2; color: #991b1b; }
+
+.member-note {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 0.72rem;
+  color: #1e293b;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  padding: 4px 6px;
+  resize: vertical;
+  min-height: 44px;
+  outline: none;
+}
+.member-note:focus { border-color: #94a3b8; }
+
+.panel-notice {
+  font-size: 0.72rem;
+  color: #334155;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.builder-primary-btn.secondary { background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; }

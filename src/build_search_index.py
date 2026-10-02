@@ -33,6 +33,7 @@ MUNICIPIOS_TABLE = "jurisdicoes_pe_municipios"
 #   text:  free-text descriptors (holders, names, categories)
 #   place: municipality-like columns, shown as the result subtitle
 #   ibge:  integer IBGE municipality columns resolved to names via MUNICIPIOS_TABLE
+#   searchable: False keeps the layer out of the search bar (still filterable and exportable)
 SEARCH_SOURCES: List[Dict] = [
     {"table": "sigef_casos_analisados", "label": ["nome_imovel", "titulo_fase"],
      "codes": ["codigo_imo", "parcela_codigo", "matricula_cartorio", "art"],
@@ -115,7 +116,21 @@ SEARCH_SOURCES: List[Dict] = [
     {"table": "processos_conflitos_judiciais", "label": ["numero_processo"], "codes": ["numero_processo"],
      "text": ["classe_nome", "categoria_conflito", "orgao_julgador_nome"], "place": ["municipio_nome"]},
     {"table": "area_imovel_1", "label": ["cod_imovel"], "codes": ["cod_imovel"], "text": [], "place": ["municipio"]},
+    # CAR sub-layers. `cod_imovel` identifies the PARENT property, not the feature (apps_1 holds
+    # 273k rows over 47k codes), so typing a CAR code in the search bar would return dozens of
+    # identical rows. They are indexed for filtering and export only.
+    # `place` stays empty: deriving the municipality needs a cod_imovel -> area_imovel_1 join
+    # that _build_insert does not support.
+    {"table": "apps_1", "label": ["cod_imovel"], "codes": ["cod_imovel"],
+     "text": ["nom_tema", "des_condic"], "place": [], "searchable": False},
+    {"table": "reserva_legal_1", "label": ["cod_imovel"], "codes": ["cod_imovel"],
+     "text": ["nom_tema", "des_condic"], "place": [], "searchable": False},
+    {"table": "vegetacao_nativa_1", "label": ["cod_imovel"], "codes": ["cod_imovel"],
+     "text": ["nom_tema", "des_condic"], "place": [], "searchable": False},
 ]
+
+#: Layers the search bar skips unless they are named explicitly in `?layers=`.
+NON_SEARCHABLE_LAYERS: List[str] = [s["table"] for s in SEARCH_SOURCES if s.get("searchable") is False]
 
 
 def _norm(expr: str) -> str:

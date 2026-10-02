@@ -2,7 +2,6 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { SEARCH_API_URL } from './search.service';
-import { FilterDefinition } from './filter.service';
 
 export interface LayerStyle {
   name?: string;
@@ -30,17 +29,13 @@ export interface ActiveFeatureRef {
 export class ExportService {
   private http = inject(HttpClient);
 
-  /**
-   * Bulk export. The style map travels from the frontend registry because layer colours and
-   * pt-BR names live only there; mirroring them server-side would drift.
-   */
-  exportFilter(definition: FilterDefinition, grouping: 'layer' | 'feature',
-               style: Record<string, LayerStyle>, filename: string): Observable<void> {
+  /** Exports the active selection: one KML for the set, or a ZIP with one KML per area. */
+  exportSelection(id: string, grouping: 'set' | 'feature',
+                  style: Record<string, LayerStyle>, fallbackName: string): Observable<void> {
     return this.http
-      .post(`${SEARCH_API_URL}/export/kml`,
-            { definition, grouping, style, filename },
+      .post(`${SEARCH_API_URL}/selections/${id}/export/kml`, { grouping, style },
             { responseType: 'blob', observe: 'response' })
-      .pipe(map(response => this.save(response, `${filename}.zip`)));
+      .pipe(map(response => this.save(response, fallbackName)));
   }
 
   /**

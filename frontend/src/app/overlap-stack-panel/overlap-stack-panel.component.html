@@ -50,6 +50,12 @@
               <span class="stack-row-title">{{ entry.title }}</span>
             </div>
             <div class="stack-row-actions">
+              <button class="stack-icon-btn" (click)="onAdd(entry, $event)"
+                      title="Adicionar ao conjunto ativo (Filtros)">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+                </svg>
+              </button>
               <button class="stack-icon-btn" [disabled]="isEntryHidden(entry)"
                       (click)="onSelect(entry, $event)"
                       [title]="isEntryHidden(entry) ? 'Restaure a feição para ver os detalhes' : 'Abrir os detalhes desta feição (igual ao clique direito no mapa)'">

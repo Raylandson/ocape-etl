@@ -57,6 +57,8 @@ class KmlItem:
     layer_name: str | None = None
     fill_color: str | None = None
     border_color: str | None = None
+    #: Free text a user attached to this feature in a saved selection; rendered as "Observação".
+    note: str | None = None
 
 
 # --------------------------------------------------------------------------- primitives
@@ -82,11 +84,17 @@ def is_valid_hex_color(value: Any) -> bool:
     return isinstance(value, str) and bool(_HEX_COLOR.match(value))
 
 
+#: XML 1.0 forbids these outright (even escaped): C0 controls except tab/LF/CR, and lone
+#: surrogates, which would also make `.encode("utf-8")` raise. Text pasted from Word or a PDF
+#: carries them easily, and one is enough to make Google Earth reject the whole file.
+_XML_ILLEGAL = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ud800-\udfff\ufffe\uffff]")
+
+
 def escape_xml(value: Any) -> str:
     if value is None:
         return ""
     return (
-        str(value)
+        _XML_ILLEGAL.sub("", str(value))
         .replace("&", "&amp;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")
@@ -181,7 +189,8 @@ def _humanize(key: str) -> str:
 
 # --------------------------------------------------------------------------- fragments
 
-def html_description(title: str, layer_name: str, properties: dict[str, Any]) -> str:
+def html_description(title: str, layer_name: str, properties: dict[str, Any],
+                     note: str | None = None) -> str:
     """The styled balloon table. CDATA-wrapped, but values are still escaped so a stray
     `]]>` in the data cannot terminate the section early."""
     rows = []
@@ -195,6 +204,14 @@ def html_description(title: str, layer_name: str, properties: dict[str, Any]) ->
             "        </tr>"
         )
 
+    note_html = ""
+    if note and note.strip():
+        note_html = (
+            '<div style="margin-bottom: 8px; padding: 6px 8px; background: #fffbeb; '
+            'border: 1px solid #fde68a; border-radius: 4px; font-size: 11px; color: #78350f;">'
+            f'<strong>Observação:</strong> {escape_xml(note.strip())}</div>'
+        )
+
     return f"""<![CDATA[
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 360px; color: #1e293b;">
         <div style="background-color: #0f172a; color: #ffffff; padding: 8px 12px; border-radius: 6px 6px 0 0;">
@@ -202,6 +219,7 @@ def html_description(title: str, layer_name: str, properties: dict[str, Any]) ->
           <div style="font-size: 14px; font-weight: 600; margin-top: 2px;">{escape_xml(title)}</div>
         </div>
         <div style="background: #ffffff; border: 1px solid #cbd5e1; border-top: none; border-radius: 0 0 6px 6px; padding: 8px;">
+          {note_html}
           <table style="width: 100%; border-collapse: collapse;">
             <tbody>{''.join(rows)}
             </tbody>
@@ -233,7 +251,7 @@ def build_placemark(item: KmlItem, style_id: str | None = None) -> str:
     return f"""
     <Placemark>
       <name>{escape_xml(title)}</name>{style_url}
-      <description>{html_description(title, layer_name, properties)}</description>
+      <description>{html_description(title, layer_name, properties, item.note)}</description>
 {extended_data(properties)}
       {item.geometry_kml}
     </Placemark>"""

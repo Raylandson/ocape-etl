@@ -21,10 +21,11 @@ import logging
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
+from src.build_search_index import NON_SEARCHABLE_LAYERS
 from src.database import get_engine
 from src.export_api import router as export_router
-from src.filters_api import router as filters_router
-from src.saved_filters import ensure_saved_filters_table
+from src.saved_selections import ensure_saved_selections_tables
+from src.selections_api import router as selections_router
 
 logger = logging.getLogger(__name__)
 
@@ -44,8 +45,8 @@ app.add_middleware(
 
 engine = get_engine()
 
-app.include_router(filters_router)
 app.include_router(export_router)
+app.include_router(selections_router)
 
 
 @app.on_event("startup")
@@ -53,9 +54,9 @@ def _ensure_schema() -> None:
     """`docker compose up -d` alone must yield a working feature. A cold database must not
     stop the API booting, so this is advisory only."""
     try:
-        ensure_saved_filters_table(engine)
-    except Exception as exc:  # pragma: no cover - depends on container start order
-        logger.warning(f"Could not ensure the saved_filters table: {exc}")
+        ensure_saved_selections_tables(engine)
+    except Exception as exc:  # pragma: no cover
+        logger.warning(f"Could not ensure the saved_selections tables: {exc}")
 
 
 def _escape_like(value: str) -> str:
@@ -88,6 +89,10 @@ def search(
     if layer_ids:
         where += " AND s.layer_id = ANY(:layer_ids)"
         params["layer_ids"] = layer_ids
+    elif NON_SEARCHABLE_LAYERS:
+        # Indexed for filtering/export only; naming them in `layers` still works.
+        where += " AND NOT (s.layer_id = ANY(:non_searchable))"
+        params["non_searchable"] = NON_SEARCHABLE_LAYERS
 
     sql = f"""
         WITH qn AS (

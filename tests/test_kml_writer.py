@@ -181,3 +181,44 @@ def test_title_falls_back_to_the_chain_when_absent():
     item = KmlItem(geometry_kml=POLY, properties={"nome_imovel": "Fazenda A"},
                    layer_id="x", layer_name="Camada")
     assert "<name>Fazenda A</name>" in build_document("D", [item])
+
+
+# --- member notes ("Observação") -----------------------------------------------------
+
+def test_note_renders_as_observacao_block():
+    desc = html_description("CAR PE-1", "CAR", {"cod_imovel": "PE-1"}, note="Visitar em março")
+    assert "Observação" in desc
+    assert "Visitar em março" in desc
+
+
+def test_no_note_means_no_observacao_block():
+    assert "Observação" not in html_description("t", "l", {"a": 1})
+    assert "Observação" not in html_description("t", "l", {"a": 1}, note="   ")
+    assert "Observação" not in html_description("t", "l", {"a": 1}, note=None)
+
+
+def test_note_markup_is_escaped_and_cdata_survives():
+    hostile = "<script>alert(1)</script> ]]> & \"q\" 'a'"
+    desc = html_description("t", "l", {"a": 1}, note=hostile)
+    assert "<script>" not in desc
+    assert desc.count("]]>") == 1          # only the real CDATA terminator at the end
+    assert "&lt;script&gt;" in desc
+
+
+def test_placemark_with_hostile_note_is_well_formed_xml():
+    item = KmlItem(geometry_kml=POLY, properties={"cod_imovel": "PE-1"},
+                   layer_id="area_imovel_1", layer_name="CAR",
+                   note="<b>x</b> ]]> & <![CDATA[ nested")
+    ET.fromstring(build_document("doc", [item]))   # raises ParseError if malformed
+
+
+def test_escape_xml_drops_characters_xml_forbids():
+    assert escape_xml("a\x0bb\x00c\x1fd") == "abcd"
+    assert escape_xml("a\ud800b") == "ab"            # lone surrogate would break utf-8 encoding
+    assert escape_xml("tab\tnewline\n ok") == "tab\tnewline\n ok"   # legal whitespace stays
+
+
+def test_note_with_control_characters_still_yields_well_formed_xml():
+    item = KmlItem(geometry_kml=POLY, properties={"cod_imovel": "PE-1"},
+                   layer_id="area_imovel_1", layer_name="CAR", note="x\x0b<script>]]>&\"y\x00")
+    ET.fromstring(build_document("doc", [item]).encode("utf-8"))

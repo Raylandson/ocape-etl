@@ -73,7 +73,7 @@ def main():
     )
     parser.add_argument(
         "--step",
-        choices=["unpack", "etl", "jurisdicoes", "datajud", "datajud_sqlite", "sigef_historico", "moradia_iterpe", "despejo_zero", "aneel", "search_index"],
+        choices=["unpack", "etl", "jurisdicoes", "datajud", "datajud_sqlite", "sigef_historico", "moradia_iterpe", "despejo_zero", "aneel", "search_index", "saved_selections"],
         help="Run only a specific pipeline step."
     )
     parser.add_argument(
@@ -150,6 +150,12 @@ def main():
     if not args.step or args.step == "search_index":
         from src.build_search_index import build_search_index
         results.append(run_pipeline_step("8. Unified Search Index", build_search_index))
+
+    # Step 8b: Saved selections tables. User data, so this only creates them if missing; they
+    # are the only tables in the database this pipeline cannot regenerate.
+    if not args.step or args.step == "saved_selections":
+        from src.saved_selections import ensure_saved_selections_tables
+        results.append(run_pipeline_step("8b. Saved Selections Tables", ensure_saved_selections_tables))
 
     # Step 9: Restart Martin Vector Tile Server
     if args.restart_martin and not args.step:

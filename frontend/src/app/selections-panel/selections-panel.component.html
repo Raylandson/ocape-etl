@@ -1,0 +1,117 @@
+@if (!sel.panelOpen()) {
+  <button class="panel-toggle-badge left-toggle" (click)="toggleOpen()" title="Abrir conjuntos de áreas">
+    <svg class="toggle-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h18l-7 8v6l-4 2v-8z" />
+    </svg>
+    <span class="toggle-badge-text">Filtros</span>
+    @if (sel.activeId()) { <span class="toggle-badge-count">{{ sel.members().length }}</span> }
+  </button>
+} @else {
+  <div class="legend-panel left-panel selections-panel">
+    <div class="legend-header">
+      <div class="legend-header-text">
+        <h3>Filtros</h3>
+        <p>Conjuntos de áreas selecionadas</p>
+      </div>
+      <button class="close-panel-btn" (click)="toggleOpen()" title="Ocultar painel">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="legend-body">
+      @if (sel.notice()) { <div class="panel-notice">{{ sel.notice() }}</div> }
+
+      <div class="builder-section-title">Conjuntos ({{ sel.selections().length }})</div>
+      @for (item of sel.selections(); track item.id) {
+        <div class="set-row" [class.active]="item.id === sel.activeId()" (click)="pick(item.id)">
+          <div class="set-row-text">
+            @if (renamingId === item.id) {
+              <input class="builder-input" [(ngModel)]="renameValue" (click)="$event.stopPropagation()"
+                     (keydown.enter)="commitRename()" (blur)="commitRename()" />
+            } @else {
+              <span class="set-row-name">{{ item.name }}</span>
+              <span class="set-row-meta">{{ item.member_count }} área(s)</span>
+            }
+          </div>
+          <button class="builder-icon-btn" (click)="startRename(item.id, item.name, $event)" title="Renomear">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />
+            </svg>
+          </button>
+          <button class="builder-icon-btn" (click)="removeSet(item.id, $event)" title="Excluir conjunto">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+            </svg>
+          </button>
+        </div>
+      }
+      @if (renameError) { <div class="builder-error inline">{{ renameError }}</div> }
+
+      <div class="builder-save">
+        <input class="builder-input grow" [(ngModel)]="newName" (keydown.enter)="create()" placeholder="Nome do novo conjunto" />
+        <button class="builder-primary-btn" [disabled]="!newName.trim()" (click)="create()">Criar</button>
+      </div>
+      @if (createError) { <div class="builder-error inline">{{ createError }}</div> }
+
+      <div class="builder-block-actions">
+        <button class="builder-text-btn" (click)="sel.exportBackup()">Exportar JSON</button>
+        <button class="builder-text-btn" (click)="importInput.click()">Importar JSON</button>
+        <input #importInput type="file" accept="application/json,.json" hidden (change)="onImport($event)" />
+      </div>
+
+      @if (sel.activeId()) {
+        <div class="builder-section-title">{{ activeName }} · {{ sel.members().length }} área(s)</div>
+
+        @if (!sel.members().length) {
+          <div class="set-row-meta">Clique no mapa e use o botão de adicionar nas linhas de Sobreposições ou no popup.</div>
+        }
+
+        @for (member of sel.members(); track member.id) {
+          <div class="member-row">
+            <div class="member-head">
+              <span class="color-indicator" [style.background-color]="layerColor(member.layer_id)"
+                    [style.border-color]="layerBorder(member.layer_id)"></span>
+              <div class="member-text">
+                <span class="member-layer">{{ layerName(member.layer_id) }}</span>
+                <span class="member-label">{{ member.label }}</span>
+              </div>
+              @if (member.resolved === 'approximate') { <span class="member-badge" title="Os atributos mudaram desde que a área foi adicionada">aproximada</span> }
+              @if (member.resolved === 'missing') { <span class="member-badge missing" title="A feição não existe mais nesta posição">não encontrada</span> }
+              <button class="builder-icon-btn" [disabled]="member.resolved === 'missing'" (click)="zoomTo(member)" title="Ir para a área">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="3" /><path stroke-linecap="round" d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+                </svg>
+              </button>
+              <button class="builder-icon-btn" (click)="sel.removeMember(member.id)" title="Remover do conjunto">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <textarea class="member-note" placeholder="Observação (opcional)"
+                      [value]="member.note ?? ''" (blur)="saveNote(member, $any($event.target).value)"></textarea>
+          </div>
+        }
+
+        <button class="builder-primary-btn full secondary" [disabled]="!usable && !isolation.active()"
+                (click)="toggleIsolation()">
+          {{ isolation.active() ? 'Sair do isolamento' : 'Isolar no mapa' }}
+        </button>
+
+        <div class="builder-section-title">Exportar KML</div>
+        <label class="builder-radio">
+          <input type="radio" value="set" [(ngModel)]="grouping" /> <span>Um KML para o conjunto</span>
+        </label>
+        <label class="builder-radio">
+          <input type="radio" value="feature" [(ngModel)]="grouping" /> <span>Um KML por área (ZIP)</span>
+        </label>
+        <button class="builder-primary-btn full" [disabled]="exporting || !usable" (click)="exportNow()">
+          {{ exporting ? 'Gerando…' : 'Baixar' }}
+        </button>
+        @if (exportError) { <div class="builder-error inline">{{ exportError }}</div> }
+      }
+    </div>
+  </div>
+}
