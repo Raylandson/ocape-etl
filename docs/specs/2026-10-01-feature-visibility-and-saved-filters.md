@@ -546,8 +546,16 @@ idiom (measured 2.5 ms via `idx_search_index_search_text`).
 
 #### Worked examples
 
-**A — "CAR ativos ≥ 100 ha sobre Terras Indígenas"** is the JSON above. Measured **226 ms**,
-18 matching features. This is the canonical acceptance case.
+**A — "CAR pendentes sobre Terras Indígenas"** is the JSON above with `ind_status = 'PE'`.
+Measured **750 features**, and the plan verified as the fast shape: `CTE Scan on t0_0` (16 rows)
+driving `Index Scan using idx_search_index_geometry` over 16 loops, **12.6 ms execution**.
+This is the canonical acceptance case.
+
+It is also the one worth running first analytically. Measured across the whole registry:
+**53.3 % of all pending CAR registrations (750 of 1,406) overlap an Indigenous Land**, against
+7.7 % of cancelled ones (150 of 1,949) and 0.004 % of active ones (16 of 429,750). The same
+filter with `ind_status = 'AT'` returns only 15 features — a corner of the data, not a
+representative case.
 
 **B — "APPs e Reserva Legal em assentamentos do INCRA"** uses two blocks, each with only a
 spatial condition against `assentamentos_incra_pe`. The equivalent single-block query against
@@ -1008,8 +1016,9 @@ Verified reference data: 179 `area_imovel_1` polygons intersect this TI; `tis_po
 
 ### 7.2 Feature B
 
-12. Building `ind_status = AT` + `num_area ≥ 100` + intersects **Terras Indígenas** on CAR
-    settles the preview at **18 feições in roughly 230 ms**.
+12. Building `ind_status = PE` + intersects **Terras Indígenas** on CAR settles the preview at
+    **750 feições**; the same filter with `ind_status = AT` and `num_area ≥ 100` returns **15**.
+    Both verified against hand-written SQL.
 13. Saving as `CAR ativos em TI` succeeds; saving again under the same name reports a duplicate
     (409 from `idx_saved_filters_name_norm`).
 14. Reloading the browser keeps the filter listed — it lives in PostgreSQL, not `localStorage`.

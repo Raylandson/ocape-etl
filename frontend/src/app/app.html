@@ -3,6 +3,7 @@
 <!-- Left Side Floating Panels (Search, DataJud Legend & SIGEF Casos Analisados Filter) -->
 <div class="left-panels-stack">
   <app-search-bar [layerMeta]="searchLayerMeta" (resultSelected)="selectSearchResult($event)"></app-search-bar>
+  <div class="left-panels-scroll">
   <app-datajud-legend [isVisible]="isDataJudVisible()"></app-datajud-legend>
   <app-sigef-batateiras-filter 
     [isVisible]="isSigefCasosAnalisadosVisible()"
@@ -18,6 +19,8 @@
     (stackCleared)="clearOverlapStack()"
     (featureHovered)="onStackFeatureHovered($event)">
   </app-overlap-stack-panel>
+  <app-filter-builder [layers]="layers"></app-filter-builder>
+  </div>
 </div>
 
 <!-- Floating Basemap Switcher (Bottom Left) -->

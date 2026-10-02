@@ -6,17 +6,59 @@
   left: 0;
 }
 
-/* Left side floating panels container (vertical stack) */
+/* Left side floating panels container (vertical stack).
+   The search bar stays pinned at the top; every other panel lives in `.left-panels-scroll`,
+   which scrolls when the open panels do not fit, so they never overlap each other or
+   run underneath the bottom-left basemap switcher. */
 .left-panels-stack {
   position: absolute;
   top: 20px;
   left: 20px;
+  bottom: 84px;
+  width: 320px;
   z-index: 10;
   display: flex;
   flex-direction: column;
   gap: 12px;
   pointer-events: none;
-  max-height: calc(100vh - 40px);
+}
+
+.left-panels-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+  /* Room for the panel drop shadows, which overflow-x/y would otherwise clip. */
+  padding: 4px 16px 12px;
+  margin: -4px -16px -12px;
+}
+
+.left-panels-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.left-panels-scroll > * {
+  flex-shrink: 0;
+}
+
+/* Panels that render nothing (layer off) must not add a flex gap. */
+.left-panels-scroll > *:empty {
+  display: none;
+}
+
+/* `.legend-panel` / `.panel-toggle-badge` below are the right-hand panel and set
+   `top/right: 20px`. Left-column members are `position: relative`, where those offsets
+   still apply and `right` shifts the box left, out of line with the search bar. */
+.left-panels-stack .legend-panel,
+.left-panels-stack .panel-toggle-badge {
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
 }
 
 /* Floating Basemap Controls (Bottom-Left) */
@@ -686,4 +728,41 @@
   background: #0f172a;
   border-color: #0f172a;
   color: #ffffff;
+}
+
+/* Phones: single column, every panel the same width as the search bar. */
+@media (max-width: 640px) {
+  .left-panels-stack {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    bottom: 76px;
+    width: auto;
+  }
+
+  .bottom-left-controls {
+    left: 12px;
+    bottom: 16px;
+  }
+
+  /* The layer panel becomes a sheet over the left column; its toggle moves to the bottom row. */
+  .legend-panel:not(.left-panel) {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    bottom: 76px;
+    width: auto;
+    max-height: none;
+    z-index: 30;
+  }
+
+  .legend-panel.panel-hidden:not(.left-panel) {
+    transform: translateY(calc(100% + 30px));
+  }
+
+  .panel-toggle-badge {
+    top: auto;
+    right: 12px;
+    bottom: 16px;
+  }
 }

@@ -12,3 +12,13 @@ dependencies = [
     "sqlalchemy>=2.0.51",
     "uvicorn>=0.54.0",
 ]
+
+[dependency-groups]
+dev = ["pytest>=8.4"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# `src` is a PEP 420 namespace package (no __init__.py), so the repo root must be importable.
+# This is pytest's equivalent of the sys.path prepend every script in src/ does by hand.
+pythonpath = ["."]
+addopts = "-q"

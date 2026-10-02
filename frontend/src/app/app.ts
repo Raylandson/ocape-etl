@@ -2,10 +2,12 @@ import { Component, AfterViewInit, inject, ViewEncapsulation } from '@angular/co
 import { Map, Popup, AttributionControl } from 'maplibre-gl';
 import { DatajudLegendComponent } from './datajud-legend/datajud-legend.component';
 import { SigefBatateirasFilterComponent } from './sigef-batateiras-filter/sigef-batateiras-filter.component';
-import { KmlExportService, KmlExportItem } from './services/kml-export.service';
+import { ExportService, ActiveFeatureRef } from './services/export.service';
+import { getFeatureTitle } from './feature-title';
 import { SearchBarComponent, SearchLayerMeta } from './search-bar/search-bar.component';
 import { SearchResult } from './services/search.service';
 import { OverlapStackPanelComponent } from './overlap-stack-panel/overlap-stack-panel.component';
+import { FilterBuilderComponent } from './filter-builder/filter-builder.component';
 import { LAYERS, PRIORITY_ORDER, LayerConfig, renderedLayerIds } from './layers.config';
 import { FeatureVisibilityService, StackEntry } from './services/feature-visibility.service';
 
@@ -95,22 +97,23 @@ export const ENRICHED_CAR_DATA: Record<string, EnrichedCarInfo> = {
 
 @Component({
   selector: 'app-root',
-  imports: [DatajudLegendComponent, SigefBatateirasFilterComponent, SearchBarComponent, OverlapStackPanelComponent],
+  imports: [DatajudLegendComponent, SigefBatateirasFilterComponent, SearchBarComponent, OverlapStackPanelComponent, FilterBuilderComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
   encapsulation: ViewEncapsulation.None
 })
 export class App implements AfterViewInit {
-  private kmlExportService = inject(KmlExportService);
+  private exportService = inject(ExportService);
   private visibility = inject(FeatureVisibilityService);
 
   map!: Map;
-  isPanelOpen: boolean = true;
+  // On phones the layer panel is a full-width sheet, so start with it closed.
+  isPanelOpen: boolean = window.innerWidth > 640;
   selectedSigefPhases: string[] = ['AV-17-73', 'AV-19-73', 'AV-23-73', 'SIGEF Atual'];
   currentBasemap: 'vector' | 'satellite' = 'vector';
 
-  // Active clicked feature state
-  activeSelectedFeatureItem: KmlExportItem | null = null;
+  // Enough to let the server re-find this feature and export its exact geometry.
+  activeFeatureRef: ActiveFeatureRef | null = null;
 
   /** Features under the last click, topmost first. Drives the overlap stack panel. */
   overlapStack: StackEntry[] = [];
@@ -192,10 +195,10 @@ export class App implements AfterViewInit {
     // Global handler for copy and KML export buttons inside map popups
     document.addEventListener('click', (e: MouseEvent) => {
       const kmlBtn = (e.target as HTMLElement).closest('[data-action="export-single-kml"]') as HTMLButtonElement | null;
-      if (kmlBtn && this.activeSelectedFeatureItem) {
+      if (kmlBtn && this.activeFeatureRef) {
         e.preventDefault();
         e.stopPropagation();
-        this.kmlExportService.exportSingleFeature(this.activeSelectedFeatureItem);
+        this.exportFeatureToKml(kmlBtn, this.activeFeatureRef);
         return;
       }
 
@@ -2316,6 +2319,7 @@ export class App implements AfterViewInit {
             .map(f => this.toStackEntry(f, e.lngLat, sorted))
             .filter((x): x is StackEntry => x !== null)
         );
+        this.loadFullGeometries(this.overlapStack);
 
         return sorted;
       };
@@ -2345,13 +2349,7 @@ export class App implements AfterViewInit {
 
         // Track selected feature for KML export & highlight on map
         const layerInfo = this.getLayerInfoForFeature(layerId);
-        this.activeSelectedFeatureItem = {
-          feature: topFeature,
-          layerId: layerInfo.id,
-          layerName: layerInfo.name,
-          fillColor: layerInfo.fillColor,
-          borderColor: layerInfo.borderColor
-        };
+        this.activeFeatureRef = this.buildFeatureRef(layerInfo, layerId, props, e.lngLat);
         this.highlightFeature({
           geometry: this.activeStackEntry?.geometry ?? topFeature.geometry,
           properties: props
@@ -2393,12 +2391,10 @@ export class App implements AfterViewInit {
       .find(id => this.map.getLayer(id)) ?? layer.id;
     const layerInfo = this.getLayerInfoForFeature(renderedLayerId);
 
-    this.activeSelectedFeatureItem = {
-      feature,
-      layerId: layerInfo.id,
-      layerName: layerInfo.name,
-      fillColor: layerInfo.fillColor,
-      borderColor: layerInfo.borderColor
+    this.activeFeatureRef = {
+      ...this.buildFeatureRef(layerInfo, renderedLayerId, properties,
+                              { lng: result.anchor[0], lat: result.anchor[1] }),
+      searchIndexId: result.id,
     };
     this.highlightFeature(feature);
     this.renderPopupForLayer(renderedLayerId, properties, result.anchor);
@@ -2419,8 +2415,7 @@ export class App implements AfterViewInit {
   /**
    * Outlines the area a panel row refers to, without disturbing the click selection.
    *
-   * Geometry comes from the rendered tile, so it is simplified and may be clipped at a tile
-   * seam. That is fine for a transient "this is the one" cue; exports use exact geometry.
+   * Geometry is the tile fragment until `loadFullGeometries` swaps in the full boundary.
    */
   highlightHoverGeometry(geometry: any | null) {
     if (!this.map) return;
@@ -2434,7 +2429,7 @@ export class App implements AfterViewInit {
 
   clearFeatureHighlight() {
     if (!this.map) return;
-    this.activeSelectedFeatureItem = null;
+    this.activeFeatureRef = null;
     const source = this.map.getSource('selected-feature-source') as any;
     if (source) {
       source.setData({
@@ -2463,7 +2458,7 @@ export class App implements AfterViewInit {
       fillColor: info.fillColor,
       borderColor: info.borderColor,
       key,
-      title: this.kmlExportService.getFeatureTitle(props, info.name),
+      title: getFeatureTitle(props, info.name),
       canHide: key !== null && this.visibility.canHide(info.id),
       shared: this.visibility.keyStability(info.id) === 'shared',
       // Starts as this tile's fragment; dedupeAndSort merges in the rest.
@@ -2474,6 +2469,37 @@ export class App implements AfterViewInit {
     };
   }
 
+  /**
+   * Replaces each entry's tile fragment with the feature's whole boundary.
+   *
+   * A point query only returns the fragment inside the tile under the cursor, so merging
+   * "fragments" in the visibility service never had more than one to merge and parcels
+   * crossing tile seams were highlighted (and hidden-row previews drawn) as clipped slivers.
+   * The fragment stays in place until the response arrives, and if the request fails.
+   */
+  private loadFullGeometries(stack: StackEntry[]) {
+    for (const entry of stack) {
+      if (/Point$/.test(entry.geometry?.type ?? 'Point')) continue;
+
+      const ref = this.buildFeatureRef(
+        { id: entry.baseLayerId, name: entry.layerName,
+          fillColor: entry.fillColor, borderColor: entry.borderColor },
+        entry.renderedLayerId, entry.feature.properties, entry.lngLat);
+
+      this.exportService.featureGeometry(ref).subscribe({
+        next: geometry => {
+          // The user may have clicked elsewhere while this was in flight.
+          if (!geometry || !this.overlapStack.includes(entry)) return;
+          entry.geometry = geometry;
+          if (this.activeStackEntry === entry) {
+            this.highlightFeature({ geometry, properties: entry.feature.properties });
+          }
+        },
+        error: () => { /* keep the tile fragment */ },
+      });
+    }
+  }
+
   /** Opens the popup for a row the click dispatcher did not pick as top priority. */
   onStackFeatureSelected(entry: StackEntry) {
     if (!this.map || !this.renderPopupForLayer) return;
@@ -2481,13 +2507,10 @@ export class App implements AfterViewInit {
     // Closing first clears the previous highlight via the popup close handler.
     this.activePopup?.remove();
 
-    this.activeSelectedFeatureItem = {
-      feature: entry.feature,
-      layerId: entry.baseLayerId,
-      layerName: entry.layerName,
-      fillColor: entry.fillColor,
-      borderColor: entry.borderColor
-    };
+    this.activeFeatureRef = this.buildFeatureRef(
+      { id: entry.baseLayerId, name: entry.layerName,
+        fillColor: entry.fillColor, borderColor: entry.borderColor },
+      entry.renderedLayerId, entry.feature.properties, entry.lngLat);
     this.activeStackEntry = entry;
     // Highlight the merged geometry, not the single tile fragment on `entry.feature`.
     this.highlightFeature({ geometry: entry.geometry, properties: entry.feature.properties });
@@ -2546,6 +2569,55 @@ export class App implements AfterViewInit {
   moveLayerToBack(layer: LayerConfig, event: Event) {
     event.stopPropagation();
     this.visibility.moveToBack(layer.id);
+  }
+
+  /**
+   * Builds what the server needs to re-find this feature.
+   *
+   * Tiles carry no feature id and most tables have no primary key, so the server locates it by
+   * point-in-polygon (0.25 ms via the GIST index). Polygons resolve with zero tolerance; points
+   * and lines need a pixel-derived box because the click rarely lands exactly on them.
+   */
+  private buildFeatureRef(
+    layerInfo: { id: string; name: string; fillColor: string; borderColor: string },
+    renderedLayerId: string,
+    props: any,
+    lngLat: { lng: number; lat: number },
+  ): ActiveFeatureRef {
+    const isArea = renderedLayerId.endsWith('_fill');
+    return {
+      layerId: layerInfo.id,
+      layerName: layerInfo.name,
+      fillColor: layerInfo.fillColor,
+      borderColor: layerInfo.borderColor,
+      lng: lngLat.lng,
+      lat: lngLat.lat,
+      zoom: this.map ? this.map.getZoom() : 12,
+      props: props ?? {},
+      tolerancePx: isArea ? 0 : 6,
+    };
+  }
+
+  /**
+   * Exports the clicked feature through the API, so the KML carries the exact PostGIS
+   * boundary. The previous client-side path serialised `queryRenderedFeatures` geometry, which
+   * is simplified and clipped at tile seams.
+   */
+  private exportFeatureToKml(button: HTMLButtonElement, ref: ActiveFeatureRef) {
+    if (button.disabled) return;
+    const original = button.innerHTML;
+    button.disabled = true;
+    button.textContent = 'Gerando…';
+
+    const restore = () => { button.disabled = false; button.innerHTML = original; };
+    this.exportService.exportFeature(ref).subscribe({
+      next: restore,
+      error: () => {
+        button.disabled = false;
+        button.textContent = 'Falha ao exportar';
+        setTimeout(restore, 2500);
+      },
+    });
   }
 
   getLayerInfoForFeature(renderedLayerId: string): { id: string; name: string; fillColor: string; borderColor: string } {

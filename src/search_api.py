@@ -16,10 +16,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
+import logging
+
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from src.database import get_engine
+from src.export_api import router as export_router
+from src.filters_api import router as filters_router
+from src.saved_filters import ensure_saved_filters_table
+
+logger = logging.getLogger(__name__)
 
 MIN_QUERY_LENGTH = 3
 MAX_TOKENS = 6
@@ -28,11 +35,27 @@ app = FastAPI(title="Land Conflict Mapping — Search API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:4200", "http://127.0.0.1:4200"],
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    # Without this the browser hides the header from a blob response and the downloaded
+    # archive gets a random name.
+    expose_headers=["Content-Disposition"],
 )
 
 engine = get_engine()
+
+app.include_router(filters_router)
+app.include_router(export_router)
+
+
+@app.on_event("startup")
+def _ensure_schema() -> None:
+    """`docker compose up -d` alone must yield a working feature. A cold database must not
+    stop the API booting, so this is advisory only."""
+    try:
+        ensure_saved_filters_table(engine)
+    except Exception as exc:  # pragma: no cover - depends on container start order
+        logger.warning(f"Could not ensure the saved_filters table: {exc}")
 
 
 def _escape_like(value: str) -> str:

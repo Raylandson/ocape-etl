@@ -61,8 +61,8 @@ export interface StackEntry {
   canHide: boolean;
   shared: boolean;
   /**
-   * Full geometry for this feature: the union of every tile fragment queryRenderedFeatures
-   * returned for it. `feature.geometry` alone is only the fragment inside one tile.
+   * Geometry for this feature. Starts as the tile fragment under the cursor (clipped at tile
+   * seams) and is replaced by the full boundary from `/feature/geometry` once it arrives.
    */
   geometry: any;
   feature: any;
@@ -182,8 +182,8 @@ export class FeatureVisibilityService {
       const id = `${e.baseLayerId}${KEY_SEP}${e.key}`;
       const kept = byId.get(id);
       if (kept) {
-        // A feature crossing a tile seam comes back once per tile, each time clipped to that
-        // tile. Merging the fragments is what makes the highlight show the whole parcel.
+        // Same-feature fragments are only combined as a stopgap: a point query rarely returns
+        // more than one, so the app replaces this with the server's full boundary.
         kept.geometry = mergeGeometries(kept.geometry, e.geometry);
         continue;
       }

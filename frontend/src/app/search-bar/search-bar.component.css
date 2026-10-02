@@ -1,6 +1,6 @@
 .search-bar {
   position: relative;
-  width: 320px;
+  width: 100%;
   pointer-events: auto;
 }
 
