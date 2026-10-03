@@ -53,6 +53,10 @@ SEARCH_SOURCES: List[Dict] = [
      "text": ["sg_modalidade"], "place": ["no_municipio"]},
     {"table": "despejo_zero_pe", "label": ["nome_comunidade"], "codes": ["conflito_id"],
      "text": ["agente_promotor", "causa_conflito"], "place": ["municipio"]},
+    {"table": "ppcac_conflitos_pe", "label": ["nome_area"],
+     "codes": ["processos_judiciais", "processos_mppe", "processos_sei", "sigef_codigos", "car_codigos"],
+     "text": ["programa", "proprietario", "movimento_social", "situacao", "iterpe_nomes", "incra_projetos"],
+     "place": ["municipio"], "ibge": ["municipio_ibge"], "searchable": True},
     {"table": "moradia_legal_pe", "label": ["nome", "comunidade"], "codes": [],
      "text": ["comunidade", "tipo"], "place": ["municipio"]},
     {"table": "iterpe_glebas_pe", "label": ["nome"], "codes": [], "text": ["tipo"], "place": ["municipio"]},
@@ -141,22 +145,41 @@ def _code_norm(expr: str) -> str:
     return f"regexp_replace({_norm(expr)}, '[^a-z0-9]', '', 'g')"
 
 
-def _as_text(col: str) -> str:
-    return f"NULLIF(btrim(t.\"{col}\"::text), '')"
-
-
-def _fetch_columns(conn) -> Dict[str, Set[str]]:
+def _fetch_columns(conn) -> Dict[str, Dict[str, str]]:
     rows = conn.execute(text(
-        "SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = 'public'"
+        "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_schema = 'public'"
     )).fetchall()
-    columns: Dict[str, Set[str]] = {}
-    for table_name, column_name in rows:
-        columns.setdefault(table_name, set()).add(column_name)
+    columns: Dict[str, Dict[str, str]] = {}
+    for table_name, column_name, data_type in rows:
+        columns.setdefault(table_name, {})[column_name] = data_type
     return columns
 
 
-def _build_insert(source: Dict, rank: int, available: Set[str], has_municipios: bool) -> Optional[str]:
+def _as_text(col: str, is_array: bool = False) -> str:
+    if is_array:
+        return f"NULLIF(btrim(array_to_string(t.\"{col}\", ' ')), '')"
+    return f"NULLIF(btrim(t.\"{col}\"::text), '')"
+
+
+def _as_code_display(col: str, is_array: bool = False) -> str:
+    if is_array:
+        return f"NULLIF(btrim(t.\"{col}\"[1]), '')"
+    return f"NULLIF(btrim(t.\"{col}\"::text), '')"
+
+
+def _code_expr_for_col(col: str, is_array: bool = False) -> str:
+    if is_array:
+        return (
+            f"(SELECT string_agg(regexp_replace(lower(unaccent(elem)), '[^a-z0-9]', '', 'g'), ' ') "
+            f"FROM unnest(t.\"{col}\") AS elem "
+            f"WHERE elem IS NOT NULL AND btrim(elem) <> '')"
+        )
+    return _code_norm(_as_text(col, False))
+
+
+def _build_insert(source: Dict, rank: int, table_cols: Dict[str, str], has_municipios: bool) -> Optional[str]:
     table = source["table"]
+    available = set(table_cols.keys())
     pick = lambda cols: [c for c in cols if c in available]
 
     label_cols = pick(source["label"])
@@ -169,18 +192,24 @@ def _build_insert(source: Dict, rank: int, available: Set[str], has_municipios: 
         logger.warning(f"Skipping '{table}': none of the label columns {source['label']} exist.")
         return None
 
-    place_exprs = [_as_text(c) for c in place_cols] + [
+    place_exprs = [_as_text(c, table_cols.get(c) == "ARRAY") for c in place_cols] + [
         f"(SELECT m.municipio_nome::text FROM {MUNICIPIOS_TABLE} m WHERE m.municipio_ibge = t.\"{c}\" LIMIT 1)"
         for c in ibge_cols
     ]
-    label_expr = f"COALESCE({', '.join(_as_text(c) for c in label_cols)})"
-    code_expr = f"COALESCE({', '.join(_as_text(c) for c in code_cols)})" if code_cols else "NULL"
+    label_expr = f"COALESCE({', '.join(_as_text(c, table_cols.get(c) == 'ARRAY') for c in label_cols)})"
+    code_expr = (
+        f"COALESCE({', '.join(_as_code_display(c, table_cols.get(c) == 'ARRAY') for c in code_cols)})"
+        if code_cols else "NULL"
+    )
     place_expr = f"COALESCE({', '.join(place_exprs)})" if place_exprs else "NULL"
 
-    all_exprs = [_as_text(c) for c in dict.fromkeys(label_cols + code_cols + text_cols)] + place_exprs
+    all_exprs = [
+        _as_text(c, table_cols.get(c) == "ARRAY")
+        for c in dict.fromkeys(label_cols + code_cols + text_cols)
+    ] + place_exprs
     search_text = _norm(f"concat_ws(' ', {', '.join(all_exprs)})")
     codes = (
-        f"concat_ws(' ', {', '.join(_code_norm(_as_text(c)) for c in code_cols)})"
+        f"concat_ws(' ', {', '.join(_code_expr_for_col(c, table_cols.get(c) == 'ARRAY') for c in code_cols)})"
         if code_cols else "''"
     )
 

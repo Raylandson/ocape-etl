@@ -1,0 +1,164 @@
+@if (isVisible) {
+  @if (!isOpen) {
+    <!-- Floating Toggle Badge when collapsed -->
+    <button class="panel-toggle-badge left-toggle" (click)="toggleOpen()" title="Abrir painel de Conflitos do PPCAC">
+      <svg class="toggle-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+      <span class="toggle-badge-text">PPCAC</span>
+      <span class="toggle-badge-count">{{ stats?.ativos ?? (isLoading ? '...' : areas.length) }}</span>
+    </button>
+  } @else {
+    <!-- Main PPCAC Filter Panel -->
+    <div class="legend-panel left-panel ppcac-panel">
+      <div class="legend-header">
+        <div class="legend-header-text">
+          <div class="header-title-row">
+            <h3>PPCAC</h3>
+            <span class="header-badge">{{ areas.length }} áreas</span>
+          </div>
+          <p>Conflitos Agrários Coletivos (Lei 18.441/2023)</p>
+        </div>
+        <button class="close-panel-btn" (click)="toggleOpen()" title="Ocultar painel">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="legend-body">
+        <!-- Isolation Mode Toggle Switch -->
+        <div class="isolation-switch-container">
+          <div class="isolation-info">
+            <span class="isolation-title">Isolar no Mapa</span>
+            <span class="isolation-subtitle">Ocultar litígios fora do PPCAC</span>
+          </div>
+          <button 
+            type="button" 
+            class="switch-control" 
+            [class.active]="isIsolating" 
+            (click)="toggleIsolation()"
+            role="switch"
+            [attr.aria-checked]="isIsolating"
+            title="Alternar isolamento de áreas do PPCAC no mapa">
+            <span class="switch-knob"></span>
+          </button>
+        </div>
+
+        <!-- Status Filter Pills -->
+        <div class="status-pills-row">
+          <button 
+            type="button" 
+            class="pill-btn" 
+            [class.active]="selectedStatus === 'ALL'" 
+            (click)="setStatus('ALL')">
+            Todos ({{ areas.length }})
+          </button>
+          <button 
+            type="button" 
+            class="pill-btn" 
+            [class.active]="selectedStatus === 'ATIVO'" 
+            (click)="setStatus('ATIVO')">
+            Ativos ({{ stats?.ativos ?? 0 }})
+          </button>
+          <button 
+            type="button" 
+            class="pill-btn" 
+            [class.active]="selectedStatus === 'ARQUIVADO'" 
+            (click)="setStatus('ARQUIVADO')">
+            Arquivados ({{ stats?.arquivados ?? 0 }})
+          </button>
+        </div>
+
+        <!-- Search Input -->
+        <div class="search-box">
+          <input 
+            type="text" 
+            class="ppcac-search-input" 
+            placeholder="Buscar por imóvel, município ou movimento..."
+            [(ngModel)]="searchQuery" 
+            (input)="onSearchChange()" 
+          />
+          @if (searchQuery) {
+            <button class="clear-search-btn" (click)="searchQuery = ''; onSearchChange()" title="Limpar busca">
+              ✕
+            </button>
+          }
+        </div>
+
+        <!-- Area List -->
+        <div class="areas-list-scroll">
+          @if (isLoading) {
+            <div class="empty-state-box">Carregando áreas do PPCAC...</div>
+          } @else if (filteredAreas.length === 0) {
+            <div class="empty-state-box">Nenhuma área encontrada.</div>
+          } @else {
+            @for (area of filteredAreas; track area.id) {
+              <div 
+                class="area-card" 
+                [class.selected]="area.id === selectedAreaId" 
+                (click)="selectArea(area)">
+                
+                <div class="area-card-header">
+                  <span class="area-name">{{ area.nome_area }}</span>
+                  <span class="area-status-pill" [class.archived]="area.situacao === 'ARQUIVADO'">
+                    {{ area.situacao }}
+                  </span>
+                </div>
+
+                <div class="area-sub-row">
+                  <span class="area-municipio">{{ area.municipio }}</span>
+                  @if (area.fonte_geometria?.startsWith('SIGEF')) {
+                    <span class="geo-badge sigef" title="Polígono cartográfico do SIGEF">Polígono SIGEF</span>
+                  } @else if (area.fonte_geometria === 'ITERPE') {
+                    <span class="geo-badge iterpe" title="Polígono estadual do ITERPE (Território Quilombola / Gleba)">Polígono ITERPE</span>
+                  } @else if (area.fonte_geometria === 'INCRA') {
+                    <span class="geo-badge incra" title="Polígono federal do INCRA (Projeto de Assentamento)">Polígono INCRA</span>
+                  } @else if (area.fonte_geometria === 'DATAJUD') {
+                    <span class="geo-badge jud" title="Ponto de litígio judicial DataJud">Judicial</span>
+                  } @else if (area.fonte_geometria === 'DESPEJO_ZERO') {
+                    <span class="geo-badge dz" title="Ponto de comunidade Despejo Zero">Comunidade</span>
+                  } @else {
+                    <span class="geo-badge mun" title="Enquadramento pela sede municipal">Sede Mun.</span>
+                  }
+                </div>
+
+                @if (area.proprietario || area.movimento_social) {
+                  <div class="area-parties-row">
+                    @if (area.proprietario) {
+                      <span class="party-label">Prop: {{ area.proprietario }}</span>
+                    }
+                    @if (area.movimento_social) {
+                      <span class="party-label movement">Mov: {{ area.movimento_social }}</span>
+                    }
+                  </div>
+                }
+
+                <div class="area-metrics-row">
+                  <span class="metric-tag" title="Processos judiciais vinculados">
+                    Jud: {{ area.processos_judiciais.length }}
+                  </span>
+                  @if (area.processos_mppe.length > 0) {
+                    <span class="metric-tag" title="Procedimentos preparatórios / inquéritos MPPE">
+                      MPPE: {{ area.processos_mppe.length }}
+                    </span>
+                  }
+                  @if (area.processos_sei.length > 0) {
+                    <span class="metric-tag" title="Processos administrativos SEI-PE">
+                      SEI: {{ area.processos_sei.length }}
+                    </span>
+                  }
+                  @if (area.car_codigos && area.car_codigos.length > 0) {
+                    <span class="metric-tag car" title="Imóveis rurais do CAR cadastrados">
+                      CAR: {{ area.car_codigos.length }}
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  }
+}

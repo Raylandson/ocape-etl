@@ -2,6 +2,8 @@ import { Component, AfterViewInit, inject, ViewEncapsulation } from '@angular/co
 import { Map, Popup, AttributionControl } from 'maplibre-gl';
 import { DatajudLegendComponent } from './datajud-legend/datajud-legend.component';
 import { SigefBatateirasFilterComponent } from './sigef-batateiras-filter/sigef-batateiras-filter.component';
+import { PpcacFilterComponent } from './ppcac-filter/ppcac-filter.component';
+import { PpcacService, PpcacArea } from './services/ppcac.service';
 import { ExportService, ActiveFeatureRef } from './services/export.service';
 import { getFeatureTitle } from './feature-title';
 import { SearchBarComponent, SearchLayerMeta } from './search-bar/search-bar.component';
@@ -99,7 +101,7 @@ export const ENRICHED_CAR_DATA: Record<string, EnrichedCarInfo> = {
 
 @Component({
   selector: 'app-root',
-  imports: [DatajudLegendComponent, SigefBatateirasFilterComponent, SearchBarComponent, OverlapStackPanelComponent, SelectionsPanelComponent],
+  imports: [DatajudLegendComponent, SigefBatateirasFilterComponent, PpcacFilterComponent, SearchBarComponent, OverlapStackPanelComponent, SelectionsPanelComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
   encapsulation: ViewEncapsulation.None
@@ -107,6 +109,7 @@ export const ENRICHED_CAR_DATA: Record<string, EnrichedCarInfo> = {
 export class App implements AfterViewInit {
   private exportService = inject(ExportService);
   private visibility = inject(FeatureVisibilityService);
+  private ppcacService = inject(PpcacService);
   readonly selection = inject(SelectionService);
   readonly isolation = inject(SelectionIsolationService);
 
@@ -185,6 +188,212 @@ export class App implements AfterViewInit {
     // Registered as a domain filter rather than applied directly: the service ANDs it with any
     // hidden-feature filter on the same layer, so the two no longer overwrite each other.
     this.visibility.setDomainFilter('sigef_casos_analisados', filterExpr);
+  }
+
+  onPpcacAreaSelected(area: PpcacArea) {
+    if (!this.map) return;
+    if (area.bbox && area.bbox.length === 4) {
+      this.map.fitBounds(
+        [[area.bbox[0], area.bbox[1]], [area.bbox[2], area.bbox[3]]],
+        { padding: 80, maxZoom: 16, duration: 1200 }
+      );
+    } else if (area.centroid_lon && area.centroid_lat) {
+      this.map.flyTo({
+        center: [area.centroid_lon, area.centroid_lat],
+        zoom: 14,
+        duration: 1200
+      });
+    }
+
+    // Highlight area geometry on map (polygon fill + dashed line or point circle)
+    if (area.geometry) {
+      this.highlightFeature({
+        type: 'Feature',
+        geometry: area.geometry,
+        properties: {
+          ...area,
+          nome: area.nome_area,
+          municipio: area.municipio
+        }
+      });
+    }
+
+    // Ensure corresponding spatial layer is enabled so user sees the vector tiles
+    if (area.fonte_geometria === 'SIGEF_CASOS_ANALISADOS') {
+      const layer = this.layers.find(l => l.id === 'sigef_casos_analisados');
+      if (layer && !layer.visible) this.toggleLayer(layer);
+    } else if (area.fonte_geometria === 'SIGEF_PRIVADO') {
+      const layer = this.layers.find(l => l.id === 'sigef_privado_pe');
+      if (layer && !layer.visible) this.toggleLayer(layer);
+    } else if (area.fonte_geometria === 'SIGEF_PUBLICO') {
+      const layer = this.layers.find(l => l.id === 'sigef_publico_pe');
+      if (layer && !layer.visible) this.toggleLayer(layer);
+    } else if (area.fonte_geometria === 'ITERPE') {
+      const layer = this.layers.find(l => l.id === 'iterpe_glebas_pe');
+      if (layer && !layer.visible) this.toggleLayer(layer);
+    } else if (area.fonte_geometria === 'INCRA') {
+      const layer = this.layers.find(l => l.id === 'assentamentos_incra_pe');
+      if (layer && !layer.visible) this.toggleLayer(layer);
+    } else if (area.fonte_geometria === 'DATAJUD') {
+      const layer = this.layers.find(l => l.id === 'processos_conflitos_judiciais');
+      if (layer && !layer.visible) this.toggleLayer(layer);
+    } else if (area.fonte_geometria === 'DESPEJO_ZERO') {
+      const layer = this.layers.find(l => l.id === 'despejo_zero_pe');
+      if (layer && !layer.visible) this.toggleLayer(layer);
+    }
+
+    this.activePopup?.remove();
+    const popupHtml = this.buildPpcacPopupHtml(area);
+    this.activePopup = new Popup({ className: 'custom-popup ppcac-dossier-popup', maxWidth: '380px' })
+      .setLngLat([area.centroid_lon, area.centroid_lat])
+      .setHTML(popupHtml)
+      .addTo(this.map);
+
+    this.activePopup.on('close', () => {
+      this.clearFeatureHighlight();
+    });
+  }
+
+  buildPpcacPopupHtml(area: PpcacArea): string {
+    const statusBadge = area.situacao === 'ARQUIVADO'
+      ? `<span style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 3px; background: #f1f5f9; color: #64748b;">ARQUIVADO</span>`
+      : `<span style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 3px; background: #dcfce7; color: #166534;">ATIVO ${area.ano_referencia ? '(' + area.ano_referencia + ')' : ''}</span>`;
+
+    let geoNotice = '';
+    if (area.fonte_geometria === 'SIGEF_CASOS_ANALISADOS') {
+      geoNotice = `
+        <div style="margin: 8px 0; padding: 6px 8px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 4px; font-size: 11px; color: #1e40af; line-height: 1.3;">
+          <strong>Delimitação Fundiária:</strong> Polígono SIGEF Casos Analisados (Batateiras)
+        </div>`;
+    } else if (area.fonte_geometria === 'SIGEF_PRIVADO') {
+      const cods = area.sigef_codigos && area.sigef_codigos.length ? ` · Cód: ${area.sigef_codigos.join(', ')}` : '';
+      geoNotice = `
+        <div style="margin: 8px 0; padding: 6px 8px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 4px; font-size: 11px; color: #1e40af; line-height: 1.3;">
+          <strong>Delimitação Fundiária:</strong> Polígono SIGEF Privado Oficial${cods}
+        </div>`;
+    } else if (area.fonte_geometria === 'SIGEF_PUBLICO') {
+      const cods = area.sigef_codigos && area.sigef_codigos.length ? ` · Cód: ${area.sigef_codigos.join(', ')}` : '';
+      geoNotice = `
+        <div style="margin: 8px 0; padding: 6px 8px; background: #f0fdfa; border: 1px solid #ccfbf1; border-radius: 4px; font-size: 11px; color: #0f766e; line-height: 1.3;">
+          <strong>Delimitação Fundiária:</strong> Polígono SIGEF Público Oficial${cods}
+        </div>`;
+    } else if (area.fonte_geometria === 'ITERPE') {
+      const gNomes = area.iterpe_nomes && area.iterpe_nomes.length ? ` (${area.iterpe_nomes.join(', ')})` : '';
+      geoNotice = `
+        <div style="margin: 8px 0; padding: 6px 8px; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 4px; font-size: 11px; color: #7e22ce; line-height: 1.3;">
+          <strong>Delimitação Fundiária:</strong> Polígono Estadual ITERPE${gNomes}
+        </div>`;
+    } else if (area.fonte_geometria === 'INCRA') {
+      const pNomes = area.incra_projetos && area.incra_projetos.length ? ` (${area.incra_projetos.join(', ')})` : '';
+      geoNotice = `
+        <div style="margin: 8px 0; padding: 6px 8px; background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 4px; font-size: 11px; color: #115e59; line-height: 1.3;">
+          <strong>Delimitação Fundiária:</strong> Polígono Federal INCRA Assentamento${pNomes}
+        </div>`;
+    } else if (area.fonte_geometria === 'DATAJUD') {
+      geoNotice = `
+        <div style="margin: 8px 0; padding: 6px 8px; background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 4px; font-size: 11px; color: #5b21b6; line-height: 1.3;">
+          <strong>Localização:</strong> Ponto do Litígio Judicial (Comarca de ${area.municipio})
+        </div>`;
+    } else if (area.fonte_geometria === 'DESPEJO_ZERO') {
+      geoNotice = `
+        <div style="margin: 8px 0; padding: 6px 8px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 4px; font-size: 11px; color: #9f1239; line-height: 1.3;">
+          <strong>Localização:</strong> Ponto da Comunidade Despejo Zero
+        </div>`;
+    } else {
+      geoNotice = `
+        <div style="margin: 8px 0; padding: 6px 8px; background: #fef3c7; border: 1px solid #fde68a; border-radius: 4px; font-size: 11px; color: #92400e; line-height: 1.3;">
+          Localizado no município de <strong>${area.municipio}</strong>. Delimitação cartográfica específica pendente.
+        </div>`;
+    }
+
+    const judList = area.processos_judiciais.length > 0
+      ? area.processos_judiciais.map(p => `<li style="font-family: monospace; font-size: 11px; margin-bottom: 2px;">${p}</li>`).join('')
+      : '<li style="font-size: 11px; color: #94a3b8;">Nenhum processo judicial cadastrado</li>';
+
+    const mppeList = area.processos_mppe.length > 0
+      ? area.processos_mppe.map(m => `<li style="font-family: monospace; font-size: 11px; margin-bottom: 2px;">${m}</li>`).join('')
+      : '';
+
+    const seiList = area.processos_sei.length > 0
+      ? area.processos_sei.map(s => `<li style="font-family: monospace; font-size: 11px; margin-bottom: 2px;">${s}</li>`).join('')
+      : '';
+
+    return `
+      <div class="popup-detail-box" style="padding: 12px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+          <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: #64748b; text-transform: uppercase;">PPCAC · Conflito Agrário</span>
+          ${statusBadge}
+        </div>
+        <h4 style="margin: 0 0 2px 0; font-size: 14px; font-weight: 700; color: #0f172a;">${area.nome_area}</h4>
+        <div style="font-size: 12px; color: #475569; margin-bottom: 6px;">Município: <strong>${area.municipio}</strong></div>
+        ${geoNotice}
+        ${area.proprietario ? `<div style="font-size: 11px; margin-bottom: 3px; color: #334155;"><strong>Proprietário:</strong> ${area.proprietario}</div>` : ''}
+        ${area.movimento_social ? `<div style="font-size: 11px; margin-bottom: 6px; color: #0369a1;"><strong>Movimento / Comunidade:</strong> ${area.movimento_social}</div>` : ''}
+        
+        ${area.car_codigos && area.car_codigos.length > 0 ? `
+        <div style="margin-top: 6px; border-top: 1px solid #f1f5f9; padding-top: 4px;">
+          <div style="font-size: 11px; font-weight: 600; color: #15803d; margin-bottom: 2px;">
+            Imóveis Rurais CAR vinculados (${area.car_codigos.length}):
+          </div>
+          <div style="font-family: monospace; font-size: 10px; color: #475569; max-height: 55px; overflow-y: auto; background: #f8fafc; padding: 4px; border-radius: 3px; border: 1px solid #e2e8f0;">
+            ${area.car_codigos.slice(0, 4).join('<br>')}
+            ${area.car_codigos.length > 4 ? `<div style="color: #64748b; font-style: italic; margin-top: 2px;">+ ${area.car_codigos.length - 4} outros imóveis</div>` : ''}
+          </div>
+        </div>` : ''}
+
+        ${area.iterpe_nomes && area.iterpe_nomes.length > 0 && area.fonte_geometria !== 'ITERPE' ? `
+        <div style="margin-top: 6px; border-top: 1px solid #f1f5f9; padding-top: 4px;">
+          <div style="font-size: 11px; font-weight: 600; color: #7e22ce; margin-bottom: 2px;">Sobreposição Territorial ITERPE:</div>
+          <div style="font-size: 11px; color: #4b5563;">${area.iterpe_nomes.join(', ')}</div>
+        </div>` : ''}
+
+        ${area.incra_projetos && area.incra_projetos.length > 0 && area.fonte_geometria !== 'INCRA' ? `
+        <div style="margin-top: 6px; border-top: 1px solid #f1f5f9; padding-top: 4px;">
+          <div style="font-size: 11px; font-weight: 600; color: #0f766e; margin-bottom: 2px;">Sobreposição Assentamento INCRA:</div>
+          <div style="font-size: 11px; color: #4b5563;">${area.incra_projetos.join(', ')}</div>
+        </div>` : ''}
+
+        <div style="margin-top: 8px; border-top: 1px solid #e2e8f0; padding-top: 6px;">
+          <div style="font-size: 11px; font-weight: 600; color: #0f172a; margin-bottom: 4px;">Processos Judiciais (TJPE / TRF5):</div>
+          <ul style="margin: 0; padding-left: 16px; color: #1e293b;">${judList}</ul>
+        </div>
+
+        ${mppeList ? `
+        <div style="margin-top: 6px; border-top: 1px solid #f1f5f9; padding-top: 4px;">
+          <div style="font-size: 11px; font-weight: 600; color: #0f172a; margin-bottom: 2px;">Procedimentos MPPE:</div>
+          <ul style="margin: 0; padding-left: 16px; color: #1e293b;">${mppeList}</ul>
+        </div>` : ''}
+
+        ${seiList ? `
+        <div style="margin-top: 6px; border-top: 1px solid #f1f5f9; padding-top: 4px;">
+          <div style="font-size: 11px; font-weight: 600; color: #0f172a; margin-bottom: 2px;">Processos SEI-PE:</div>
+          <ul style="margin: 0; padding-left: 16px; color: #1e293b;">${seiList}</ul>
+        </div>` : ''}
+      </div>
+    `;
+  }
+
+  onPpcacIsolationToggled(active: boolean) {
+    if (!this.map) return;
+    if (active) {
+      this.ppcacService.getFilterKeys().subscribe(keys => {
+        if (!this.map) return;
+        const filterExpr = [
+          'in',
+          ['get', 'numero_processo'],
+          ['literal', keys.processos_conflitos_judiciais]
+        ];
+        this.visibility.setDomainFilter('processos_conflitos_judiciais', filterExpr);
+
+        // Ensure layer is visible so user sees the isolated points
+        const layer = this.layers.find(l => l.id === 'processos_conflitos_judiciais');
+        if (layer && !layer.visible) {
+          this.toggleLayer(layer);
+        }
+      });
+    } else {
+      this.visibility.setDomainFilter('processos_conflitos_judiciais', null);
+    }
   }
 
   /** Live copy of the registry: `toggleLayer` mutates `.visible`, so entries are copied. */

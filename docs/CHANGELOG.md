@@ -6,6 +6,27 @@ This document chronicles the architectural evolutions, dataset ingestions, and m
 
 ## Chronological Change Log
 
+### October 2026: PPCAC Conflict Areas — Comprehensive Cross-Referencing (SIGEF, CAR, ITERPE, INCRA, DataJud & Despejo Zero)
+- **Why**: Full cross-referencing between official state conflict mediation dossiers (`ppcac_conflitos_pe`), public and private land tenure polygons (SIGEF Privado/Público, ITERPE, INCRA), environmental rural registrations (CAR / SICAR), judicial lawsuits (DataJud TJPE/TRF5), and social community mappings (Despejo Zero).
+- **Specification**: [`docs/superpowers/specs/2026-10-02-ppcac-filter-design.md`](superpowers/specs/2026-10-02-ppcac-filter-design.md); implementation plan: [`docs/superpowers/plans/2026-10-02-ppcac-filter.md`](superpowers/plans/2026-10-02-ppcac-filter.md).
+- **Model**: PostGIS table `public.ppcac_conflitos_pe` containing 80 consolidated conflict areas across Pernambuco, with native arrays for judicial lawsuits (`processos_judiciais`), MPPE inquiries (`processos_mppe`), and SEI electronic files (`processos_sei`). Updated to `GEOMETRY(Geometry, 4326)` with metadata columns `fonte_geometria`, `tipo_geometria`, `sigef_codigos`, `car_codigos`, `iterpe_nomes`, `incra_projetos`, `total_car_imoveis`. Implements multi-tier spatial resolution:
+  - **Tier 1 (SIGEF Casos Analisados)**: Polygons from `sigef_casos_analisados` (e.g. *Engenho Batateiras* in Maraial).
+  - **Tier 2a (SIGEF Privado)**: 23 polygons from `sigef_privado_pe` matched by IBGE code, word-boundary regex on core name, and trigram similarity $\ge 0.35$ (*Roncadorzinho*, *Fervedouro*, *Paraguassu*, *Pau Amarelo*, *Humaitá*, *Jacaré*, *Megaó de Baixo*, *Novo São Paulo*, *São Francisco*, *Vila Real*, etc.).
+  - **Tier 2b (SIGEF Público)**: Polygons from `sigef_publico_pe` (e.g. *Engenho São Pedro* in Jaboatão dos Guararapes).
+  - **Tier 2c (ITERPE Glebas & Territórios Quilombolas)**: State tenure polygons from `iterpe_glebas_pe` (e.g. *Comunidade Quilombola Negros de Gilú* in Itacuruba, 103,71 ha).
+  - **Tier 2d (INCRA Assentamentos)**: Federal settlement project polygons from `assentamentos_incra_pe`.
+  - **Tier 3 (DataJud Judicial Points)**: 32 areas with precise coordinates from judicial lawsuit dockets (`processos_conflitos_judiciais`).
+  - **Tier 4 (Despejo Zero Points)**: 8 community points from `despejo_zero_pe` (resolved via normalized core name matching).
+  - **Tier 5 (Municipal Centroid Fallback)**: Dropped from 28 down to 14 areas without specific cartographic mapping (`jurisdicoes_pe_municipios`).
+- **CAR Cross-Referencing**: Automated spatial intersection post-process against `area_imovel_1` and `car_casos_analisados`. **41 of 80 PPCAC areas** now have directly linked CAR properties, associating **562 distinct CAR parcels** (`car_codigos`) displayed in the popup and searchable globally.
+- **ETL Pipeline** ([`src/etl_ppcac.py`](../src/etl_ppcac.py)): Parses `data/raw/Planilha_da_Relacao_Conflitos_09.02.2026.xlsx`, forward-fills merged cells, rectifies shifted columns, runs multi-tier spatial resolution, and calculates spatial intersections with CAR, ITERPE, and INCRA.
+- **Unified Search** ([`src/build_search_index.py`](../src/build_search_index.py)): Indexed `sigef_codigos`, `car_codigos`, `iterpe_nomes`, and `incra_projetos` in `search_index`. Searching any CAR code, SIGEF parcel, or procedure immediately surfaces the PPCAC conflict area.
+- **API Endpoints** ([`src/search_api.py`](../src/search_api.py)): `GET /ppcac/areas` returns all cross-referenced metadata (`car_codigos`, `iterpe_nomes`, `incra_projetos`, `total_car_imoveis`, `geometry_json`) and updated stats (`com_poligono: 26`, `com_car: 41`).
+- **Frontend & Map Interaction** ([`frontend/src/app/ppcac-filter/`](../frontend/src/app/ppcac-filter/) and [`frontend/src/app/app.ts`](../frontend/src/app/app.ts)):
+  - Badges distinguishing `Polígono SIGEF`, `Polígono ITERPE`, `Polígono INCRA`, `Judicial`, `Comunidade`, `Sede Mun.`, plus CAR parcel count tags (`CAR: {n}`).
+  - Auto-activation of the corresponding vector tile layers (`sigef_casos_analisados`, `sigef_privado_pe`, `sigef_publico_pe`, `iterpe_glebas_pe`, `assentamentos_incra_pe`, `processos_conflitos_judiciais`, `despejo_zero_pe`) upon selection.
+  - Institutional popup dossier displaying delimitation provenance, CAR property lists, territorial overlap notices, and procedural records.
+
 ### October 2026: Saved Selections (Replaces the Rule-Based Filter Builder)
 - **Why**: The rule-based builder (layer blocks, conditions, spatial crossings) did not match the intent, which was named sets of hand-picked areas. Specification: [`docs/specs/2026-10-02-saved-selections.md`](specs/2026-10-02-saved-selections.md); plan: [`docs/superpowers/plans/2026-10-02-saved-selections.md`](superpowers/plans/2026-10-02-saved-selections.md).
 - **Model**: `saved_selections` and `saved_selection_members` ([`src/saved_selections.py`](../src/saved_selections.py)). A member is a locator (layer, `md5(props::text)` fingerprint, `ST_PointOnSurface` anchor, string-attribute hint, note), not a `search_index.id`, because the index is rebuilt and its ids restart. Resolution is `exact`, `approximate` (attributes changed) or `missing` (kept, flagged, skipped on export). 500 areas per set.

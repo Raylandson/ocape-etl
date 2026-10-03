@@ -35,6 +35,7 @@ Este documento centraliza o inventário de dados da **Plataforma de Mapeamento e
 | :---: | :--- | :--- | :--- | :---: |
 | **f** | **DataJud** | CNJ / TJPE / TRF5 | Processos judiciais ativos de litígio fundiário e posse |  **Importado** |
 | **g** | **DespejoZero** | Campanha Despejo Zero | Mapeamento comunitário de áreas sob risco ou ameaça de despejo (`despejo_zero_pe`) |  **Importado** |
+| **i** | **PPCAC** | SJDH / CEACA / MPPE | Programa Estadual de Prevenção de Conflitos Agrários Coletivos (`ppcac_conflitos_pe`) |  **Importado** |
 | **h** | **ONR** | Operador Nacional (SREI) | Registro eletrônico de imóveis e cadeia de matrículas | ⏳ **A Importar** |
 
 
@@ -286,6 +287,24 @@ Calculado por `calculate_energy_overlaps()` em [`src/overlaps.py`](../src/overla
 * **Métricas em PE:** 43.585 famílias sob ameaça ativa de despejo, 8.397 famílias já removidas e 3.400 ordens suspensas/sanadas. Municípios líderes: Recife (93), Jaboatão dos Guararapes (30), Olinda (28), Goiana (18), Cabo de Santo Agostinho (15).
 * **Atributos Chave:** `conflito_id`, `nome_comunidade`, `municipio`, `familias_ameacadas`, `familias_despejadas`, `familias_suspensas`, `total_familias`, `status_conflito`, `causa_conflito`, `acompanhamento_juridico`, `agente_promotor`, `descricao`.
 * **Aplicação em Conflitos:** Fornece o contraponto empírico e humanitário às ações do DataJud, alertando magistrados e órgãos de conciliação agrária sobre o impacto social de reintegrações de posse.
+
+#### i. PPCAC — Programa de Prevenção de Conflitos Agrários Coletivos (Lei Estadual 18.441/2023)
+* **Status:** **Importado e Ativo**
+* **Tabela PostGIS:** `public.ppcac_conflitos_pe` (80 áreas consolidadas cobrindo 92 processos judiciais, 81 procedimentos MPPE e 211 processos SEI).
+* **Descrição:** Relação oficial de conflitos agrários coletivos com acompanhamento interinstitucional em Pernambuco, coordenada pela Secretaria de Justiça, Direitos Humanos e Prevenção à Violência (SJDH) em articulação com a Comissão Estadual de Acompanhamento dos Conflitos Agrários (CEACA/PE) e o Ministério Público de Pernambuco (MPPE).
+* **Resolução Espacial Multi-Nível e Cruzamento Cartográfico Integral:**
+  - *Tier 1 (Polígonos SIGEF Privado e Casos Analisados)*: Vinculação topológica às poligonais de imóveis certificados (`sigef_casos_analisados` como *Engenho Batateiras* e `sigef_privado_pe` cobrindo 23 áreas como *Roncadorzinho*, *Fervedouro*, *Paraguassu*, *Pau Amarelo*, *Humaitá*, *Jacaré*, *Megaó de Baixo*, *Novo São Paulo*, *São Francisco*, *Vila Real*, etc.).
+  - *Tier 2 (Polígonos Federais e Estaduais - SIGEF Público, ITERPE e INCRA)*:
+    - **SIGEF Público**: *Engenho São Pedro* em Jaboatão dos Guararapes (`sigef_publico_pe`).
+    - **ITERPE**: *Comunidade Quilombola Negros de Gilú* em Itacuruba (polígono estadual de 103,71 ha via `iterpe_glebas_pe`).
+    - **INCRA Assentamentos**: *Engenhos São Gregório, Alegre I e Alegre II* em Gameleira (`assentamentos_incra_pe`).
+  - *Tier 3 (Georreferenciamento Judicial DataJud)*: 32 áreas com coordenadas precisas dos autos de litígio fundiário (`processos_conflitos_judiciais`).
+  - *Tier 4 (Comunidades Despejo Zero)*: 8 áreas com coordenadas de comunidades mapeadas (`despejo_zero_pe`).
+  - *Tier 5 (Enquadramento Municipal Fallback)*: Apenas 14 áreas sem delimitação específica adotam a sede municipal (`jurisdicoes_pe_municipios`).
+* **Cruzamento com Cadastro Ambiental Rural (CAR - SICAR / CPRH):**
+  - Todas as áreas com geometria (polígonos e pontos) sofrem cruzamento espacial automático com a malha do CAR (`area_imovel_1` e `car_casos_analisados`).
+  - **41 das 80 áreas do PPCAC** possuem imóveis do CAR diretamente sobrepostos ou interceptados, totalizando **562 parcelas CAR** vinculadas e pesquisáveis (`car_codigos`).
+* **Interface e Badges:** Componente flutuante institucional (`PpcacFilterComponent`) integrado à pilha de painéis da esquerda com busca rápida, pílulas de status (*Ativo/Arquivado*), alternador *"Isolar no Mapa"*, badges específicos (`Polígono SIGEF`, `Polígono ITERPE`, `Polígono INCRA`, `Judicial`, `Comunidade`, `Sede Mun.`), contagem de imóveis CAR vinculados, ativação automática das camadas cartográficas subjacentes ao clicar e dossiê institucional completo com os autos do TJPE/TRF5, MPPE, SEI e CAR.
 
 ### 2.3. Tabela Derivada: Índice de Busca Unificado (`search_index`)
 

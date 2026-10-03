@@ -73,7 +73,7 @@ def main():
     )
     parser.add_argument(
         "--step",
-        choices=["unpack", "etl", "jurisdicoes", "datajud", "datajud_sqlite", "sigef_historico", "moradia_iterpe", "despejo_zero", "aneel", "search_index", "saved_selections"],
+        choices=["unpack", "etl", "jurisdicoes", "datajud", "datajud_sqlite", "sigef_historico", "moradia_iterpe", "despejo_zero", "aneel", "ppcac", "search_index", "saved_selections"],
         help="Run only a specific pipeline step."
     )
     parser.add_argument(
@@ -145,6 +145,11 @@ def main():
     if not args.step or args.step == "aneel":
         from src.etl_aneel import run as run_aneel
         results.append(run_pipeline_step("7. ANEEL/SIGEL & EPE Energy Infrastructure", run_aneel))
+
+    # Step 7b: PPCAC (Programa de Prevenção de Conflitos Agrários Coletivos)
+    if not args.step or args.step == "ppcac":
+        from src.etl_ppcac import ingest_ppcac
+        results.append(run_pipeline_step("7b. PPCAC Conflitos Coletivos", ingest_ppcac))
 
     # Step 8: Unified search index (must run after every layer is loaded)
     if not args.step or args.step == "search_index":

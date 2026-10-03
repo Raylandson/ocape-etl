@@ -10,6 +10,11 @@
     (filterChanged)="onSigefFilterChanged($event)"
     (focusRequested)="focusBatateiras()">
   </app-sigef-batateiras-filter>
+  <app-ppcac-filter
+    [isVisible]="true"
+    (areaSelected)="onPpcacAreaSelected($event)"
+    (isolationToggled)="onPpcacIsolationToggled($event)">
+  </app-ppcac-filter>
   <app-overlap-stack-panel
     [stack]="overlapStack"
     [activeEntry]="activeStackEntry"

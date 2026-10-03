@@ -53,12 +53,23 @@
 /* `.legend-panel` / `.panel-toggle-badge` below are the right-hand panel and set
    `top/right: 20px`. Left-column members are `position: relative`, where those offsets
    still apply and `right` shifts the box left, out of line with the search bar. */
-.left-panels-stack .legend-panel,
-.left-panels-stack .panel-toggle-badge {
+.left-panels-stack .legend-panel {
+  position: relative;
   top: auto;
   right: auto;
   bottom: auto;
   left: auto;
+  pointer-events: auto;
+}
+
+.left-panels-stack .panel-toggle-badge {
+  position: relative;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  pointer-events: auto;
+  width: fit-content;
 }
 
 /* Floating Basemap Controls (Bottom-Left) */
